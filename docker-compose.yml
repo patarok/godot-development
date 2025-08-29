@@ -3,7 +3,6 @@ version: "3.9"
 services:
   frontend:
     image: node:22
-    container_name: frontend
     working_dir: /var/www
     volumes:
       - .:/var/www
@@ -26,7 +25,6 @@ services:
 
   db:
     image: postgres:16
-    container_name: db
     restart: always
     environment:
       POSTGRES_USER: app_user
@@ -41,7 +39,6 @@ services:
 
   mail:
     image: mailhog/mailhog
-    container_name: mailer
     ports:
       - "8025:8025"  # Web UI
       - "1025:1025"  # SMTP
