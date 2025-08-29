@@ -13,10 +13,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^5.4.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
-    "semantic-release": "^24.2.7"
+    "semantic-release": "^24.2.7",
+    "vite": "^6.3.5"
   }
 }
