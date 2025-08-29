@@ -1,21 +1,29 @@
 name: Release
+
 on:
   push:
     branches:
       - main
+
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # This line is the fix!
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          
       - name: Install dependencies
         run: npm install
+        
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
