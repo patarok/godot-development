@@ -1,0 +1,89 @@
+node_modules
+
+# Lock files
+package-lock.json
+composer.lock
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+## Panda
+styled-system
+styled-system-studio
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Diagnostic reports (Node.js)
+report.*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage / tests
+coverage
+.nyc_output
+.vitest
+test-results
+junit.xml
+
+# TypeScript
+*.tsbuildinfo
+dist
+
+# Caches
+.vite
+.cache
+.pnpm-store
+.turbo
+.parcel-cache
+
+# Editor/IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.sample.json
+*.swp
+.history
+
+# Prisma (SQLite dev databases)
+prisma/*.db
+prisma/*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+# If Prisma client is generated outside node_modules, add its path below:
+# generated/prisma
+
+# Docker / local data
+docker-data
+Dockerfile.local
+.docker/*
+docker/*.env
+docker-compose.override.yml
