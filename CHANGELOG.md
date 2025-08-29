@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/patarok/godot-development/compare/v1.0.0...v1.0.1) (2025-08-29)
+
+
+### Bug Fixes
+
+* **release:** explicitly add github plugin to config ([2d7521b](https://github.com/patarok/godot-development/commit/2d7521bb97770f6b0fb7dd94c4e8f47f926c0a0c))
+
 # 1.0.0 (2025-08-29)
 
 
