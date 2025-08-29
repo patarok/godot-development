@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/patarok/godot-development/compare/v1.1.0...v1.2.0) (2025-08-29)
+
+
+### Bug Fixes
+
+* renamed release.config.js to .cjs ending so it doesnt get treated as ESM ([3e4fc9d](https://github.com/patarok/godot-development/commit/3e4fc9d4cc1936da5b94b42d63462d4eb3469dba))
+
+
+### Features
+
+* adds Svelte/SvelteKit with basic skeleton ([418956d](https://github.com/patarok/godot-development/commit/418956d21301f3e5d30089133413e5d515893849))
+* moved to typescript ([36d7808](https://github.com/patarok/godot-development/commit/36d78088823f3849d54fa32e93a2d84bf26718ee))
+
 # [1.1.0](https://github.com/patarok/godot-development/compare/v1.0.2...v1.1.0) (2025-08-29)
 
 
