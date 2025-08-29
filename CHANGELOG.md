@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/patarok/godot-development/compare/v1.0.1...v1.0.2) (2025-08-29)
+
+
+### Bug Fixes
+
+* **release:** changed policy to --major: false--, so we start out with v0 in future projects, which derive from this as template ([a6ef367](https://github.com/patarok/godot-development/commit/a6ef367bf8c81fa7f630e287dbde26ab7dffcc76))
+
 ## [1.0.1](https://github.com/patarok/godot-development/compare/v1.0.0...v1.0.1) (2025-08-29)
 
 
