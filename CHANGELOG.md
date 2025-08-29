@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/patarok/godot-development/compare/v1.0.2...v1.1.0) (2025-08-29)
+
+
+### Features
+
+* sets up dockerized development environment, adds .gitignore ([e7048f8](https://github.com/patarok/godot-development/commit/e7048f885fa1592401688567b6551afbc004e755))
+* setup dockerized development environment ([1c796ca](https://github.com/patarok/godot-development/commit/1c796caa71adb93fdf04faa0141ce7cc446e0547))
+
 ## [1.0.2](https://github.com/patarok/godot-development/compare/v1.0.1...v1.0.2) (2025-08-29)
 
 
