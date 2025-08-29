@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: node:22
+    container_name: frontend
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./node_modules:/var/www/node_modules
+    ports:
+      - "5173:5173"
+      - "5174:5174"
+      - "4173:4173"
+      - "4174:4174"
+      - "9229:9229"
+      - "5555:5555"
+    environment:
+      NODE_ENV: development
+    command: >
+      sh -c "npm install && node --enable-source-maps --inspect=0.0.0.0:9229 node_modules/vite/bin/vite.js dev --host 0.0.0.0"
+    stdin_open: true
+    tty: true
+    networks:
+      - godot-network
+
+  db:
+    image: postgres:16
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_pass
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - godot-network
+
+  mail:
+    image: mailhog/mailhog
+    container_name: mailer
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+    tty: true
+    networks:
+      - godot-network
+
+volumes:
+  db_data:
+
+networks:
+  godot-network:
+    driver: bridge
