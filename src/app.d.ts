@@ -27,15 +27,19 @@ declare global {
         // defines 'event.locals'
         // interface Locals {}
         // SvelteKit Starter defines it as follows
-        // interface Locals {
-        //     user: {
-        //         id: number,
-        //         name: string,
-        //     };
-        // }
+        interface Locals {
+            user: {
+                username: string;
+                token: string }
+            | null }
+
 
         // shape of "'page.data' state" and "'$page.data' store"
-        // interface PageData {}
+        interface PageData {
+            user: {
+                username: string }
+            | null }
+
 
         // special contracts distinct to 'Edge Platforms' (PaaS) like:
         // Vercel, Netlify, 'Cloudflare Workers'

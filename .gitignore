@@ -70,6 +70,7 @@ dist
 .parcel-cache
 
 # Storage(fs)
+users.json
 user.json
 
 

@@ -1,11 +1,13 @@
 <script lang="ts">
-
 	import favicon from '$lib/assets/favicon.svg';
 	import '../app.css';
-	import {writable} from "svelte/store";
-	import {browser} from "$app/environment";
+	import { writable } from 'svelte/store';
+	import { browser } from '$app/environment';
+	import type { LayoutData } from './$types';
 
-
+	// Svelte 5 way: get props via $props(), no $: and no $page
+	let { data, children }: { data: LayoutData; children: any } = $props();
+	const user = data.user; // { username } | null
 
 	const theme = writable<'light' | 'dark'>('light');
 
@@ -13,7 +15,6 @@
 		if (newTheme === 'dark') {
 			document.documentElement.classList.add('dark');
 		} else document.documentElement.classList.remove('dark');
-
 		theme.set(newTheme);
 	}
 
@@ -24,25 +25,17 @@
 			return newTheme;
 		});
 	}
-
-	let { children } = $props();
-
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<!--	<link rel="stylesheet" href="/reset.css">-->
 </svelte:head>
 
 {#if browser}
 	<button
-		onclick={toggleTheme}
-		style="	aspect-ratio: 1 / 1;
-				border: none;
-				position: absolute;
-				bottom: 0;
-				right: 0;"
-			  >
+			onclick={toggleTheme}
+			style="aspect-ratio: 1 / 1; border: none; position: absolute; bottom: 0; right: 0; margin: 1rem;"
+	>
 		🌙
 	</button>
 {/if}

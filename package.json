@@ -19,6 +19,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@lucide/svelte": "^0.542.0",
+    "@node-rs/argon2": "^2.0.2",
     "@pandacss/dev": "^1.2.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
