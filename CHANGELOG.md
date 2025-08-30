@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/patarok/godot-development/compare/v1.4.0...v1.5.0) (2025-08-30)
+
+
+### Features
+
+* adds basic user auth to program TODO: sanitation ([8770b88](https://github.com/patarok/godot-development/commit/8770b88a33aed98dc2c8f8ad979d705b0d7caa32))
+
 # [1.4.0](https://github.com/patarok/godot-development/compare/v1.3.1...v1.4.0) (2025-08-30)
 
 
