@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/patarok/godot-development/compare/v1.2.0...v1.3.0) (2025-08-30)
+
+
+### Features
+
+* using PandaCSS now ([27b5ace](https://github.com/patarok/godot-development/commit/27b5ace99f600c7c61dfc92d44b7e17cb2ba3d1a))
+
 # [1.2.0](https://github.com/patarok/godot-development/compare/v1.1.0...v1.2.0) (2025-08-29)
 
 
