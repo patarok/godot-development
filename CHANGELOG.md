@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/patarok/godot-development/compare/v1.5.1...v1.5.2) (2025-08-30)
+
+
+### Bug Fixes
+
+* adds a proper 'sketch-prisma.schema' as starting point ([e078796](https://github.com/patarok/godot-development/commit/e078796df506fb28271ac254ec6b08912af58e16))
+
 ## [1.5.1](https://github.com/patarok/godot-development/compare/v1.5.0...v1.5.1) (2025-08-30)
 
 
