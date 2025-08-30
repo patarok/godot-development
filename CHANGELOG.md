@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/patarok/godot-development/compare/v1.3.0...v1.3.1) (2025-08-30)
+
+
+### Bug Fixes
+
+* allowed vite to serve from styled-system ([85e1c55](https://github.com/patarok/godot-development/commit/85e1c55b9e127a97c51ed079e05958930b3ca601))
+
 # [1.3.0](https://github.com/patarok/godot-development/compare/v1.2.0...v1.3.0) (2025-08-30)
 
 
