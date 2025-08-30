@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/patarok/godot-development/compare/v1.5.0...v1.5.1) (2025-08-30)
+
+
+### Bug Fixes
+
+* re-organizes package.json, adds pkgs for further development ([921b9fc](https://github.com/patarok/godot-development/commit/921b9fca6baeb7283020f302625d22029a05ac88))
+
 # [1.5.0](https://github.com/patarok/godot-development/compare/v1.4.0...v1.5.0) (2025-08-30)
 
 
