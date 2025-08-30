@@ -1,0 +1,369 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MainRoleTitle {
+  CUSTOMER
+  CONTRIBUTOR
+}
+
+// Permission model to be created - defines granular access controls
+model Permission {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  rolePermissions RolePermission[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+// Junction table for many-to-many relationship between roles and permissions
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+// Hierarchical levels within the organization
+// Default levels: Junior (basic rights to order), Mid (can buy and is responsible), Senior (can contract)
+model Echelon {
+  id          Int      @id @default(autoincrement())
+  title       String   @unique // Junior, Mid, Senior
+  description String // Detailed description of rights and responsibilities for this level
+  orderLevel  Int      @unique // Numeric order for hierarchy (1=Junior, 2=Mid, 3=Senior)
+  roles       Role[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Role system supporting both main roles (Customer/Contributor) and sub-roles
+model Role {
+  id              Int              @id @default(autoincrement())
+  isMainRole      Boolean          @default(false)
+  mainRoleTitle   MainRoleTitle? // Only set when isMainRole is true
+  parentRoleId    Int? // Self-reference for role hierarchy
+  parentRole      Role?            @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  subRoles        Role[]           @relation("RoleHierarchy")
+  title           String
+  description     String?
+  echelonId       Int
+  echelon         Echelon          @relation(fields: [echelonId], references: [id])
+  rolePermissions RolePermission[]
+  users           User[]           @relation("UserRoles")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+// Flexible tagging system with color coding for visual organization
+model Tag {
+  id        String     @id @default(cuid())
+  title     String     @unique
+  color     String // HEX color format - can be enforced at app level or via DB constraint
+  tasks     Task[]     @relation("TaskTags")
+  deadlines Deadline[] @relation("DeadlineTags")
+  projects  Project[]  @relation("ProjectTags")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// Task state management for workflow tracking (e.g., TODO, IN_PROGRESS, DONE)
+model TaskState {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  color       String // HEX color format - can be enforced at app level or via DB constraint
+  orderNo     Int // For workflow ordering
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Project state management (separate from task states)
+model ProjectState {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  color       String // HEX color format - can be enforced at app level or via DB constraint
+  orderNo     Int // For workflow ordering
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Priority levels for tasks and deadlines with visual indicators
+model Priority {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  orderNo     Int        @unique // Numeric priority order (1=highest priority)
+  color       String // HEX color format - can be enforced at app level or via DB constraint
+  deadlines   Deadline[]
+  tasks       Task[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Deadline management with priority assignment and tagging support
+model Deadline {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  dueDate     DateTime
+  priorityId  String
+  priority    Priority  @relation(fields: [priorityId], references: [id])
+  tags        Tag[]     @relation("DeadlineTags")
+  projects    Project[] @relation("ProjectDeadlines")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// User management with multi-role support and authentication
+model User {
+  id                  Int                @id @default(autoincrement())
+  email               String             @unique
+  forename            String?
+  surname             String?
+  username            String?            @unique
+  password            String // Should be hashed at application level
+  token               String?            @unique // Authentication token
+  // Task relationships
+  tasks               Task[]             @relation("TaskUsers") // Many-to-many tasks
+  activeTasks         Task[]             @relation("ActiveUserOnTask") // Tasks where user is currently active
+  // Role relationships
+  mainRoleId          Int?
+  mainRole            Role?              @relation("UserMainRole", fields: [mainRoleId], references: [id])
+  roles               Role[]             @relation("UserRoles") // Additional roles beyond main role
+  // Project relationships
+  createdProjects     Project[]          @relation("ProjectCreators")
+  activeProjects      Project[]          @relation("ActiveUserOnProject")
+  // Segment relationships for workflow management
+  segmentStakeholders IterationSegment[] @relation("SegmentStakeholders")
+  segmentResponsibles IterationSegment[] @relation("SegmentResponsibles")
+  segmentAttendees    IterationSegment[] @relation("SegmentAttendees")
+  segmentContributors IterationSegment[] @relation("SegmentContributors")
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+// Solution library for impediment resolution
+// Contains reusable solutions that can be applied to similar impediments
+model Solution {
+  id                Int                @id @default(autoincrement())
+  title             String
+  explanation       String // Detailed explanation of the solution
+  link              String? // Optional reference link for additional information
+  impediments       Impediment[] // Individual impediments using this solution
+  impedimentMedians ImpedimentMedian[] // Merged impediments using this solution
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+// Individual impediment tracking with AI-powered similarity detection
+// AI searches for similar impediments with same causes or effects
+// When duplicates are found and confirmed, impediments are merged into ImpedimentMedian
+model Impediment {
+  id             Int               @id @default(autoincrement())
+  title          String
+  description    String?
+  estimatedHours Int? // Original time estimate to resolve (in hours)
+  actualHours    Int? // Actual time spent resolving the impediment
+  isDone         Boolean           @default(false)
+  solutionId     Int?
+  solution       Solution?         @relation(fields: [solutionId], references: [id])
+  taskId         String?
+  task           Task?             @relation(fields: [taskId], references: [id])
+  // AI matching for merging similar impediments
+  mergedIntoId   Int? // Reference to ImpedimentMedian if this impediment was merged
+  mergedInto     ImpedimentMedian? @relation(fields: [mergedIntoId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+// Consolidated impediment data created by AI analysis
+// AI searches for similar impediments with same causes or effects
+// When duplicates are found and confirmed, individual impediments are merged here
+model ImpedimentMedian {
+  id                Int          @id @default(autoincrement())
+  title             String
+  description       String?
+  hasSolution       Boolean      @default(false)
+  solutionId        Int?
+  solution          Solution?    @relation(fields: [solutionId], references: [id])
+  averageHours      Float? // Average time required to resolve this type of impediment
+  mergedImpediments Impediment[] // Individual impediments that were merged into this median
+  occurrenceCount   Int          @default(1) // How many times this impediment type has occurred
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// Core task management with workflow support and impediment tracking
+model Task {
+  id                    String              @id @default(cuid())
+  title                 String
+  description           String
+  isDone                Boolean             @default(false)
+  taskStateId           String
+  taskState             TaskState           @relation(fields: [taskStateId], references: [id])
+  priorityId            String?
+  priority              Priority?           @relation(fields: [priorityId], references: [id])
+  // User assignments
+  users                 User[]              @relation("TaskUsers") // Many-to-many users assigned to task
+  activeUserId          Int? // Currently active user working on the task
+  activeUser            User?               @relation("ActiveUserOnTask", fields: [activeUserId], references: [id])
+  // Organization and metadata
+  tags                  Tag[]               @relation("TaskTags")
+  estimatedHours        Int? // Time estimate in hours
+  impediments           Impediment[] // Impediments blocking or affecting this task
+  // Workflow management
+  hasSegmentGroupCircle Boolean             @default(false)
+  segmentGroupCircleId  Int?
+  segmentGroupCircle    SegmentGroupCircle? @relation(fields: [segmentGroupCircleId], references: [id])
+  // Note: Each task can only have one SegmentGroupCircle which can only be executed once
+  // Maximum 3 segments per task within the circle
+  projectId             String?
+  project               Project?            @relation(fields: [projectId], references: [id])
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+// Iteration segments define the steps within a workflow circle
+// Predefined iteration segments exist for the first and second execution cycles
+//
+// First cycle predefined segments:
+// 1. Project Inquiry - Initial project request and evaluation
+// 2. Accept/Reject - Decision on whether to proceed with the project
+// 3. Planning - Detailed project planning and resource allocation
+// 4. Intake (Aufbereitung) - Project preparation and setup
+// 5. Proceed/Cancel - Customer and contributor accommodate and settle opposing views
+// 6. Project Revision - Communication and further development refinement
+// 7. Completion - Loops back to: Intake || Project Inquiry (1.1/1.x Additional Inquiry in 2nd PM cycle) || ACCEPT (Intake and END)
+model IterationSegment {
+  id                   Int                @id @default(autoincrement())
+  segmentNo            Int // Order number within the segment group circle
+  title                String
+  description          String?
+  // Participant management
+  stakeholders         User[]             @relation("SegmentStakeholders") // Users with interest in outcomes
+  responsibles         User[]             @relation("SegmentResponsibles") // Users responsible for execution
+  attendees            User[]             @relation("SegmentAttendees") // Users required to attend
+  contributors         User[]             @relation("SegmentContributors") // Users contributing to the work
+  // Time management
+  startSchedule        DateTime? // Planned start date
+  endSchedule          DateTime? // Planned end date
+  dueDate              DateTime? // Hard deadline
+  dropDate             DateTime? // Date after which segment should be dropped
+  actualStartDate      DateTime? // Actual start date
+  actualEndDate        DateTime? // Actual completion date
+  // Iteration tracking
+  iterationCount       Int                @default(1) // How often this segment has been executed between Customer and Contributor
+  completedIterations  Int                @default(0) // How often this segment was marked 'done' and had to recycle
+  isComplete           Boolean            @default(false) // Initially false, will not reoccur when true
+  // Resource management
+  estimatedCost        Decimal?           @db.Money // Estimated financial cost
+  actualCost           Decimal?           @db.Money // Actual financial cost
+  estimatedHours       Int? // Estimated time in hours
+  actualHours          Int? // Actual time spent in hours
+  // Relationships
+  segmentGroupCircleId Int
+  segmentGroupCircle   SegmentGroupCircle @relation(fields: [segmentGroupCircleId], references: [id])
+  projects             Project[]          @relation("ProjectCurrentSegment") // Projects currently in this segment
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+// Segment Group Circles define complete workflow cycles
+//
+// The first SegmentGroupCircle is always PL2RT: 'Project-Layout to Requirements-Termination'
+// This can also be the second circle. Predefined iteration segments exist for first and second execution.
+//
+// First SegmentGroupCircle consists of the following segments:
+// 1. Project Inquiry - Initial project request
+// 2. Accept/Reject - Go/no-go decision
+// 3. Planning - Project planning phase
+// 4. Intake (Aufbereitung) - Project preparation
+// 5. Proceed/Cancel - Customer and contributor accommodate and settle opposing views
+// 6. Project Revision - Communication and further development
+// 7. Completion - Loops back to: Intake || Project Inquiry (1.1/1.x Additional Inquiry) || ACCEPT (Intake and END)
+//
+// IMPORTANT: Step 5 [Proceed/Cancel] ALWAYS triggers the INTERNAL PROCESS
+// The project manager can define unlimited additional cycles using either existing SegmentGroupCircles or newly defined ones.
+//
+// The INTERNAL FIRST CIRCLE is defined as follows:
+// 1. Milestone Spread - Breaking down project into milestones
+// 2. Accept/Reject - Decision by internal stakeholders (department heads, team leads, project managers)
+// 3. Milestone Plan - Milestones are planned into sprints, sprints are roughly divided into tasks
+// 4. Contributor Evaluation - Who can or should work on the project? Who is suitable?
+//    Invitations are sent for roughly evaluated tasks that can only be rejected with justification
+// 5. Complete Contributors or Recycle Contributor Evaluation - Finalize team or repeat evaluation
+// 6. External Power Acquisition - Acquiring external resources if needed
+// 7. Work Start - All employees who have tasks to complete within a specific time window receive notification to begin
+// 8. Self-Definition Phase - Employees define small circles with maximum 3 segments within which they complete their tasks
+model SegmentGroupCircle {
+  id                        Int                @id @default(autoincrement())
+  orderNo                   Int // Execution order among multiple circles
+  title                     String
+  description               String?
+  segments                  IterationSegment[] // Segments that make up this circle
+  isProjectManagementCircle Boolean            @default(false) // True for customer-facing project management circles
+  isInternal                Boolean            @default(false) // True for internal organizational circles
+  isFirst                   Boolean            @default(false) // Can be true for either isInternal OR isProjectManagementCircle
+  // Note: isInternal and isProjectManagementCircle can never both be true simultaneously
+  // Additional circles can contain unlimited segments of any type
+  isActive                  Boolean            @default(false) // Currently executing
+  isComplete                Boolean            @default(false) // Fully completed
+  maxIterations             Int                @default(1) // Maximum allowed iterations of this circle
+  currentIteration          Int                @default(1) // Current iteration number
+  // Relationships
+  tasks                     Task[] // Tasks associated with this circle
+  projects                  Project[] // Projects using this circle
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+}
+
+// Main project management entity with complex lifecycle support
+model Project {
+  id                   String              @id @default(cuid())
+  title                String
+  description          String
+  deadlines            Deadline[]          @relation("ProjectDeadlines")
+  isDone               Boolean             @default(false)
+  iterationNumber      Int                 @default(1) // First iteration is always 'Project-Layout to Requirements-Termination'
+  iterationWarnAt      Int                 @default(3) // Warn when approaching this iteration number
+  maxIterations        Int? // Maximum allowed iterations before escalation
+  // Current workflow state
+  currentSegmentId     Int? // Currently active segment
+  currentSegment       IterationSegment?   @relation("ProjectCurrentSegment", fields: [currentSegmentId], references: [id])
+  projectStateId       String
+  projectState         ProjectState        @relation(fields: [projectStateId], references: [id])
+  segmentGroupCircleId Int?
+  segmentGroupCircle   SegmentGroupCircle? @relation(fields: [segmentGroupCircleId], references: [id])
+  // User management
+  creators             User[]              @relation("ProjectCreators") // Multiple users can create/own a project
+  activeUserId         Int? // Currently active user managing the project
+  activeUser           User?               @relation("ActiveUserOnProject", fields: [activeUserId], references: [id])
+  // Organization and tasks
+  tags                 Tag[]               @relation("ProjectTags")
+  tasks                Task[] // Tasks belonging to this project
+  // Time tracking
+  estimatedHours       Int? // Total estimated hours for project completion
+  actualHours          Int? // Total actual hours spent on project
+  startDate            DateTime? // Project start date
+  endDate              DateTime? // Project end date
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}

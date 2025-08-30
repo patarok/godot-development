@@ -96,3 +96,5 @@ Dockerfile.local
 .docker/*
 docker/*.env
 docker-compose.override.yml
+
+/../generated/prisma
