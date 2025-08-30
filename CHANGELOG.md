@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/patarok/godot-development/compare/v1.3.1...v1.4.0) (2025-08-30)
+
+
+### Features
+
+* implements dark mode button, fix .svelte files ([35b47e3](https://github.com/patarok/godot-development/commit/35b47e370a016f760761f2b5c25fd0db65736006))
+
 ## [1.3.1](https://github.com/patarok/godot-development/compare/v1.3.0...v1.3.1) (2025-08-30)
 
 
