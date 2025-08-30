@@ -7,6 +7,9 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		//alias: { 'our-stuff': './src/wheretopackitfrom/*'}
+		alias: {
+			'styled-system': './src/lib/styled-system/*'
+		}
 	}
 };
 

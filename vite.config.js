@@ -12,6 +12,9 @@ export default defineConfig( ({mode}) => {
 		host: '0.0.0.0',
 		port: 5173
 	},
+	css: {
+		postcss: true
+	},
 	define: {
 		// Make environment variables available to the app (server-side)
 		'process.env.DATABASE_URL': JSON.stringify(env.DATABASE_URL)
