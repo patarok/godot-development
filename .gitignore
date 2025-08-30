@@ -69,6 +69,10 @@ dist
 .turbo
 .parcel-cache
 
+# Storage(fs)
+user.json
+
+
 # Editor/IDE
 .idea
 .vscode/*
