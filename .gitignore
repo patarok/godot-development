@@ -26,9 +26,13 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-## Panda
-styled-system
-styled-system-studio
+## Panda ... since we are symlinking into src/lib/styled-system and we want to be clear on this,
+## Panda ... we do not ignore
+/styled-system/*
+!/styled-system/.gitkeep
+
+/styled-system-studio/*
+!/styled-system-studio/.gitkeep
 
 # Logs
 logs
