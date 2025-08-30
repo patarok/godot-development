@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { css } from '$lib/styled-system/css';
 </script>
 
