@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/patarok/godot-development/compare/v1.5.2...v1.5.3) (2025-08-31)
+
+
+### Bug Fixes
+
+* improves schema, improves notes ([fd06718](https://github.com/patarok/godot-development/commit/fd0671821b04767eee8b3d192433b5f8ff48263a))
+
 ## [1.5.2](https://github.com/patarok/godot-development/compare/v1.5.1...v1.5.2) (2025-08-30)
 
 
