@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/patarok/godot-development/compare/v1.5.3...v2.0.0) (2025-09-01)
+
+
+* feat(auth,admin,mail,schema,storage,ui)!: admin area, Mailhog email, DB-like sessions; enriched registration & user views ([e926bb3](https://github.com/patarok/godot-development/commit/e926bb3fe38a15aeca411342218f10a558f73401))
+
+
+### BREAKING CHANGES
+
+* users.json storage format changed to a versioned object (v2) with separate sessions and tokens. Legacy inline tokens are discarded; users must re-login. Install new dependency (nodemailer) and run DB migrations before enabling Prisma-backed auth.
+
 ## [1.5.3](https://github.com/patarok/godot-development/compare/v1.5.2...v1.5.3) (2025-08-31)
 
 
