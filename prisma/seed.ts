@@ -1,16 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import { hash } from '@node-rs/argon2';
 
 const prisma = new PrismaClient();
 
-// Idempotent upsert helpers
-async function upsertByUnique<T extends keyof PrismaClient>(model: any, where: any, create: any, update: any = {}) {
-  const existing = await model.findUnique({ where });
-  if (existing) return model.update({ where, data: update });
-  return model.create({ data: create });
-}
-
 async function main() {
-  // 1) Config/lookup kinds
+  // 1) Config/lookup kinds (idempotent)
   const projectKinds = [
     { key: 'DRAFT', title: 'Draft', orderNo: 1 },
     { key: 'INQUIRY_PENDING', title: 'Inquiry Pending', orderNo: 2 },
@@ -48,7 +42,6 @@ async function main() {
     { key: 'CANCELLED', title: 'Cancelled', orderNo: 4 }
   ];
 
-  // main role titles
   const mainRoleTitles = [
     { key: 'CUSTOMER', title: 'Customer' },
     { key: 'CONTRIBUTOR', title: 'Contributor' }
@@ -109,7 +102,180 @@ async function main() {
     await prisma.priority.upsert({ where: { orderNo: p.orderNo }, create: p, update: { title: p.title, color: p.color, kindId: p.kindId } });
   }
 
-  console.log('Seed completed');
+  // 4) Echelons
+  const echelons = [
+    { title: 'Junior', description: 'Entry level', orderLevel: 1 },
+    { title: 'Mid', description: 'Mid level', orderLevel: 2 },
+    { title: 'Senior', description: 'Senior level', orderLevel: 3 }
+  ];
+  for (const e of echelons) {
+    await prisma.echelon.upsert({ where: { title: e.title }, create: e, update: { description: e.description, orderLevel: e.orderLevel } });
+  }
+  const echelonMap = new Map((await prisma.echelon.findMany()).map((e) => [e.title, e.id]));
+
+  // 5) Roles (Admin, Consumer, Contributor)
+  const mrTitles = await prisma.mainRoleTitleCfg.findMany();
+  const getMainTitleId = (key: string) => mrTitles.find((r) => r.key === key)?.id || null;
+  const rolesData = [
+    { title: 'Admin', isMainRole: false, mainRoleTitleId: null as number | null, echelonId: echelonMap.get('Senior')!, description: 'Administrator' },
+    { title: 'Consumer', isMainRole: true, mainRoleTitleId: getMainTitleId('CUSTOMER'), echelonId: echelonMap.get('Mid')!, description: 'Customer role' },
+    { title: 'Contributor', isMainRole: true, mainRoleTitleId: getMainTitleId('CONTRIBUTOR'), echelonId: echelonMap.get('Mid')!, description: 'Contributor role' }
+  ];
+  for (const r of rolesData) {
+    const existing = await prisma.role.findFirst({ where: { title: r.title } });
+    if (existing) {
+      await prisma.role.update({ where: { id: existing.id }, data: { isMainRole: r.isMainRole, mainRoleTitleId: r.mainRoleTitleId ?? undefined, echelonId: r.echelonId, description: r.description } });
+    } else {
+      await prisma.role.create({ data: r });
+    }
+  }
+  const roles = await prisma.role.findMany();
+  const roleByTitle = (t: string) => roles.find((r) => r.title === t)!.id;
+
+  // 6) Users (argon2id hashed)
+  async function hashPwd(p: string) {
+    return hash(p, { memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 });
+  }
+  const usersSeed = [
+    { email: 'admin@example.local', username: 'admin', forename: 'Admin', surname: 'User', password: await hashPwd('admin123') },
+    { email: 'consumer@example.local', username: 'consumer', forename: 'Con', surname: 'Sumer', password: await hashPwd('consumer123') },
+    { email: 'contributor@example.local', username: 'contributor', forename: 'Contri', surname: 'Butor', password: await hashPwd('contrib123') }
+  ];
+  for (const u of usersSeed) {
+    const existing = await prisma.user.findUnique({ where: { email: u.email } });
+    if (existing) {
+      await prisma.user.update({ where: { id: existing.id }, data: { username: u.username, forename: u.forename, surname: u.surname, password: u.password, isActive: true } });
+    } else {
+      await prisma.user.create({ data: { ...u, isActive: true } });
+    }
+  }
+  const admin = await prisma.user.findUnique({ where: { email: 'admin@example.local' } });
+  const consumer = await prisma.user.findUnique({ where: { email: 'consumer@example.local' } });
+  const contributor = await prisma.user.findUnique({ where: { email: 'contributor@example.local' } });
+
+  // 7) Assign roles to users
+  async function ensureUserRole(userId: number, roleTitle: string) {
+    const roleId = roleByTitle(roleTitle);
+    const exists = await prisma.userRole.findFirst({ where: { userId, roleId } });
+    if (!exists) await prisma.userRole.create({ data: { userId, roleId } });
+  }
+  if (admin) await ensureUserRole(admin.id, 'Admin');
+  if (consumer) await ensureUserRole(consumer.id, 'Consumer');
+  if (contributor) await ensureUserRole(contributor.id, 'Contributor');
+
+  // 8) Tags
+  const tags = [
+    { id: 'tag-initial', title: 'initial', color: '#3B82F6' },
+    { id: 'tag-customer', title: 'customer', color: '#10B981' },
+    { id: 'tag-internal', title: 'internal', color: '#9CA3AF' }
+  ];
+  for (const t of tags) {
+    const existing = await prisma.tag.findUnique({ where: { title: t.title } });
+    if (existing) {
+      await prisma.tag.update({ where: { id: existing.id }, data: { color: t.color } });
+    } else {
+      await prisma.tag.create({ data: t });
+    }
+  }
+
+  // 9) Demo Project with initial circle, 7 segments, tasks, and assignments
+  const draftState = await prisma.projectState.findUnique({ where: { orderNo: 1 } });
+  const todoState = await prisma.taskState.findUnique({ where: { orderNo: 1 } });
+
+  const project = await prisma.project.upsert({
+    where: { id: 'demo-project-1' },
+    update: {},
+    create: {
+      id: 'demo-project-1',
+      title: 'Demo Project',
+      description: 'A demo project seeded by prisma/seed.ts',
+      projectStateId: draftState!.id,
+      iterationWarnAt: 3,
+      maxIterations: 5,
+      estimatedBudget: 10000 as any,
+      priority: 'High',
+      riskLevel: 'Medium'
+    }
+  });
+
+  // Create a SegmentGroupCircle
+  const circle = await prisma.segmentGroupCircle.create({
+    data: { orderNo: 1, title: 'Initial Workflow', isFirst: true, isActive: true }
+  });
+
+  // Link via ProjectCircle
+  await prisma.projectCircle.upsert({
+    where: { projectId_orderNo: { projectId: project.id, orderNo: 1 } },
+    update: { circleId: circle.id, isCurrent: true },
+    create: { projectId: project.id, circleId: circle.id, orderNo: 1, isCurrent: true }
+  });
+
+  const segmentTitles = [
+    'Project Inquiry',
+    'Accept/Reject',
+    'Planning',
+    'Intake (Aufbereitung)',
+    'ProceedOrCancel (accommodate opposing views)',
+    'Project-Revision (communication-further devel)',
+    'Completion'
+  ];
+
+  // Create 7 segments with unique segmentNo per circle
+  const segments = [] as { id: number; title: string }[];
+  for (let i = 0; i < segmentTitles.length; i++) {
+    const s = await prisma.iterationSegment.create({
+      data: {
+        segmentNo: i + 1,
+        title: segmentTitles[i],
+        segmentGroupCircleId: circle.id
+      }
+    });
+    segments.push({ id: s.id, title: s.title });
+  }
+
+  // Create one Task per segment and connect to project (and optionally circle)
+  for (const s of segments) {
+    await prisma.task.create({
+      data: {
+        title: s.title,
+        description: s.title,
+        taskStateId: todoState!.id,
+        projectId: project.id,
+        segmentGroupCircleId: circle.id
+      }
+    });
+  }
+
+  // Assign participants via explicit junctions (Responsible: admin or consumer)
+  if (admin && segments.length > 0) {
+    for (const s of segments) {
+      await prisma.segmentResponsible.upsert({
+        where: { userId_iterationSegmentId: { userId: admin.id, iterationSegmentId: s.id } },
+        update: {},
+        create: { userId: admin.id, iterationSegmentId: s.id }
+      });
+    }
+  }
+  if (consumer && segments.length > 0) {
+    for (const s of segments) {
+      await prisma.segmentStakeholder.upsert({
+        where: { userId_iterationSegmentId: { userId: consumer.id, iterationSegmentId: s.id } },
+        update: {},
+        create: { userId: consumer.id, iterationSegmentId: s.id }
+      });
+    }
+  }
+  if (contributor && segments.length > 0) {
+    for (const s of segments) {
+      await prisma.segmentContributor.upsert({
+        where: { userId_iterationSegmentId: { userId: contributor.id, iterationSegmentId: s.id } },
+        update: {},
+        create: { userId: contributor.id, iterationSegmentId: s.id }
+      });
+    }
+  }
+
+  console.log('Seed completed successfully');
 }
 
 main()
