@@ -1,0 +1,506 @@
+@startuml
+' Layout/visual tweaks
+skinparam linetype ortho
+hide circle
+hide methods
+hide stereotypes
+
+' =====================
+' ENUMS
+' =====================
+enum MainRoleTitle {
+  CUSTOMER
+  CONTRIBUTOR
+}
+
+enum ProjectStateType {
+  DRAFT
+  INQUIRY_PENDING
+  ACCEPTED
+  REJECTED
+  PLANNING
+  INTAKE
+  IN_PROGRESS
+  REVISION
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+}
+
+enum TaskStateType {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum PriorityLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ImpedimentStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum SegmentType {
+  PROJECT_INQUIRY
+  ACCEPT_REJECT
+  PLANNING
+  INTAKE
+  PROCEED_CANCEL
+  PROJECT_REVISION
+  COMPLETION
+  MILESTONE_SPREAD
+  CONTRIBUTOR_EVALUATION
+  WORKSTART
+  SELF_DEFINITION
+}
+
+' =====================
+' ENTITIES
+' =====================
+
+entity "Session" as Session {
+  +id: String <<PK>>
+  userId: Int <<FK>>
+  tokenHash: String
+  createdAt: DateTime
+  expiresAt: DateTime
+  lastUsedAt: DateTime?
+  userAgent: String?
+  ip: String?
+  revokedAt: DateTime?
+}
+
+entity "VerificationToken" as VerificationToken {
+  +id: String <<PK>>
+  userId: Int <<FK>>
+  tokenHash: String
+  type: String
+  expiresAt: DateTime
+  createdAt: DateTime
+}
+
+entity "PasswordResetToken" as PasswordResetToken {
+  +id: String <<PK>>
+  userId: Int <<FK>>
+  tokenHash: String
+  expiresAt: DateTime
+  createdAt: DateTime
+}
+
+entity "Permission" as Permission {
+  +id: Int <<PK>>
+  name: String
+  description: String?
+  category: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "RolePermission" as RolePermission {
+  +id: Int <<PK>>
+  roleId: Int <<FK>>
+  permissionId: Int <<FK>>
+  createdAt: DateTime
+}
+
+entity "Echelon" as Echelon {
+  +id: Int <<PK>>
+  title: String
+  description: String
+  orderLevel: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Role" as Role {
+  +id: Int <<PK>>
+  isMainRole: Boolean
+  mainRoleTitle: MainRoleTitle?
+  parentRoleId: Int? <<FK>>
+  title: String
+  description: String?
+  echelonId: Int <<FK>>
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "User" as User {
+  +id: Int <<PK>>
+  email: String
+  forename: String?
+  surname: String?
+  username: String?
+  password: String
+  isActive: Boolean
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "UserRole" as UserRole {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  roleId: Int <<FK>>
+  assignedAt: DateTime
+}
+
+entity "Tag" as Tag {
+  +id: String <<PK>>
+  title: String
+  color: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "ProjectState" as ProjectState {
+  +id: String <<PK>>
+  type: ProjectStateType
+  title: String
+  description: String?
+  color: String
+  orderNo: Int
+  isInitial: Boolean
+  isFinal: Boolean
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "TaskState" as TaskState {
+  +id: String <<PK>>
+  type: TaskStateType
+  title: String
+  description: String?
+  color: String
+  orderNo: Int
+  isInitial: Boolean
+  isFinal: Boolean
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Priority" as Priority {
+  +id: String <<PK>>
+  level: PriorityLevel
+  title: String
+  description: String?
+  orderNo: Int
+  color: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Deadline" as Deadline {
+  +id: String <<PK>>
+  title: String
+  description: String?
+  dueDate: DateTime
+  priorityId: String <<FK>>
+  projectId: String? <<FK>>
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "DeadlineTag" as DeadlineTag {
+  +id: Int <<PK>>
+  deadlineId: String <<FK>>
+  tagId: String <<FK>>
+  createdAt: DateTime
+}
+
+entity "Solution" as Solution {
+  +id: Int <<PK>>
+  title: String
+  explanation: String
+  link: String?
+  authorId: Int? <<FK>>
+  category: String?
+  effectiveness: Float?
+  usageCount: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Impediment" as Impediment {
+  +id: Int <<PK>>
+  title: String
+  description: String?
+  status: ImpedimentStatus
+  estimatedHours: Int?
+  actualHours: Int?
+  isDone: Boolean
+  solutionId: Int? <<FK>>
+  assigneeId: Int? <<FK>>
+  taskId: String? <<FK>>
+  similarityScore: Float?
+  mergedIntoId: Int? <<FK>>
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "ImpedimentMedian" as ImpedimentMedian {
+  +id: Int <<PK>>
+  title: String
+  description: String?
+  hasSolution: Boolean
+  solutionId: Int? <<FK>>
+  averageHours: Float?
+  occurrenceCount: Int
+  confidenceScore: Float?
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Task" as Task {
+  +id: String <<PK>>
+  title: String
+  description: String
+  isDone: Boolean
+  taskStateId: String <<FK>>
+  priorityId: String? <<FK>>
+  activeUserId: Int? <<FK>>
+  estimatedHours: Int?
+  actualHours: Int?
+  hasSegmentGroupCircle: Boolean
+  segmentGroupCircleId: Int? <<FK>>
+  projectId: String? <<FK>>
+  parentTaskId: String? <<FK>>
+  dueDate: DateTime?
+  startDate: DateTime?
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "UserTask" as UserTask {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  taskId: String <<FK>>
+  role: String?
+  assignedAt: DateTime
+}
+
+entity "TaskTag" as TaskTag {
+  +id: Int <<PK>>
+  taskId: String <<FK>>
+  tagId: String <<FK>>
+  createdAt: DateTime
+}
+
+entity "IterationSegment" as IterationSegment {
+  +id: Int <<PK>>
+  segmentNo: Int
+  title: String
+  description: String?
+  startSchedule: DateTime?
+  endSchedule: DateTime?
+  dueDate: DateTime?
+  dropDate: DateTime?
+  actualStartDate: DateTime?
+  actualEndDate: DateTime?
+  iterationCount: Int
+  completedIterations: Int
+  isComplete: Boolean
+  estimatedCost: Decimal?
+  actualCost: Decimal?
+  estimatedHours: Int?
+  actualHours: Int?
+  segmentGroupCircleId: Int <<FK>>
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "SegmentGroupCircle" as SegmentGroupCircle {
+  +id: Int <<PK>>
+  orderNo: Int
+  title: String
+  description: String?
+  isProjectManagementCircle: Boolean
+  isInternal: Boolean
+  isFirst: Boolean
+  isActive: Boolean
+  isComplete: Boolean
+  maxIterations: Int
+  currentIteration: Int
+  parentCircleId: Int? <<FK>>
+  estimatedDuration: Int?
+  actualDuration: Int?
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "Project" as Project {
+  +id: String <<PK>>
+  title: String
+  description: String
+  isDone: Boolean
+  currentIterationNumber: Int
+  iterationWarnAt: Int
+  maxIterations: Int?
+  currentSegmentId: Int? <<FK>>
+  projectStateId: String <<FK>>
+  segmentGroupCircleId: Int? <<FK>>
+  activeUserId: Int? <<FK>>
+  estimatedBudget: Decimal?
+  actualCost: Decimal?
+  estimatedHours: Int?
+  actualHours: Int?
+  startDate: DateTime?
+  endDate: DateTime?
+  actualStartDate: DateTime?
+  actualEndDate: DateTime?
+  priority: String?
+  riskLevel: String?
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+entity "ProjectTag" as ProjectTag {
+  +id: Int <<PK>>
+  projectId: String <<FK>>
+  tagId: String <<FK>>
+  createdAt: DateTime
+}
+
+entity "AuditLog" as AuditLog {
+  +id: Int <<PK>>
+  userId: Int? <<FK>>
+  action: String
+  tableName: String
+  recordId: String
+  oldValues: Json?
+  newValues: Json?
+  ipAddress: String?
+  userAgent: String?
+  timestamp: DateTime
+}
+
+entity "SystemSetting" as SystemSetting {
+  +id: Int <<PK>>
+  key: String
+  value: String
+  description: String?
+  category: String?
+  isPublic: Boolean
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+' =====================
+' EXPLICIT M:N RELATIONS FOR SEGMENT ROLES
+' =====================
+
+entity "SegmentStakeholder" as SegmentStakeholder {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  iterationSegmentId: Int <<FK>>
+  assignedAt: DateTime
+}
+
+entity "SegmentResponsible" as SegmentResponsible {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  iterationSegmentId: Int <<FK>>
+  assignedAt: DateTime
+}
+
+entity "SegmentAttendee" as SegmentAttendee {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  iterationSegmentId: Int <<FK>>
+}
+
+entity "SegmentContributor" as SegmentContributor {
+  +id: Int <<PK>>
+  userId: Int <<FK>>
+  iterationSegmentId: Int <<FK>>
+}
+
+entity "ProjectCreator" as ProjectCreator {
+  userId: Int <<FK>>
+  projectId: String <<FK>>
+  <<implicit junction table>>
+}
+
+' =====================
+' RELATIONSHIPS
+' =====================
+
+' Permission System
+Role ||--o{ RolePermission
+RolePermission }o--|| Permission
+User ||--o{ UserRole
+UserRole }o--|| Role
+
+' Hierarchical Relations
+Echelon ||--o{ Role
+Role ||--o{ Role : "parent-child"
+SegmentGroupCircle ||--o{ SegmentGroupCircle : "parent-child"
+Task ||--o{ Task : "parent-child"
+
+' State Management
+ProjectState ||--o{ Project
+TaskState ||--o{ Task
+Priority ||--o{ Deadline
+Priority ||--o{ Task
+
+' Tagging System
+Deadline ||--o{ DeadlineTag
+DeadlineTag }o--|| Tag
+Task ||--o{ TaskTag
+TaskTag }o--|| Tag
+Project ||--o{ ProjectTag
+ProjectTag }o--|| Tag
+
+' User-Task Relations
+User ||--o{ UserTask
+UserTask }o--|| Task
+User ||--o{ Task : "active user"
+
+' Solution & Impediment System
+User ||--o{ Solution : "author"
+Solution ||--o{ Impediment
+Solution ||--o{ ImpedimentMedian
+User ||--o{ Impediment : "assignee"
+Task ||--o{ Impediment
+ImpedimentMedian ||--o{ Impediment : "merged into"
+
+' Project Management
+Project ||--o{ Task
+Project ||--o{ Deadline
+User ||--o{ Project : "active user"
+SegmentGroupCircle ||--o{ Project
+SegmentGroupCircle ||--o{ Task
+SegmentGroupCircle ||--o{ IterationSegment
+IterationSegment ||--o{ Project : "current segment"
+
+' Explicit M:N Relations for segment roles
+User ||--o{ SegmentStakeholder
+SegmentStakeholder }o--|| IterationSegment
+User ||--o{ SegmentResponsible
+SegmentResponsible }o--|| IterationSegment
+User ||--o{ SegmentAttendee
+SegmentAttendee }o--|| IterationSegment
+User ||--o{ SegmentContributor
+SegmentContributor }o--|| IterationSegment
+User ||--o{ ProjectCreator
+ProjectCreator }o--|| Project
+
+' Audit System
+User ||--o{ AuditLog
+
+' Authentication entities
+User ||--o{ Session
+User ||--o{ VerificationToken
+User ||--o{ PasswordResetToken
+
+' No relations for SystemSetting (standalone configuration)
+
+@enduml

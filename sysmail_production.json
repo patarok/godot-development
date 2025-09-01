@@ -1,0 +1,23 @@
+{
+  "smtp": {
+    "host": "smtp.bplaced.net",
+    "port": 465,
+    "secure": true,
+    "auth": { "user": "peter.patoschka@lichtstrom-fotografie.at", "pass": "<REPLACE_WITH_REAL_PASSWORD>" },
+    "from": "foo.bar@hoster.at"
+  },
+  "imap": {
+    "host": "imap.bplaced.net",
+    "port": 993,
+    "secure": true,
+    "user": "peter.patoschka@lichtstrom-fotografie.at",
+    "pass": "<REPLACE_WITH_REAL_PASSWORD>"
+  },
+  "pop3": {
+    "host": "pop.bplaced.net",
+    "port": 995,
+    "secure": true,
+    "user": "peter.patoschka@lichtstrom-fotografie.at",
+    "pass": "<REPLACE_WITH_REAL_PASSWORD>"
+  }
+}

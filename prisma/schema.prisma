@@ -62,20 +62,6 @@ enum ImpedimentStatus {
   CANCELLED
 }
 
-enum SegmentType {
-  PROJECT_INQUIRY
-  ACCEPT_REJECT
-  PLANNING
-  INTAKE
-  PROCEED_CANCEL
-  PROJECT_REVISION
-  COMPLETION
-  MILESTONE_SPREAD
-  CONTRIBUTOR_EVALUATION
-  WORKSTART
-  SELF_DEFINITION
-}
-
 // Permission system for granular access control
 // App constraint: Permissions should be cached and validated on each request
 model Permission {
@@ -145,28 +131,31 @@ model Role {
 // User system with multi-role support
 // App constraint: Email validation, password hashing, token expiration management
 model User {
-  id                  Int                @id @default(autoincrement())
-  email               String             @unique
+  id                  Int                  @id @default(autoincrement())
+  email               String               @unique
   forename            String?
   surname             String?
-  username            String?            @unique
-  password            String // App: Hash with bcrypt
-  token               String?            @unique // Auth tokens
-  tokenExpiresAt      DateTime? // App constraint: Implement token expiration
-  isActive            Boolean            @default(true)
+  username            String?              @unique
+  password            String // App: Hash with bcrypt or Argon2id
+  isActive            Boolean              @default(true)
   roles               UserRole[]
   tasks               UserTask[] // Many-to-many with tasks
-  activeTasks         Task[]             @relation("ActiveUserOnTask")
-  createdProjects     Project[]          @relation("ProjectCreator")
-  activeProjects      Project[]          @relation("ActiveUserOnProject")
-  segmentStakeholders IterationSegment[] @relation("SegmentStakeholders")
-  segmentResponsibles IterationSegment[] @relation("SegmentResponsibles")
-  segmentAttendees    IterationSegment[] @relation("SegmentAttendees")
-  segmentContributors IterationSegment[] @relation("SegmentContributors")
-  impedimentAssignees Impediment[]       @relation("ImpedimentAssignee")
-  solutionAuthors     Solution[]         @relation("SolutionAuthor")
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  activeTasks         Task[]               @relation("ActiveUserOnTask")
+  createdProjects     Project[]            @relation("ProjectCreator")
+  activeProjects      Project[]            @relation("ActiveUserOnProject")
+  // Segment role memberships via explicit junction tables
+  segmentStakeholders SegmentStakeholder[] // should be 'segmentStakeholderIn'
+  segmentResponsibles SegmentResponsible[]
+  segmentAttendees    SegmentAttendee[]
+  segmentContributors SegmentContributor[]
+  impedimentAssignees Impediment[]         @relation("ImpedimentAssignee")
+  solutionAuthors     Solution[]           @relation("SolutionAuthor")
+  sessions            Session[]
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   @@index([email])
   @@index([username])
@@ -448,36 +437,36 @@ model TaskTag {
 // Complex iteration segment system
 // App constraint: Sophisticated workflow engine with predefined and custom segments
 model IterationSegment {
-  id                   Int                @id @default(autoincrement())
+  id                   Int                  @id @default(autoincrement())
   segmentNo            Int // Order within the circle
-  segmentType          SegmentType? // Predefined segment types
+  // segmentType removed: segment behavior defined by title/description and app logic
   title                String
   description          String?
-  stakeholders         User[]             @relation("SegmentStakeholders")
-  responsibles         User[]             @relation("SegmentResponsibles")
-  attendees            User[]             @relation("SegmentAttendees")
-  contributors         User[]             @relation("SegmentContributors")
+  stakeholders         SegmentStakeholder[]
+  responsibles         SegmentResponsible[]
+  attendees            SegmentAttendee[]
+  contributors         SegmentContributor[]
   startSchedule        DateTime?
   endSchedule          DateTime?
   dueDate              DateTime?
   dropDate             DateTime? // Deadline for dropping the segment
   actualStartDate      DateTime?
   actualEndDate        DateTime?
-  iterationCount       Int                @default(1) // How many times this segment was iterated
-  completedIterations  Int                @default(0) // How many iterations completed
-  isComplete           Boolean            @default(false)
-  estimatedCost        Decimal?           @db.Money
-  actualCost           Decimal?           @db.Money
+  iterationCount       Int                  @default(1) // How many times this segment was iterated
+  completedIterations  Int                  @default(0) // How many iterations completed
+  isComplete           Boolean              @default(false)
+  estimatedCost        Decimal?             @db.Money
+  actualCost           Decimal?             @db.Money
   estimatedHours       Int?
   actualHours          Int?
   segmentGroupCircleId Int
-  segmentGroupCircle   SegmentGroupCircle @relation(fields: [segmentGroupCircleId], references: [id], onDelete: Cascade)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  segmentGroupCircle   SegmentGroupCircle   @relation(fields: [segmentGroupCircleId], references: [id], onDelete: Cascade)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  currentForProjects   Project[]
 
   @@index([segmentGroupCircleId])
   @@index([segmentNo])
-  @@index([segmentType])
   @@index([isComplete])
   @@index([dueDate])
 }
@@ -611,4 +600,97 @@ model SystemSetting {
 
   @@index([category])
   @@index([isPublic])
+}
+
+// Explicit segment role junction tables
+model SegmentStakeholder {
+  id                 Int              @id @default(autoincrement())
+  userId             Int
+  iterationSegmentId Int
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment            IterationSegment @relation(fields: [iterationSegmentId], references: [id], onDelete: Cascade)
+  assignedAt         DateTime         @default(now())
+
+  @@unique([userId, iterationSegmentId])
+  @@index([userId])
+  @@index([iterationSegmentId])
+}
+
+model SegmentResponsible {
+  id                 Int              @id @default(autoincrement())
+  userId             Int
+  iterationSegmentId Int
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment            IterationSegment @relation(fields: [iterationSegmentId], references: [id], onDelete: Cascade)
+  assignedAt         DateTime         @default(now())
+
+  @@unique([userId, iterationSegmentId])
+  @@index([userId])
+  @@index([iterationSegmentId])
+}
+
+model SegmentAttendee {
+  id                 Int              @id @default(autoincrement())
+  userId             Int
+  iterationSegmentId Int
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment            IterationSegment @relation(fields: [iterationSegmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, iterationSegmentId])
+  @@index([userId])
+  @@index([iterationSegmentId])
+}
+
+model SegmentContributor {
+  id                 Int              @id @default(autoincrement())
+  userId             Int
+  iterationSegmentId Int
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment            IterationSegment @relation(fields: [iterationSegmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, iterationSegmentId])
+  @@index([userId])
+  @@index([iterationSegmentId])
+}
+
+// Auth: sessions and tokens (store only hashed tokens)
+model Session {
+  id         String    @id @default(cuid())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  lastUsedAt DateTime?
+  userAgent  String?
+  ip         String?
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  type      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }

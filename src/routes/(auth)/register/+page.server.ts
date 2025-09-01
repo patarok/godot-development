@@ -1,26 +1,44 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { hash } from '@node-rs/argon2';
-import { getUser, upsertUser } from '$lib/server/userStorage';
+import { getUser, getUserByEmail, upsertUser } from '$lib/server/userStorage';
 
 export const actions = {
     default: async ({ request }) => {
-        const { username, password } = Object.fromEntries(await request.formData()) as Record<string, string>;
+        const { email, forename, surname, username, password, role } = Object.fromEntries(await request.formData()) as Record<string, string>;
 
-        if (!username || !password) {
+        if (!email || !username || !password) {
             return fail(400, {
                 error: true,
-                message: '<strong>Username</strong> and/or <strong>password</strong> can not be blank.'
+                message: '<strong>Email</strong>, <strong>username</strong> and <strong>password</strong> can not be blank.'
             });
         }
 
         const trimmedUsername = username.trim();
+        const normalizedEmail = email.trim().toLowerCase();
+        const emailValid = /.+@.+\..+/.test(normalizedEmail);
+        if (!emailValid) {
+            return fail(400, { error: true, message: 'Please provide a valid <strong>email</strong>.' });
+        }
 
         const existing = await getUser(trimmedUsername);
         if (existing) {
             return fail(400, {
                 error: true,
                 message: '<strong>Username</strong> already exists.'
+            });
+        }
+
+        const roleValue = role?.trim().toLowerCase();
+        if (roleValue !== 'admin' && roleValue !== 'user') {
+            return fail(400, { error: true, message: 'Invalid role selected.' });
+        }
+
+        const existingEmail = await getUserByEmail(normalizedEmail);
+        if (existingEmail) {
+            return fail(400, {
+                error: true,
+                message: '<strong>Email</strong> already in use.'
             });
         }
 
@@ -31,7 +49,7 @@ export const actions = {
             parallelism: 1
         });
 
-        await upsertUser({ username: trimmedUsername, password: hashedPassword, token: '' });
+        await upsertUser({ email: normalizedEmail, forename: forename?.trim() || undefined, surname: surname?.trim() || undefined, username: trimmedUsername, role: roleValue as 'admin' | 'user', password: hashedPassword });
 
         redirect(303, '/login');
     }

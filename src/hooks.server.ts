@@ -7,7 +7,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const token = event.cookies.get('session');
     const u = await getUserByToken(token);
 
-    event.locals.user = u ? { username: u.username, token: u.token } : null;
+   	event.locals.user = u ? { username: u.username, email: u.email, forename: u.forename, surname: u.surname, role: u.role } : null;
 
     return resolve(event);
 };
