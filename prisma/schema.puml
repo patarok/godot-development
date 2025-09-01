@@ -6,67 +6,54 @@ hide methods
 hide stereotypes
 
 ' =====================
-' ENUMS
+' LOOKUP ENTITIES (replace enums)
 ' =====================
-enum MainRoleTitle {
-  CUSTOMER
-  CONTRIBUTOR
+entity "MainRoleTitleCfg" as MainRoleTitleCfg {
+  +id: Int <<PK>>
+  key: String
+  title: String
 }
 
-enum ProjectStateType {
-  DRAFT
-  INQUIRY_PENDING
-  ACCEPTED
-  REJECTED
-  PLANNING
-  INTAKE
-  IN_PROGRESS
-  REVISION
-  COMPLETED
-  CANCELLED
-  ON_HOLD
+entity "ProjectStateKind" as ProjectStateKind {
+  +id: Int <<PK>>
+  key: String
+  title: String
+  orderNo: Int?
 }
 
-enum TaskStateType {
-  TODO
-  IN_PROGRESS
-  REVIEW
-  BLOCKED
-  DONE
-  CANCELLED
+entity "TaskStateKind" as TaskStateKind {
+  +id: Int <<PK>>
+  key: String
+  title: String
+  orderNo: Int?
 }
 
-enum PriorityLevel {
-  CRITICAL
-  HIGH
-  MEDIUM
-  LOW
+entity "PriorityLevelCfg" as PriorityLevelCfg {
+  +id: Int <<PK>>
+  key: String
+  title: String
+  orderNo: Int
 }
 
-enum ImpedimentStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CANCELLED
-}
-
-enum SegmentType {
-  PROJECT_INQUIRY
-  ACCEPT_REJECT
-  PLANNING
-  INTAKE
-  PROCEED_CANCEL
-  PROJECT_REVISION
-  COMPLETION
-  MILESTONE_SPREAD
-  CONTRIBUTOR_EVALUATION
-  WORKSTART
-  SELF_DEFINITION
+entity "ImpedimentStatusCfg" as ImpedimentStatusCfg {
+  +id: Int <<PK>>
+  key: String
+  title: String
+  orderNo: Int?
 }
 
 ' =====================
 ' ENTITIES
 ' =====================
+
+entity "ProjectCircle" as ProjectCircle {
+  +id: Int <<PK>>
+  projectId: String <<FK>>
+  circleId: Int <<FK>>
+  orderNo: Int
+  isCurrent: Boolean
+  createdAt: DateTime
+}
 
 entity "Session" as Session {
   +id: String <<PK>>
@@ -125,10 +112,10 @@ entity "Echelon" as Echelon {
 entity "Role" as Role {
   +id: Int <<PK>>
   isMainRole: Boolean
-  mainRoleTitle: MainRoleTitle?
-  parentRoleId: Int? <<FK>>
+  mainRoleTitleId: Int? <<FK>>
   title: String
   description: String?
+  parentRoleId: Int? <<FK>>
   echelonId: Int <<FK>>
   createdAt: DateTime
   updatedAt: DateTime
@@ -163,7 +150,7 @@ entity "Tag" as Tag {
 
 entity "ProjectState" as ProjectState {
   +id: String <<PK>>
-  type: ProjectStateType
+  kindId: Int <<FK>>
   title: String
   description: String?
   color: String
@@ -176,7 +163,7 @@ entity "ProjectState" as ProjectState {
 
 entity "TaskState" as TaskState {
   +id: String <<PK>>
-  type: TaskStateType
+  kindId: Int <<FK>>
   title: String
   description: String?
   color: String
@@ -189,7 +176,7 @@ entity "TaskState" as TaskState {
 
 entity "Priority" as Priority {
   +id: String <<PK>>
-  level: PriorityLevel
+  kindId: Int <<FK>>
   title: String
   description: String?
   orderNo: Int
@@ -233,7 +220,7 @@ entity "Impediment" as Impediment {
   +id: Int <<PK>>
   title: String
   description: String?
-  status: ImpedimentStatus
+  statusId: Int <<FK>>
   estimatedHours: Int?
   actualHours: Int?
   isDone: Boolean
@@ -424,9 +411,12 @@ entity "SegmentContributor" as SegmentContributor {
 }
 
 entity "ProjectCreator" as ProjectCreator {
+  +id: Int <<PK>>
   userId: Int <<FK>>
   projectId: String <<FK>>
-  <<implicit junction table>>
+  role: String?
+  isPrimary: Boolean
+  createdAt: DateTime
 }
 
 ' =====================
@@ -438,6 +428,7 @@ Role ||--o{ RolePermission
 RolePermission }o--|| Permission
 User ||--o{ UserRole
 UserRole }o--|| Role
+MainRoleTitleCfg ||--o{ Role
 
 ' Hierarchical Relations
 Echelon ||--o{ Role
@@ -446,6 +437,10 @@ SegmentGroupCircle ||--o{ SegmentGroupCircle : "parent-child"
 Task ||--o{ Task : "parent-child"
 
 ' State Management
+ProjectStateKind ||--o{ ProjectState
+TaskStateKind ||--o{ TaskState
+PriorityLevelCfg ||--o{ Priority
+ImpedimentStatusCfg ||--o{ Impediment
 ProjectState ||--o{ Project
 TaskState ||--o{ Task
 Priority ||--o{ Deadline
@@ -476,7 +471,8 @@ ImpedimentMedian ||--o{ Impediment : "merged into"
 Project ||--o{ Task
 Project ||--o{ Deadline
 User ||--o{ Project : "active user"
-SegmentGroupCircle ||--o{ Project
+Project ||--o{ ProjectCircle
+ProjectCircle }o--|| SegmentGroupCircle
 SegmentGroupCircle ||--o{ Task
 SegmentGroupCircle ||--o{ IterationSegment
 IterationSegment ||--o{ Project : "current segment"

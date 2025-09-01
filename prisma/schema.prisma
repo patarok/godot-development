@@ -19,47 +19,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Native PostgreSQL enums for better performance and type safety
-enum MainRoleTitle {
-  CUSTOMER
-  CONTRIBUTOR
+// Config/lookup tables instead of enums for flexibility across tenants/workspaces
+model MainRoleTitleCfg {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique // e.g., CUSTOMER, CONTRIBUTOR
+  title     String
+  roles     Role[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-enum ProjectStateType {
-  DRAFT
-  INQUIRY_PENDING
-  ACCEPTED
-  REJECTED
-  PLANNING
-  INTAKE
-  IN_PROGRESS
-  REVISION
-  COMPLETED
-  CANCELLED
-  ON_HOLD
+model ProjectStateKind {
+  id        Int            @id @default(autoincrement())
+  key       String         @unique // e.g., DRAFT, IN_PROGRESS, COMPLETED
+  title     String
+  orderNo   Int?           @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  states    ProjectState[]
 }
 
-enum TaskStateType {
-  TODO
-  IN_PROGRESS
-  REVIEW
-  BLOCKED
-  DONE
-  CANCELLED
+model TaskStateKind {
+  id        Int         @id @default(autoincrement())
+  key       String      @unique // e.g., TODO, IN_PROGRESS, DONE
+  title     String
+  orderNo   Int?        @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  states    TaskState[]
 }
 
-enum PriorityLevel {
-  CRITICAL
-  HIGH
-  MEDIUM
-  LOW
+model PriorityLevelCfg {
+  id         Int        @id @default(autoincrement())
+  key        String     @unique // e.g., CRITICAL, HIGH, MEDIUM, LOW
+  title      String
+  orderNo    Int        @unique // 1..n for display
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  priorities Priority[]
 }
 
-enum ImpedimentStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CANCELLED
+model ImpedimentStatusCfg {
+  id          Int          @id @default(autoincrement())
+  key         String       @unique // e.g., OPEN, RESOLVED
+  title       String
+  orderNo     Int?         @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  impediments Impediment[]
 }
 
 // Permission system for granular access control
@@ -107,25 +114,27 @@ model Echelon {
 // Complex role system supporting both main roles and sub-roles
 // App constraint: mainRoleType self-reference must prevent infinite loops
 model Role {
-  id              Int              @id @default(autoincrement())
-  isMainRole      Boolean          @default(false)
-  mainRoleTitle   MainRoleTitle?
+  id              Int               @id @default(autoincrement())
+  isMainRole      Boolean           @default(false)
+  mainRoleTitleId Int?
+  mainRoleTitle   MainRoleTitleCfg? @relation(fields: [mainRoleTitleId], references: [id])
   parentRoleId    Int? // Self-reference for role hierarchy
-  parentRole      Role?            @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
-  subRoles        Role[]           @relation("RoleHierarchy")
+  parentRole      Role?             @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  subRoles        Role[]            @relation("RoleHierarchy")
   title           String
   description     String?
   echelonId       Int
-  echelon         Echelon          @relation(fields: [echelonId], references: [id])
+  echelon         Echelon           @relation(fields: [echelonId], references: [id])
   rolePermissions RolePermission[]
   users           UserRole[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([isMainRole])
-  @@index([mainRoleTitle])
+  @@index([mainRoleTitleId])
   @@index([echelonId])
 }
+
 // Migration note: Add CHECK constraint to ensure mainRoleTitle is only set when isMainRole is true
 
 // User system with multi-role support
@@ -141,7 +150,7 @@ model User {
   roles               UserRole[]
   tasks               UserTask[] // Many-to-many with tasks
   activeTasks         Task[]               @relation("ActiveUserOnTask")
-  createdProjects     Project[]            @relation("ProjectCreator")
+  createdProjects     ProjectCreator[]
   activeProjects      Project[]            @relation("ActiveUserOnProject")
   // Segment role memberships via explicit junction tables
   segmentStakeholders SegmentStakeholder[] // should be 'segmentStakeholderIn'
@@ -190,13 +199,15 @@ model Tag {
 
   @@index([title])
 }
+
 // Migration note: Add CHECK constraint for HEX color validation: color ~ '^#[0-9A-Fa-f]{6}$'
 
 // Project state management
 // App constraint: State transitions should follow defined workflow rules
 model ProjectState {
   id          String           @id @default(cuid())
-  type        ProjectStateType @default(DRAFT)
+  kindId      Int
+  kind        ProjectStateKind @relation(fields: [kindId], references: [id])
   title       String
   description String?
   color       String // HEX color for UI
@@ -208,16 +219,18 @@ model ProjectState {
   updatedAt   DateTime         @updatedAt
 
   @@unique([orderNo])
-  @@index([type])
+  @@index([kindId])
   @@index([orderNo])
 }
+
 // Migration note: Add CHECK constraint for HEX color validation
 
 // Task state management
 // App constraint: State transitions should follow Kanban workflow
 model TaskState {
   id          String        @id @default(cuid())
-  type        TaskStateType @default(TODO)
+  kindId      Int
+  kind        TaskStateKind @relation(fields: [kindId], references: [id])
   title       String
   description String?
   color       String // HEX color for UI
@@ -229,29 +242,31 @@ model TaskState {
   updatedAt   DateTime      @updatedAt
 
   @@unique([orderNo])
-  @@index([type])
+  @@index([kindId])
   @@index([orderNo])
 }
+
 // Migration note: Add CHECK constraint for HEX color validation
 
 // Priority system with ordering
 // App constraint: Priority levels should be consistent across the application
 model Priority {
-  id          String        @id @default(cuid())
-  level       PriorityLevel
+  id          String           @id @default(cuid())
+  kindId      Int
+  kind        PriorityLevelCfg @relation(fields: [kindId], references: [id])
   title       String
   description String?
-  orderNo     Int           @unique // 1=Critical, 2=High, 3=Medium, 4=Low
+  orderNo     Int              @unique // display order (can duplicate kind.orderNo if desired)
   color       String // HEX color for UI
   deadlines   Deadline[]
   tasks       Task[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  @@unique([level])
   @@index([orderNo])
-  @@index([level])
+  @@index([kindId])
 }
+
 // Migration note: Add CHECK constraint for HEX color validation
 
 // Deadline management with priority and tagging
@@ -308,37 +323,40 @@ model Solution {
   @@index([category])
   @@index([effectiveness])
 }
+
 // Migration note: Add GIN index for full-text search on explanation field
 // CREATE INDEX CONCURRENTLY idx_solution_explanation_fulltext ON "Solution" USING gin(to_tsvector('english', explanation));
 
 // Individual impediment tracking
 // App constraint: AI-powered similar impediment detection for merging
 model Impediment {
-  id              Int               @id @default(autoincrement())
+  id              Int                 @id @default(autoincrement())
   title           String
   description     String? // Full-text searchable
-  status          ImpedimentStatus  @default(OPEN)
+  statusId        Int
+  status          ImpedimentStatusCfg @relation(fields: [statusId], references: [id])
   estimatedHours  Int? // Original estimate in hours
   actualHours     Int? // Actual time spent
-  isDone          Boolean           @default(false)
+  isDone          Boolean             @default(false)
   solutionId      Int?
-  solution        Solution?         @relation(fields: [solutionId], references: [id])
+  solution        Solution?           @relation(fields: [solutionId], references: [id])
   assigneeId      Int?
-  assignee        User?             @relation("ImpedimentAssignee", fields: [assigneeId], references: [id])
+  assignee        User?               @relation("ImpedimentAssignee", fields: [assigneeId], references: [id])
   taskId          String?
-  task            Task?             @relation(fields: [taskId], references: [id])
+  task            Task?               @relation(fields: [taskId], references: [id])
   // AI matching fields
   similarityScore Float? // For AI-powered matching
   mergedIntoId    Int? // Reference to ImpedimentMedian if merged
-  mergedInto      ImpedimentMedian? @relation(fields: [mergedIntoId], references: [id])
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  mergedInto      ImpedimentMedian?   @relation(fields: [mergedIntoId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
-  @@index([status])
+  @@index([statusId])
   @@index([assigneeId])
   @@index([taskId])
   @@index([mergedIntoId])
 }
+
 // Migration note: Add GIN index for full-text search on title and description
 // CREATE INDEX CONCURRENTLY idx_impediment_fulltext ON "Impediment" USING gin(to_tsvector('english', title || ' ' || COALESCE(description, '')));
 
@@ -361,6 +379,7 @@ model ImpedimentMedian {
   @@index([hasSolution])
   @@index([occurrenceCount])
 }
+
 // Migration note: Add GIN index for full-text search
 // CREATE INDEX CONCURRENTLY idx_impediment_median_fulltext ON "ImpedimentMedian" USING gin(to_tsvector('english', title || ' ' || COALESCE(description, '')));
 
@@ -394,6 +413,8 @@ model Task {
   updatedAt             DateTime            @updatedAt
   dueDate               DateTime?
   startDate             DateTime?
+  IterationSegment      IterationSegment?   @relation(fields: [iterationSegmentId], references: [id])
+  iterationSegmentId    Int?
 
   @@index([taskStateId])
   @@index([activeUserId])
@@ -402,6 +423,7 @@ model Task {
   @@index([isDone])
   @@index([dueDate])
 }
+
 // Migration note: Add GIN index for full-text search on title and description
 // CREATE INDEX CONCURRENTLY idx_task_fulltext ON "Task" USING gin(to_tsvector('english', title || ' ' || description));
 
@@ -452,6 +474,7 @@ model IterationSegment {
   dropDate             DateTime? // Deadline for dropping the segment
   actualStartDate      DateTime?
   actualEndDate        DateTime?
+  tasks                Task[]
   iterationCount       Int                  @default(1) // How many times this segment was iterated
   completedIterations  Int                  @default(0) // How many iterations completed
   isComplete           Boolean              @default(false)
@@ -465,6 +488,7 @@ model IterationSegment {
   updatedAt            DateTime             @updatedAt
   currentForProjects   Project[]
 
+  @@unique([segmentGroupCircleId, segmentNo])
   @@index([segmentGroupCircleId])
   @@index([segmentNo])
   @@index([isComplete])
@@ -487,7 +511,7 @@ model SegmentGroupCircle {
   maxIterations             Int                  @default(1) // Maximum allowed iterations
   currentIteration          Int                  @default(1)
   tasks                     Task[]
-  projects                  Project[]
+  projectLinks              ProjectCircle[]
   parentCircleId            Int? // For nested circles
   parentCircle              SegmentGroupCircle?  @relation("CircleHierarchy", fields: [parentCircleId], references: [id])
   childCircles              SegmentGroupCircle[] @relation("CircleHierarchy")
@@ -503,32 +527,32 @@ model SegmentGroupCircle {
   @@index([isActive])
   @@index([parentCircleId])
 }
+
 // Migration note: Add CHECK constraint to ensure isInternal and isProjectManagementCircle are not both true
 
 // Main project management entity
 // App constraint: Complex project lifecycle management with multiple workflow paths
 model Project {
-  id                     String              @id @default(cuid())
+  id                     String            @id @default(cuid())
   title                  String
   description            String // Full-text searchable
   deadlines              Deadline[]
-  isDone                 Boolean             @default(false)
-  currentIterationNumber Int                 @default(1)
-  iterationWarnAt        Int                 @default(3) // Warn when approaching this iteration
+  isDone                 Boolean           @default(false)
+  currentIterationNumber Int               @default(1)
+  iterationWarnAt        Int               @default(3) // Warn when approaching this iteration
   maxIterations          Int? // Maximum allowed iterations
   currentSegmentId       Int? // Current active segment
-  currentSegment         IterationSegment?   @relation(fields: [currentSegmentId], references: [id])
+  currentSegment         IterationSegment? @relation(fields: [currentSegmentId], references: [id])
   projectStateId         String
-  projectState           ProjectState        @relation(fields: [projectStateId], references: [id])
-  segmentGroupCircleId   Int?
-  segmentGroupCircle     SegmentGroupCircle? @relation(fields: [segmentGroupCircleId], references: [id])
-  creators               User[]              @relation("ProjectCreator")
+  projectState           ProjectState      @relation(fields: [projectStateId], references: [id])
+  projectCircles         ProjectCircle[]
+  creators               ProjectCreator[]
   activeUserId           Int?
-  activeUser             User?               @relation("ActiveUserOnProject", fields: [activeUserId], references: [id])
+  activeUser             User?             @relation("ActiveUserOnProject", fields: [activeUserId], references: [id])
   tags                   ProjectTag[]
   tasks                  Task[]
-  estimatedBudget        Decimal?            @db.Money
-  actualCost             Decimal?            @db.Money
+  estimatedBudget        Decimal?          @db.Money
+  actualCost             Decimal?          @db.Money
   estimatedHours         Int?
   actualHours            Int?
   startDate              DateTime?
@@ -537,19 +561,54 @@ model Project {
   actualEndDate          DateTime?
   priority               String? // Project priority level
   riskLevel              String? // Risk assessment
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
   @@index([projectStateId])
   @@index([activeUserId])
-  @@index([segmentGroupCircleId])
   @@index([isDone])
   @@index([currentIterationNumber])
   @@index([startDate])
   @@index([endDate])
 }
+
 // Migration note: Add GIN index for full-text search on title and description
 // CREATE INDEX CONCURRENTLY idx_project_fulltext ON "Project" USING gin(to_tsvector('english', title || ' ' || description));
+
+// Explicit Project ↔ User creators junction table
+model ProjectCreator {
+  id        Int      @id @default(autoincrement())
+  projectId String
+  userId    Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// Project ↔ SegmentGroupCircle junction for multiple circles per project
+model ProjectCircle {
+  id        Int      @id @default(autoincrement())
+  projectId String
+  circleId  Int
+  orderNo   Int
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  circle  SegmentGroupCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, circleId])
+  @@unique([projectId, orderNo])
+  @@index([projectId])
+  @@index([circleId])
+  @@index([isCurrent])
+}
 
 // Junction table for project-tag relationship
 model ProjectTag {
@@ -585,6 +644,7 @@ model AuditLog {
   @@index([recordId])
   @@index([timestamp])
 }
+
 // Migration note: Consider partitioning this table by timestamp for better performance
 
 // System settings for application configuration
