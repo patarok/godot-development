@@ -1,7 +1,13 @@
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { hash } from '@node-rs/argon2';
 
-const prisma = new PrismaClient();
+const connectionString = `${process.env.DATABASE_URL}`;
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
+
+//const prisma = new PrismaClient({ datasources: {  db: { url: "postgresql://app_user:app_pass@db:5432/app_db" } } });
 
 async function main() {
   // 1) Config/lookup kinds (idempotent)
@@ -192,7 +198,7 @@ async function main() {
       projectStateId: draftState!.id,
       iterationWarnAt: 3,
       maxIterations: 5,
-      estimatedBudget: 10000 as any,
+      estimatedBudget: 1,
       priority: 'High',
       riskLevel: 'Medium'
     }

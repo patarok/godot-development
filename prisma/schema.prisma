@@ -10,8 +10,8 @@
 // - Complex project state management with multiple workflow paths
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {

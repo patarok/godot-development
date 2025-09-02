@@ -29,9 +29,11 @@
     <div>
       <label>Role</label>
       <select name="role" required>
-        <option value="user" selected={data.user.role==='user'}>User</option>
-        <option value="admin" selected={data.user.role==='admin'}>Admin</option>
+        <option value="Admin" selected={data.user.roles?.includes('Admin')}>Admin</option>
+        <option value="Consumer" selected={data.user.roles?.includes('Consumer')}>Consumer</option>
+        <option value="Contributor" selected={data.user.roles?.includes('Contributor')}>Contributor</option>
       </select>
+      <small>Pick one main role. Admin overrides main roles.</small>
     </div>
     <div>
       <label>Active</label>
