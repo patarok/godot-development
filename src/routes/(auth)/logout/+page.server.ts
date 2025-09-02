@@ -1,9 +1,14 @@
-import { redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
+import { redirect } from '@sveltejs/kit';
+import { initializeDatabase } from '$lib/server/database/database-connection-init';
+import { revokeSession } from '$lib/server/services/authService';
 
-export const actions = {
+export const actions: Actions = {
     default: async ({ cookies }) => {
+        await initializeDatabase();
+        const token = cookies.get('session');
+        if (token) await revokeSession(token);
         cookies.delete('session', { path: '/' });
-        redirect(302, '/');
+        throw redirect(303, '/');
     }
-} satisfies Actions;
+};

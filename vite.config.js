@@ -18,8 +18,15 @@ export default defineConfig( ({mode}) => {
 	},
 	define: {
 		// Make environment variables available to the app (server-side)
-		'process.env.DATABASE_URL': JSON.stringify(env.DATABASE_URL)
-	}
+		'process.env.DATABASE_URL': JSON.stringify(env.DATABASE_URL),
+		'import.meta.env.VITE_DB_LOGGING': 'true'
+	},
+	optimizeDeps: {
+			exclude: ['typeorm', 'reflect-metadata'], // Exclude from Vite optimization
+	},
+	ssr: {
+			external: ['typeorm', 'reflect-metadata'], // Treat as external for SSR
+	},
 	}
 
 });

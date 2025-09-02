@@ -1,15 +1,15 @@
 import type { Actions } from './$types';
-import { createPasswordResetToken } from '$lib/server/userStorage';
+import { fail } from '@sveltejs/kit';
+import { initializeDatabase } from '$lib/server/database/database-connection-init';
+import { issuePasswordReset } from '$lib/server/services/authService';
 
 export const actions: Actions = {
-    default: async ({ request, url }) => {
-        const { username } = Object.fromEntries(await request.formData()) as Record<string, string>;
-        // Create token but do not leak existence
-        const result = await createPasswordResetToken(username);
-        if (result) {
-            const link = `${url.origin}/(auth)/reset?token=${encodeURIComponent(result.token)}`;
-            console.log('Password reset link:', link, 'expiresAt:', result.expiresAt.toISOString());
-        }
-        return { ok: true, message: 'If the user exists, a reset link has been generated.' };
+    default: async ({ request }) => {
+        await initializeDatabase();
+        const form = await request.formData();
+        const identifier = String(form.get('identifier') ?? '');
+        if (!identifier) return fail(400, { message: 'Missing email/username' });
+        await issuePasswordReset(identifier);
+        return { message: 'If the account exists, a reset email has been sent.' };
     }
 };

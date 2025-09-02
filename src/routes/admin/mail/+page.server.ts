@@ -1,5 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { listUsers } from '$lib/server/userStorage';
+import { initializeDatabase } from '$lib/server/database/database-connection-init';
+import { AppDataSource } from '$lib/server/database/config/datasource';
+import { User } from '$lib/server/database/entities/user/User';
 
 // For now, fetch from Mailhog HTTP API
 async function fetchMailhogMessages(): Promise<any[]> {
@@ -15,7 +17,11 @@ async function fetchMailhogMessages(): Promise<any[]> {
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user || locals.user.role !== 'admin') return { notAdmin: true } as any;
-  const [users, messages] = await Promise.all([listUsers(), fetchMailhogMessages()]);
+  await initializeDatabase();
+  const [users, messages] = await Promise.all([
+    AppDataSource.getRepository(User).find({ order: { createdAt: 'DESC' } as any }),
+    fetchMailhogMessages()
+  ]);
   // Normalize messages list for UI
   const mails = messages.map((m: any) => ({
     id: m.ID,
