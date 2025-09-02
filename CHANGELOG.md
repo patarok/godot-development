@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/patarok/godot-development/compare/v2.0.0...v2.1.0) (2025-09-02)
+
+
+### Features
+
+* **db,entities,pages:** add TypeORM, adds/edits entities, modifies ([5de742c](https://github.com/patarok/godot-development/commit/5de742ca569815de6dcfe4274b424101e1434792))
+
 # [2.0.0](https://github.com/patarok/godot-development/compare/v1.5.3...v2.0.0) (2025-09-01)
 
 
