@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/patarok/godot-development/compare/v2.1.0...v2.1.1) (2025-09-03)
+
+
+### Bug Fixes
+
+* populating user_role now when registering, adds flowchart, renames folder prisma ([4d5bd5d](https://github.com/patarok/godot-development/commit/4d5bd5d6a017275e68c779a555b7f0b937d0903b))
+
 # [2.1.0](https://github.com/patarok/godot-development/compare/v2.0.0...v2.1.0) (2025-09-02)
 
 
