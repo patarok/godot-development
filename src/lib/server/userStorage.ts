@@ -1,3 +1,5 @@
+// DEPRECATED: In-memory/file-based auth store has been replaced by TypeORM-backed DB services in src/lib/server/services/authService.ts.
+// This module remains for reference only and is not used anywhere. It can be safely deleted.
 import fs from 'fs/promises';
 import path from 'path';
 import { createHash, randomBytes, randomUUID } from 'crypto';

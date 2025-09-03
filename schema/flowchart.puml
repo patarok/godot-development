@@ -1,0 +1,76 @@
+@startuml
+skinparam linetype ortho
+skinparam monochrome false
+skinparam defaultFontName JetBrains Mono
+skinparam activity {
+  BackgroundColor<<frontend>> #EEF7FF
+  BackgroundColor<<server>>   #FFF6E5
+  BackgroundColor<<db>>       #F0FFF0
+}
+
+start
+
+:Admin opens /admin/users;
+
+partition "Frontend (SvelteKit)" <<frontend>> {
+  :Fetch User DTO list (GET /api/admin/users?fields=...);
+  :Hydrate UserList store\n(original snapshots + editable state);
+}
+
+repeat
+  :Admin edits a row (inputs change);
+  :Update user model editable state;
+
+  if (Value changed vs original?) then (yes)
+    :Mark field dirty;\nUpdate per-user diff;
+  else (no)
+    :No-op;
+  endif
+
+  if (Admin presses per-row Save icon?) then (yes)
+    :Persist row changes into UserList pending map\n(no server write yet);
+  else (no)
+    :Continue editing;
+  endif
+
+repeat while (More rows to edit?)
+
+if (Admin clicks "Commit user changes"?) then (yes)
+  :Compute diffs for all dirty users;\nAttach version/updatedAt per item;
+  :POST /api/admin/users/batch\nbody: [{id, version, patch}, ...];
+
+  partition "Server (SvelteKit + Domain)" <<server>> {
+    :Authorize admin via hooks.locals.user.role;
+    :Validate payload (Zod) -> if invalid, 400 fail;
+
+    :Choose batch strategy;
+    if (Partial success per item?) then (yes)
+      :Process each item:\n- Begin tx (or reuse UoW)\n- Load current user by id\n- Check version\n- Apply validations\n- Save via repository\n- Collect result\n- Commit/rollback tx;
+    else (no)
+      :All-or-nothing strategy:\n- Begin single tx\n- Process items sequentially\n- On first error -> rollback & fail all\n- Commit if all pass;
+    endif
+
+    :Respond with array of item results\n{ id, status: ok|error|conflict, message?, updatedDto?, newVersion? };
+  }
+
+  partition "Frontend" <<frontend>> {
+    if (HTTP 200?) then (yes)
+      :For each result item:;
+      if (status == ok) then (yes)
+        :Update snapshot with updatedDto + newVersion;\nClear dirty;
+      elseif (status == conflict)
+        :Mark as conflicted;\nPrompt to refresh/merge;
+      else (no)
+        :Keep dirty;\nShow error inline;
+      endif
+      :Update summary badges (N dirty, N failed, N conflicted);
+    else (no)
+      :Show batch-level error toast/dialog;
+    endif
+  }
+else (no)
+  :Continue editing locally;
+endif
+
+stop
+@enduml

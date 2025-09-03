@@ -1,0 +1,47 @@
+Questions:
+
+
+explanation on metadata ... not only but also 'reflect-metadata'
+move to 'tsc' for server build -- 'reflect-metadata' will work...
+
+•Read models/projections: Return slim DTOs tailored for pages (e.g., admin list) instead of 'hydrating full graphs'** and then re-querying. **hiermit ist gemeint sich den Abruf der gesamten Datenstruktur die sich durch den Aufruf ergibt zu ersparen, nehme ich an?
+
+•Request-scoped memoization: Centralize “getByTokenHash” or “settings by key” with memoization** so repeated calls don’t hit the DB again. **WELCHE memoization ist hier gemeint?
+
+•Layered caching: Repositories become the natural place to add TypeORM query cache ((or Redis TTL)) for read-mostly data (settings, role snapshots). wie kann ich hier TypeORM query cache hinzufuegen/verwenden?
+
+GENAUER ABLAUF VON:
+
+Identity map and memoization (sketch)•RequestContext stored on event.locals.ctx:•identity: Map<string, object> (e.g., key User:42).•memo: Map<string, Promise<any>> for per-request async memoization.•Repositories first check ctx.identity/ctx.memo before querying. If absent, they query once, map to domain, store, and return.
+
+Unit of Work / RequestContext: Created in SvelteKit’s handle. Holds an identity map (Map) and a per-request memo cache. Inject it into repositories.
+
+
+Relation preloading to avoid N+1 -> in domain models ? 
+
+
+wirklich gleich mal verbessern:
+
+Your hooks.server.ts currently does:•Query Session with user relation•Separate query to UserRole to determine if adminYou can reduce this to one query by joining through to roles.// hooks.server.ts (inside handle)
+const session = await AppDataSource
+  .getRepository(Session)
+  .createQueryBuilder('s')
+  .leftJoinAndSelect('s.user', 'u')
+  .leftJoinAndSelect('u.roles', 'ur')       // UserRole[]
+  .leftJoinAndSelect('ur.role', 'r')        // Role
+  .where('s.tokenHash = :th', { th: tokenHash })
+  .andWhere('s.revokedAt IS NULL')
+  .andWhere('s.expiresAt > NOW()')
+  .getOne();
+
+if (session) {
+  const u = session.user as User;
+  const isAdmin = (u.roles ?? []).some((ur) => (ur as any).role?.name === 'admin');
+  event.locals.user = {
+    username: u.username ?? u.email,
+    email: u.email,
+    forename: u.forename,
+    surname: u.surname,
+    role: isAdmin ? 'admin' : 'user'
+  };
+}

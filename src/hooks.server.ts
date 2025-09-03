@@ -34,6 +34,7 @@ import { UserRole } from '$lib/server/database/entities/user/UserRole';
 function sha256(s: string) { return createHash('sha256').update(s).digest('hex'); }
 
 export const handle: Handle = async ({ event, resolve }) => {
+    if (process.env.DEBUG_HOOKS === '1') debugger;
     await initializeDatabase();
 
     const token = event.cookies.get('session');

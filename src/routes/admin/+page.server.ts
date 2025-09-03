@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   adminLogin: async ({ request, cookies, getClientAddress }) => {
+
     await initializeDatabase();
     const { username, password } = Object.fromEntries(await request.formData()) as Record<string, string>;
     if (!username || !password) return fail(400, { message: 'Username and password are required' });
@@ -20,6 +21,6 @@ export const actions: Actions = {
     cookies.set('session', res.token, {
       path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30
     });
-    redirect(303, '/admin');
+    redirect(302, '/admin');
   }
 };

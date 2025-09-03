@@ -1,8 +1,11 @@
+// src/lib/server/services/authService.ts
 import { randomBytes, createHash } from 'crypto';
 import { AppDataSource } from '../database/config/datasource';
 import { User } from '../database/entities/user/User';
 import { Session } from '../database/entities/session/Session';
 import { PasswordResetToken } from '../database/entities/session/PasswordResetToken';
+import { Role } from '../database/entities/user/Role';           // NEW
+import { UserRole } from '../database/entities/user/UserRole';   // NEW
 import pkg from '@node-rs/argon2';
 const { hash: argon2hash, verify: argon2verify, argon2id } = pkg;
 
@@ -16,6 +19,7 @@ export async function findUserByUsername(username: string) {
 }
 
 export async function registerUser(input: { email: string; username?: string; forename?: string; surname?: string; password: string }) {
+    if (process.env.DEBUG_AUTH === '1') debugger;
     const repo = AppDataSource.getRepository(User);
     const email = input.email.trim().toLowerCase();
     const username = input.username?.trim() ?? email;
@@ -26,6 +30,7 @@ export async function registerUser(input: { email: string; username?: string; fo
 }
 
 export async function createSession(userId: number, meta?: { userAgent?: string; ip?: string; ttlSeconds?: number }) {
+    if (process.env.DEBUG_AUTH === '1') debugger;
     const repo = AppDataSource.getRepository(Session);
     const raw = randomBytes(32).toString('base64url');
     const now = new Date();
@@ -83,4 +88,25 @@ export async function resetPasswordWithToken(rawToken: string, newPassword: stri
     await prRepo.save(prt);
     await revokeAllSessionsForUser(user.id);
     return true;
+}
+
+// NEW: ensure a role exists (created on-the-fly if missing)
+export async function ensureRole(name: string): Promise<Role> {
+    const roleRepo = AppDataSource.getRepository(Role);
+    let role = await roleRepo.findOne({ where: { name } });
+    if (!role) {
+        role = roleRepo.create({ name });
+        role = await roleRepo.save(role);
+    }
+    return role;
+}
+
+// NEW: link a user to a role via UserRole (idempotent)
+export async function assignRoleToUser(userId: number, roleName: 'user' | 'admin'): Promise<void> {
+    const role = await ensureRole(roleName);
+    const urRepo = AppDataSource.getRepository(UserRole);
+    const existing = await urRepo.findOne({ where: { userId, roleId: role.id } as any });
+    if (!existing) {
+        await urRepo.save(urRepo.create({ userId, roleId: role.id }));
+    }
 }
