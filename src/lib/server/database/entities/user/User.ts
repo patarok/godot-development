@@ -8,8 +8,8 @@ import { PasswordResetToken } from '../session/PasswordResetToken';
 @Index(['username'])
 @Index(['isActive'])
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ type: 'varchar', length: 255, unique: true })
     email: string;

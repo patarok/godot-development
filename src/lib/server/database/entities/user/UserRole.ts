@@ -7,14 +7,14 @@ import { Role } from './Role';
 @Index(['roleId'])
 @Index(['userId', 'roleId'], { unique: true })
 export class UserRole {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-    @Column({ type: 'int' })
-    userId: number;
+    @Column({ type: 'uuid' })
+    userId: string;
 
-    @Column({ type: 'int' })
-    roleId: number;
+    @Column({ type: 'uuid' })
+    roleId: string;
 
     @ManyToOne(() => User, user => user.roles, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId' })

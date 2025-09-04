@@ -7,14 +7,14 @@ import { Permission } from './Permission';
 @Index(['permissionId'])
 @Index(['roleId', 'permissionId'], { unique: true })
 export class RolePermission {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-    @Column({ type: 'int' })
-    roleId: number;
+    @Column({ type: 'uuid' })
+    roleId: string;
 
-    @Column({ type: 'int' })
-    permissionId: number;
+    @Column({ type: 'uuid' })
+    permissionId: string;
 
     @ManyToOne(() => Role, role => role.rolePermissions, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'roleId' })

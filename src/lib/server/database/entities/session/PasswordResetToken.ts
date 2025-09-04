@@ -6,9 +6,9 @@ export class PasswordResetToken {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'int' })
+    @Column({ type: 'uuid' })
     @Index()
-    userId: number;
+    userId: string;
 
     @Column({ type: 'varchar', length: 128 })
     @Index()

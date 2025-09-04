@@ -4,8 +4,8 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, Update
 @Index(['category'])
 @Index(['isPublic'])
 export class SystemSetting {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ type: 'varchar', unique: true })
     key: string;

@@ -4,8 +4,8 @@ import { RolePermission } from './RolePermission';
 @Entity()
 @Index(['category'])
 export class Permission {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ type: 'varchar', unique: true })
     name: string;
