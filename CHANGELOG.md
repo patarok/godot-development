@@ -1,3 +1,25 @@
+# [4.0.0](https://github.com/patarok/godot-development/compare/v3.0.0...v4.0.0) (2025-09-04)
+
+
+* git commit -m "feat!: implement task management system with UUID migration and admin improvements ([94614d9](https://github.com/patarok/godot-development/commit/94614d98006e2fbae3caab239b4fe20afb653e74))
+
+
+### BREAKING CHANGES
+
+* Migrate primary keys and related foreign keys to UUID across user/role/permission/session and join tables (Session.userId, UserRole.userId/roleId, RolePermission.roleId/permissionId, UserTask.userId). TaskTag schema changed from string tag to Tag entity via tagId. Existing databases must be reset or migrated.
+
+- feat(tasks): add task creation page with title/description/due date, completion toggle, required TaskState, optional Priority, and tag assignment
+- feat(tasks): support toggling task completion and adding tags inline
+- feat(tags): add Tag entity (slug/name/color/description) and refactor TaskTag to reference Tag via tagId with unique constraint
+- feat(admin): add management UI and actions for Task States and Priorities with create/update/delete operations
+- feat(admin): add users list with computed role labels and UUID-based manipulation
+- feat(auth): add /api/logout endpoint for AJAX logout and update layout accountToggle
+- feat(db): register new entities (Task, TaskTag, UserTask, Tag, Priority, TaskState, ProjectState) in datasource
+- feat(db): add optional DROP_SCHEMA toggle for dev resets
+- fix(admin): fix serialization by returning plain objects
+- fix(auth): rework revokeSession to lookup by tokenHash with UUID fallback
+- fix(db): make Task.taskState required with onDelete RESTRICT and add Task.creator field"
+
 # [3.0.0](https://github.com/patarok/godot-development/compare/v2.2.0...v3.0.0) (2025-09-04)
 
 
