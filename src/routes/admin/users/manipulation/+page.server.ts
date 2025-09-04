@@ -1,15 +1,20 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { AppDataSource, User } from '$lib/server/database';
+import { toPlain } from '$lib/utils';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-  if (!locals.user || locals.user.role !== 'admin') return { notAdmin: true } as any;
 
-  const id = Number(url.searchParams.get('id') ?? '');
+  if (!locals.user || locals.user.role !== 'admin') return { notAdmin: true } as any;
+  const id = url.searchParams.get('id') ?? '';
+
   if (!id) return { notFound: true } as any;
   const user = await AppDataSource.getRepository(User).findOne({ where: { id } });
+
   if (!user) return { notFound: true } as any;
-  return { user };
+  const plainUser = toPlain(user);
+  return { user: plainUser };
+
 };
 
 export const actions: Actions = {

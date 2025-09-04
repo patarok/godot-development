@@ -9,6 +9,8 @@ export const actions: Actions = {
         const form = await request.formData();
         const email = String(form.get('email') ?? '');
         const username = String(form.get('username') ?? '');
+        const forename = String(form.get('forename') ?? '');
+        const surname = String(form.get('surname') ?? '');
         const password = String(form.get('password') ?? '');
         const roleRaw = String(form.get('role') ?? '').toLowerCase();
         const role = roleRaw === 'admin' ? 'admin' : 'user'; // whitelist, default to user
@@ -16,7 +18,7 @@ export const actions: Actions = {
         if (!email || !password) return fail(400, { message: 'Missing fields' });
 
         try {
-            const user = await registerUser({ email, username: username || undefined, password });
+            const user = await registerUser({ email, username: username || undefined, forename: forename || undefined, surname: surname || undefined, password });
 
             // Assign role (creates Role row if missing)
             await assignRoleToUser(user.id, role);

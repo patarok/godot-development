@@ -25,7 +25,7 @@ export async function registerUser(input: { email: string; username?: string; fo
     return repo.save(repo.create({ email, username, forename: input.forename?.trim(), surname: input.surname?.trim(), password, isActive: true }));
 }
 
-export async function createSession(userId: number, meta?: { userAgent?: string; ip?: string; ttlSeconds?: number }) {
+export async function createSession(userId: string, meta?: { userAgent?: string; ip?: string; ttlSeconds?: number }) {
     if (process.env.DEBUG_AUTH === '1') debugger;
     const repo = AppDataSource.getRepository(Session);
     const raw = randomBytes(32).toString('base64url');
@@ -48,13 +48,19 @@ export async function loginWithPassword(identifier: string, password: string, me
 
 export async function revokeSession(rawOrId: string) {
     const repo = AppDataSource.getRepository(Session);
-    const s = await repo.findOne({ where: { id: rawOrId } });
-    if (s) { s.revokedAt = new Date(); await repo.save(s); return; }
-    const found = await repo.findOne({ where: { tokenHash: sha256(rawOrId) } });
-    if (found) { found.revokedAt = new Date(); await repo.save(found); }
+    // Prefer matching by tokenHash (raw token). Only fallback to id if rawOrId looks like a UUID.
+    const tokenHash = sha256(rawOrId);
+    let s = await repo.findOne({ where: { tokenHash, revokedAt: IsNull() } });
+    if (!s && /^[0-9a-fA-F-]{36}$/.test(rawOrId)) {
+        s = await repo.findOne({ where: { id: rawOrId, revokedAt: IsNull() } });
+    }
+    if (s) {
+        s.revokedAt = new Date();
+        await repo.save(s);
+    }
 }
 
-export async function revokeAllSessionsForUser(userId: number) {
+export async function revokeAllSessionsForUser(userId: string) {
     const repo = AppDataSource.getRepository(Session);
     const sessions = await repo.find({ where: { userId, revokedAt: IsNull() } });
     for (const s of sessions) s.revokedAt = new Date();
@@ -98,7 +104,7 @@ export async function ensureRole(name: string): Promise<Role> {
 }
 
 // NEW: link a user to a role via UserRole (idempotent)
-export async function assignRoleToUser(userId: number, roleName: 'user' | 'admin'): Promise<void> {
+export async function assignRoleToUser(userId: string, roleName: 'user' | 'admin'): Promise<void> {
     const role = await ensureRole(roleName);
     const urRepo = AppDataSource.getRepository(UserRole);
     const existing = await urRepo.findOne({ where: { userId, roleId: role.id } });

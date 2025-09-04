@@ -9,6 +9,6 @@ export const actions: Actions = {
         const token = cookies.get('session');
         if (token) await revokeSession(token);
         cookies.delete('session', { path: '/' });
-        throw redirect(303, '/');
+        redirect(303, '/');
     }
 };

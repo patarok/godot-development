@@ -25,6 +25,26 @@
 			return newTheme;
 		});
 	}
+
+	async function accountToggle() {
+		const currentUser = data.user;
+		if (!browser) return;
+
+		if (currentUser) {
+			// Perform AJAX logout without redirecting to /logout
+			try {
+				const res = await fetch('/api/logout', { method: 'POST' });
+				if (!res.ok) throw new Error('Logout failed');
+				// Reload the page to refresh layout data (user from locals)
+				window.location.reload();
+			} catch (e) {
+				console.error(e);
+				window.location.reload();
+			}
+		} else {
+			window.location.href = '/login';
+		}
+	}
 </script>
 
 <svelte:head>
@@ -32,6 +52,12 @@
 </svelte:head>
 
 {#if browser}
+	<button
+			onclick={accountToggle}
+			style="aspect-ratio: 1 / 1; border: none; position: absolute; top: 0; right: 0; margin: 1rem;"
+	>
+		🔒
+	</button>
 	<button
 			onclick={toggleTheme}
 			style="aspect-ratio: 1 / 1; border: none; position: absolute; bottom: 0; right: 0; margin: 1rem;"

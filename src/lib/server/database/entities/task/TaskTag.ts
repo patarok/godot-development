@@ -1,15 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { Task } from './Task';
+import { Tag } from './Tag';
 
 /**
- * TaskTag represents a simple tagging mechanism for tasks.
- * There is no separate Tag entity yet; tags are stored as strings.
- * Ensures uniqueness of (taskId, tag).
+ * TaskTag links tasks to reusable Tag rows.
+ * Ensures uniqueness of (taskId, tagId).
  */
 @Entity()
 @Index(['taskId'])
-@Index(['tag'])
-@Index(['taskId', 'tag'], { unique: true })
+@Index(['tagId'])
+@Index(['taskId', 'tagId'], { unique: true })
 export class TaskTag {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -21,8 +21,12 @@ export class TaskTag {
   @JoinColumn({ name: 'taskId' })
   task: Task;
 
-  @Column({ type: 'varchar', length: 128 })
-  tag: string;
+  @Column({ type: 'uuid' })
+  tagId: string;
+
+  @ManyToOne(() => Tag, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'tagId' })
+  tag: Tag;
 
   @CreateDateColumn()
   createdAt: Date;

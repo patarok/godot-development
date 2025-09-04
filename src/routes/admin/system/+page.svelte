@@ -12,7 +12,72 @@
   }
 </script>
 
-<h2>System Settings</h2>
+<section style="margin-bottom: 24px;">
+  <hr>
+  <h2 style="font-weight: 700;">Task States</h2>
+  <hr>
+  <form method="POST" action="?/create_task_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
+    <input name="name" placeholder="Name (e.g., Todo)" required />
+    <input name="rank" placeholder="Rank (0)" type="number" />
+    <input name="color" placeholder="#color (optional)" />
+    <input name="description" placeholder="Description (optional)" />
+    <button class="btn" type="submit">Add</button>
+  </form>
+  <hr style="color: lightgrey; margin-bottom: 1rem;">
+  <ul style="list-style:none; padding:0;">
+    {#each data.taskStates as s (s.id)}
+      <li style="margin-bottom: 8px; display: flex;">
+        <form method="POST" action="?/update_task_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
+          <input type="hidden" name="id" value={s.id} />
+          <input name="name" value={s.name} />
+          <input name="rank" value={s.rank} type="number" />
+          <input name="color" value={s.color ?? ''} />
+          <input name="description" value={s.description ?? ''} />
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <form method="POST" action="?/delete_task_state" use:enhance={handleEnhance} style="display:inline-block; margin-left: 8px;">
+          <input type="hidden" name="id" value={s.id} />
+          <button class="btn" type="submit">Delete</button>
+        </form>
+      </li>
+    {/each}
+  </ul>
+</section>
+
+<section style="margin-bottom: 24px;">
+  <hr>
+  <h2 style="font-weight: 700;">Priorities</h2>
+  <hr>
+  <form method="POST" action="?/create_priority" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
+    <input name="name" placeholder="Name (e.g., Low)" required />
+    <input name="rank" placeholder="Rank (0)" type="number" />
+    <input name="color" placeholder="#color (optional)" />
+    <input name="description" placeholder="Description (optional)" />
+    <button class="btn" type="submit">Add</button>
+  </form>
+  <ul style="list-style:none; padding:0;">
+    {#each data.priorities as p (p.id)}
+      <li style="margin-bottom: 8px; display: flex;">
+        <form method="POST" action="?/update_priority" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
+          <input type="hidden" name="id" value={p.id} />
+          <input name="name" value={p.name} />
+          <input name="rank" value={p.rank} type="number" />
+          <input name="color" value={p.color ?? ''} />
+          <input name="description" value={p.description ?? ''} />
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <form method="POST" action="?/delete_priority" use:enhance={handleEnhance} style="display:inline-block; margin-left: 8px;">
+          <input type="hidden" name="id" value={p.id} />
+          <button class="btn" type="submit">Delete</button>
+        </form>
+      </li>
+    {/each}
+  </ul>
+</section>
+
+<hr>
+<h2 style="font-weight: 700;">System Settings</h2>
+<hr>
 
 {#if message}
   <p role="status">{message}</p>
@@ -34,7 +99,7 @@
 {:else}
   <p>No settings yet.</p>
 {/if}
-
+<hr style="color: lightgrey; margin-bottom: 1rem;">
 <h3>Add or update a setting</h3>
 <form method="POST" action="?/update" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
   <label>Key <input name="key" placeholder="some.setting.key" required /></label>

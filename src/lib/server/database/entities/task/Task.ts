@@ -21,18 +21,23 @@ export class Task {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 512, unique: true })
+    @Column({ type: 'varchar', length: 512 })
     title: string;
 
     @Column({ type: 'varchar', nullable: true })
     description?: string;
 
-    @Column({ type: 'boolean', default: true })
+    @Column({ type: 'boolean', default: false })
     isDone: boolean;
 
-    @ManyToOne(() => TaskState, { onDelete: 'SET NULL' })
+    // creatorId: who initially created the task
+    @ManyToOne(() => User, { onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'creatorId' })
+    creator?: User | null;
+
+    @ManyToOne(() => TaskState, { onDelete: 'RESTRICT', nullable: false })
     @JoinColumn({ name: 'taskStateId' })
-    taskState?: TaskState;
+    taskState: TaskState;
 
     @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'priorityId' })
@@ -42,8 +47,8 @@ export class Task {
     @JoinColumn({ name: 'activeUserId' })
     user?: User;
 
-    @Column({ type: 'int'})
-    actualHours?: number;
+    @Column({ type: 'int', nullable: true })
+    actualHours?: number | null;
 
     @Column({ type: 'boolean', default: true })
     hasSegmentGroupCircle: boolean;
