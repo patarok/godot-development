@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { AppDataSource } from '../index';
 import { Role } from '../entities/user/Role';
 import { Permission } from '../entities/user/Permission';

@@ -1,0 +1,510 @@
+@startuml
+!define ENTITY class
+!define CONFIG_TABLE #lightblue
+!define CORE_TABLE #lightgreen
+!define JUNCTION_TABLE #lightyellow
+!define AUTH_TABLE #lightcoral
+!define AUDIT_TABLE #lightgray
+
+' Configuration and Lookup Tables
+package "Configuration Tables" {
+  ENTITY MainRoleTitleCfg CONFIG_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +title: String
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY ProjectStateKind CONFIG_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +title: String
+    +orderNo: Int? @unique
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY TaskStateKind CONFIG_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +title: String
+    +orderNo: Int? @unique
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY PriorityLevelCfg CONFIG_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +title: String
+    +orderNo: Int @unique
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY ImpedimentStatusCfg CONFIG_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +title: String
+    +orderNo: Int? @unique
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' Permission and Role System
+package "Permission & Role System" {
+  ENTITY Permission CORE_TABLE {
+    +id: Int @id
+    +name: String @unique
+    +description: String?
+    +category: String
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY RolePermission JUNCTION_TABLE {
+    +id: Int @id
+    +roleId: Int
+    +permissionId: Int
+    +createdAt: DateTime
+  }
+
+  ENTITY Echelon CORE_TABLE {
+    +id: Int @id
+    +title: String @unique
+    +description: String
+    +orderLevel: Int @unique
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY Role CORE_TABLE {
+    +id: Int @id
+    +isMainRole: Boolean
+    +mainRoleTitleId: Int?
+    +parentRoleId: Int?
+    +title: String
+    +description: String?
+    +echelonId: Int
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' User Management
+package "User Management" {
+  ENTITY User CORE_TABLE {
+    +id: Int @id
+    +email: String @unique
+    +forename: String?
+    +surname: String?
+    +username: String? @unique
+    +password: String
+    +isActive: Boolean
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY UserRole JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +roleId: Int
+    +assignedAt: DateTime
+  }
+
+  ENTITY Tag CORE_TABLE {
+    +id: String @id
+    +title: String @unique
+    +color: String
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' State Management
+package "State Management" {
+  ENTITY ProjectState CORE_TABLE {
+    +id: String @id
+    +kindId: Int
+    +title: String
+    +description: String?
+    +color: String
+    +orderNo: Int @unique
+    +isInitial: Boolean
+    +isFinal: Boolean
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY TaskState CORE_TABLE {
+    +id: String @id
+    +kindId: Int
+    +title: String
+    +description: String?
+    +color: String
+    +orderNo: Int @unique
+    +isInitial: Boolean
+    +isFinal: Boolean
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY Priority CORE_TABLE {
+    +id: String @id
+    +kindId: Int
+    +title: String
+    +description: String?
+    +orderNo: Int @unique
+    +color: String
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' Deadline Management
+package "Deadline Management" {
+  ENTITY Deadline CORE_TABLE {
+    +id: String @id
+    +title: String
+    +description: String?
+    +dueDate: DateTime
+    +priorityId: String
+    +projectId: String?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY DeadlineTag JUNCTION_TABLE {
+    +id: Int @id
+    +deadlineId: String
+    +tagId: String
+    +createdAt: DateTime
+  }
+}
+
+' Solution and Impediment System
+package "Solution & Impediment System" {
+  ENTITY Solution CORE_TABLE {
+    +id: Int @id
+    +title: String
+    +explanation: String
+    +link: String?
+    +authorId: Int?
+    +category: String?
+    +effectiveness: Float?
+    +usageCount: Int
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY Impediment CORE_TABLE {
+    +id: Int @id
+    +title: String
+    +description: String?
+    +statusId: Int
+    +estimatedHours: Int?
+    +actualHours: Int?
+    +isDone: Boolean
+    +solutionId: Int?
+    +assigneeId: Int?
+    +taskId: String?
+    +similarityScore: Float?
+    +mergedIntoId: Int?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY ImpedimentMedian CORE_TABLE {
+    +id: Int @id
+    +title: String
+    +description: String?
+    +hasSolution: Boolean
+    +solutionId: Int?
+    +averageHours: Float?
+    +occurrenceCount: Int
+    +confidenceScore: Float?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' Task Management
+package "Task Management" {
+  ENTITY Task CORE_TABLE {
+    +id: String @id
+    +title: String
+    +description: String
+    +isDone: Boolean
+    +taskStateId: String
+    +priorityId: String?
+    +activeUserId: Int?
+    +estimatedHours: Int?
+    +actualHours: Int?
+    +hasSegmentGroupCircle: Boolean
+    +segmentGroupCircleId: Int?
+    +projectId: String?
+    +parentTaskId: String?
+    +dueDate: DateTime?
+    +startDate: DateTime?
+    +iterationSegmentId: Int?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY UserTask JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +taskId: String
+    +role: String?
+    +assignedAt: DateTime
+  }
+
+  ENTITY TaskTag JUNCTION_TABLE {
+    +id: Int @id
+    +taskId: String
+    +tagId: String
+    +createdAt: DateTime
+  }
+}
+
+' Iteration Segment System
+package "Iteration Segment System" {
+  ENTITY IterationSegment CORE_TABLE {
+    +id: Int @id
+    +segmentNo: Int
+    +title: String
+    +description: String?
+    +startSchedule: DateTime?
+    +endSchedule: DateTime?
+    +dueDate: DateTime?
+    +dropDate: DateTime?
+    +actualStartDate: DateTime?
+    +actualEndDate: DateTime?
+    +iterationCount: Int
+    +completedIterations: Int
+    +isComplete: Boolean
+    +estimatedCost: Decimal?
+    +actualCost: Decimal?
+    +estimatedHours: Int?
+    +actualHours: Int?
+    +segmentGroupCircleId: Int
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY SegmentGroupCircle CORE_TABLE {
+    +id: Int @id
+    +orderNo: Int
+    +title: String
+    +description: String?
+    +isProjectManagementCircle: Boolean
+    +isInternal: Boolean
+    +isFirst: Boolean
+    +isActive: Boolean
+    +isComplete: Boolean
+    +maxIterations: Int
+    +currentIteration: Int
+    +parentCircleId: Int?
+    +estimatedDuration: Int?
+    +actualDuration: Int?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY SegmentStakeholder JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +iterationSegmentId: Int
+    +assignedAt: DateTime
+  }
+
+  ENTITY SegmentResponsible JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +iterationSegmentId: Int
+    +assignedAt: DateTime
+  }
+
+  ENTITY SegmentAttendee JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +iterationSegmentId: Int
+  }
+
+  ENTITY SegmentContributor JUNCTION_TABLE {
+    +id: Int @id
+    +userId: Int
+    +iterationSegmentId: Int
+  }
+}
+
+' Project Management
+package "Project Management" {
+  ENTITY Project CORE_TABLE {
+    +id: String @id
+    +title: String
+    +description: String
+    +isDone: Boolean
+    +currentIterationNumber: Int
+    +iterationWarnAt: Int
+    +maxIterations: Int?
+    +currentSegmentId: Int?
+    +projectStateId: String
+    +activeUserId: Int?
+    +estimatedBudget: Decimal?
+    +actualCost: Decimal?
+    +estimatedHours: Int?
+    +actualHours: Int?
+    +startDate: DateTime?
+    +endDate: DateTime?
+    +actualStartDate: DateTime?
+    +actualEndDate: DateTime?
+    +priority: String?
+    +riskLevel: String?
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+
+  ENTITY ProjectCreator JUNCTION_TABLE {
+    +id: Int @id
+    +projectId: String
+    +userId: Int
+    +role: String?
+    +isPrimary: Boolean
+    +createdAt: DateTime
+  }
+
+  ENTITY ProjectCircle JUNCTION_TABLE {
+    +id: Int @id
+    +projectId: String
+    +circleId: Int
+    +orderNo: Int
+    +isCurrent: Boolean
+    +createdAt: DateTime
+  }
+
+  ENTITY ProjectTag JUNCTION_TABLE {
+    +id: Int @id
+    +projectId: String
+    +tagId: String
+    +createdAt: DateTime
+  }
+}
+
+' Authentication System
+package "Authentication System" {
+  ENTITY Session AUTH_TABLE {
+    +id: String @id
+    +userId: Int
+    +tokenHash: String @unique
+    +createdAt: DateTime
+    +expiresAt: DateTime
+    +lastUsedAt: DateTime?
+    +userAgent: String?
+    +ip: String?
+    +revokedAt: DateTime?
+  }
+
+  ENTITY VerificationToken AUTH_TABLE {
+    +id: String @id
+    +userId: Int
+    +tokenHash: String @unique
+    +type: String
+    +expiresAt: DateTime
+    +createdAt: DateTime
+  }
+
+  ENTITY PasswordResetToken AUTH_TABLE {
+    +id: String @id
+    +userId: Int
+    +tokenHash: String @unique
+    +expiresAt: DateTime
+    +createdAt: DateTime
+  }
+}
+
+' System Management
+package "System Management" {
+  ENTITY AuditLog AUDIT_TABLE {
+    +id: Int @id
+    +userId: Int?
+    +action: String
+    +tableName: String
+    +recordId: String
+    +oldValues: Json?
+    +newValues: Json?
+    +ipAddress: String?
+    +userAgent: String?
+    +timestamp: DateTime
+  }
+
+  ENTITY SystemSetting AUDIT_TABLE {
+    +id: Int @id
+    +key: String @unique
+    +value: String
+    +description: String?
+    +category: String?
+    +isPublic: Boolean
+    +createdAt: DateTime
+    +updatedAt: DateTime
+  }
+}
+
+' Key Relationships
+MainRoleTitleCfg ||--o{ Role : mainRoleTitleId
+Role ||--o{ Role : parentRoleId
+Role }o--|| Echelon : echelonId
+Role ||--o{ RolePermission
+Permission ||--o{ RolePermission
+User ||--o{ UserRole
+Role ||--o{ UserRole
+User ||--o{ UserTask
+Task ||--o{ UserTask
+Task }o--|| TaskState : taskStateId
+TaskState }o--|| TaskStateKind : kindId
+Task }o--o| Priority : priorityId
+Priority }o--|| PriorityLevelCfg : kindId
+Task ||--o{ TaskTag
+Tag ||--o{ TaskTag
+Task }o--o| User : activeUserId
+Task }o--o| SegmentGroupCircle : segmentGroupCircleId
+Task }o--o| Project : projectId
+Task ||--o{ Task : parentTaskId
+Task ||--o{ Impediment : taskId
+Impediment }o--|| ImpedimentStatusCfg : statusId
+Impediment }o--o| Solution : solutionId
+Impediment }o--o| User : assigneeId
+Impediment }o--o| ImpedimentMedian : mergedIntoId
+ImpedimentMedian }o--o| Solution : solutionId
+Solution }o--o| User : authorId
+Project }o--|| ProjectState : projectStateId
+ProjectState }o--|| ProjectStateKind : kindId
+Project ||--o{ ProjectCreator
+User ||--o{ ProjectCreator
+Project }o--o| User : activeUserId
+Project }o--o| IterationSegment : currentSegmentId
+Project ||--o{ ProjectCircle
+SegmentGroupCircle ||--o{ ProjectCircle
+Project ||--o{ ProjectTag
+Tag ||--o{ ProjectTag
+SegmentGroupCircle ||--o{ IterationSegment : segmentGroupCircleId
+SegmentGroupCircle ||--o{ SegmentGroupCircle : parentCircleId
+IterationSegment ||--o{ SegmentStakeholder
+User ||--o{ SegmentStakeholder
+IterationSegment ||--o{ SegmentResponsible
+User ||--o{ SegmentResponsible
+IterationSegment ||--o{ SegmentAttendee
+User ||--o{ SegmentAttendee
+IterationSegment ||--o{ SegmentContributor
+User ||--o{ SegmentContributor
+Deadline }o--|| Priority : priorityId
+Deadline }o--o| Project : projectId
+Deadline ||--o{ DeadlineTag
+Tag ||--o{ DeadlineTag
+User ||--o{ Session
+User ||--o{ VerificationToken
+User ||--o{ PasswordResetToken
+User ||--o{ AuditLog
+@enduml

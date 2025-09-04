@@ -1,16 +1,17 @@
 import { AppDataSource } from './config/datasource';
 
-let isInitialized = false;
+
+// race conditions finally eliminated for sure
+let initPromise: Promise<typeof AppDataSource> | null = null;
 
 export async function initializeDatabase() {
-    if (!isInitialized) {
+    if (AppDataSource.isInitialized) return AppDataSource;
+
+    return initPromise ??= (async () => {
         await AppDataSource.initialize();
-        isInitialized = true;
         console.log('Database connection initialized');
-    }
-    return AppDataSource;
+        return AppDataSource;
+    })();
 }
 
 export { AppDataSource };
-//export * from './repositories';
-//export * from './services';

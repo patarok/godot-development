@@ -1,0 +1,13 @@
+system.core.mail_address
+system.core.language
+system.performance.cache_adapter
+system.performance.cache_enabled
+system.security.captcha_provider
+system.licensing.domain
+system.licensing.hash
+
+organization.identity.name
+organization.identity.type
+organization.contact.owner_email
+organization.contact.address
+organization.financial.banking_info

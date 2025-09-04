@@ -1,7 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { initializeDatabase } from '$lib/server/database/database-connection-init';
-import { loginWithPassword } from '$lib/server/services/authService';
+import { loginWithPassword } from '$lib/server/services';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user = locals.user;
@@ -11,7 +10,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
   adminLogin: async ({ request, cookies, getClientAddress }) => {
 
-    await initializeDatabase();
     const { username, password } = Object.fromEntries(await request.formData()) as Record<string, string>;
     if (!username || !password) return fail(400, { message: 'Username and password are required' });
 

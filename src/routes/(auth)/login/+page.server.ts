@@ -1,11 +1,11 @@
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { initializeDatabase } from '$lib/server/database/database-connection-init';
-import { loginWithPassword } from '$lib/server/services/authService';
+
+import { loginWithPassword } from '$lib/server/services';
 
 export const actions: Actions = {
     default: async ({ request, cookies, getClientAddress }) => {
-        await initializeDatabase();
+
         const form = await request.formData();
         const identifier = String(form.get('username') ?? '');
         const password = String(form.get('password') ?? '');

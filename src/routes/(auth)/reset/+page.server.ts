@@ -1,11 +1,9 @@
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { initializeDatabase } from '$lib/server/database/database-connection-init';
-import { resetPasswordWithToken } from '$lib/server/services/authService';
+import { resetPasswordWithToken } from '$lib/server/services';
 
 export const actions: Actions = {
     default: async ({ request }) => {
-        await initializeDatabase();
         const form = await request.formData();
         const token = String(form.get('token') ?? '');
         const password = String(form.get('password') ?? '');

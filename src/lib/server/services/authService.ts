@@ -1,11 +1,7 @@
 // src/lib/server/services/authService.ts
 import { randomBytes, createHash } from 'crypto';
-import { AppDataSource } from '../database/config/datasource';
-import { User } from '../database/entities/user/User';
-import { Session } from '../database/entities/session/Session';
-import { PasswordResetToken } from '../database/entities/session/PasswordResetToken';
-import { Role } from '../database/entities/user/Role';           // NEW
-import { UserRole } from '../database/entities/user/UserRole';   // NEW
+import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
+import { IsNull } from 'typeorm';
 import pkg from '@node-rs/argon2';
 const { hash: argon2hash, verify: argon2verify, argon2id } = pkg;
 
@@ -60,7 +56,7 @@ export async function revokeSession(rawOrId: string) {
 
 export async function revokeAllSessionsForUser(userId: number) {
     const repo = AppDataSource.getRepository(Session);
-    const sessions = await repo.find({ where: { userId, revokedAt: null } as any });
+    const sessions = await repo.find({ where: { userId, revokedAt: IsNull() } });
     for (const s of sessions) s.revokedAt = new Date();
     if (sessions.length) await repo.save(sessions);
 }
@@ -78,7 +74,7 @@ export async function issuePasswordReset(usernameOrEmail: string, ttlMinutes = 3
 export async function resetPasswordWithToken(rawToken: string, newPassword: string) {
     const prRepo = AppDataSource.getRepository(PasswordResetToken);
     const userRepo = AppDataSource.getRepository(User);
-    const prt = await prRepo.findOne({ where: { tokenHash: sha256(rawToken), usedAt: null } as any });
+    const prt = await prRepo.findOne({ where: { tokenHash: sha256(rawToken), usedAt: IsNull() } });
     if (!prt || prt.expiresAt <= new Date()) return false;
     const user = await userRepo.findOne({ where: { id: prt.userId } });
     if (!user) return false;
@@ -105,7 +101,7 @@ export async function ensureRole(name: string): Promise<Role> {
 export async function assignRoleToUser(userId: number, roleName: 'user' | 'admin'): Promise<void> {
     const role = await ensureRole(roleName);
     const urRepo = AppDataSource.getRepository(UserRole);
-    const existing = await urRepo.findOne({ where: { userId, roleId: role.id } as any });
+    const existing = await urRepo.findOne({ where: { userId, roleId: role.id } });
     if (!existing) {
         await urRepo.save(urRepo.create({ userId, roleId: role.id }));
     }

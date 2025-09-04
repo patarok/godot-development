@@ -1,12 +1,11 @@
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { initializeDatabase } from '$lib/server/database/database-connection-init';
-import { registerUser, createSession, assignRoleToUser } from '$lib/server/services/authService';
+import { registerUser, createSession, assignRoleToUser } from '$lib/server/services';
 
 export const actions: Actions = {
     default: async ({ request, cookies, getClientAddress }) => {
         if (process.env.DEBUG_REGISTER === '1') debugger;
-        await initializeDatabase();
+
         const form = await request.formData();
         const email = String(form.get('email') ?? '');
         const username = String(form.get('username') ?? '');
