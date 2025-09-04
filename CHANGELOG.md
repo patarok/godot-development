@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/patarok/godot-development/compare/v2.1.1...v2.2.0) (2025-09-04)
+
+
+### Features
+
+* barrels used wisely, redundancies removed ([b730ec5](https://github.com/patarok/godot-development/commit/b730ec58208ce5ddfc46445e91d24a9f2839da37))
+
 ## [2.1.1](https://github.com/patarok/godot-development/compare/v2.1.0...v2.1.1) (2025-09-03)
 
 
