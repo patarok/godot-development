@@ -1,3 +1,19 @@
+# [3.0.0](https://github.com/patarok/godot-development/compare/v2.2.0...v3.0.0) (2025-09-04)
+
+
+* feat!: implement core domain entities with UUID primary keys ([3820162](https://github.com/patarok/godot-development/commit/382016286cdbf0c1a09f95a5f384f969407718d1))
+
+
+### BREAKING CHANGES
+
+* Changed primary keys from integer to UUID/GUID format
+
+- feat: add configuration entities (MainRoleTitleCfg, PriorityLevelCfg, ProjectStateKind, TaskStateKind)
+- feat: add state management entities (Priority, ProjectState, TaskState)
+- feat: add core business entities (Task, TaskTag, UserTask)
+- fix: convert all primary keys to UUID/GUID format
+- refactor: improve entity definitions and structure
+
 # [2.2.0](https://github.com/patarok/godot-development/compare/v2.1.1...v2.2.0) (2025-09-04)
 
 
