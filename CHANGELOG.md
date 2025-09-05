@@ -1,3 +1,15 @@
+# [5.0.0](https://github.com/patarok/godot-development/compare/v4.0.0...v5.0.0) (2025-09-05)
+
+
+### Features
+
+* **projects:** introduce full Project domain, Risk Levels, and /projects CRUD; enhance Tasks and Admin System ([1b886e0](https://github.com/patarok/godot-development/commit/1b886e053cc9b9c950530008cf8645bec64e9c2f))
+
+
+### BREAKING CHANGES
+
+* **projects:** Project.riskLevel changed from a non-null string to an optional FK (riskLevelId). Generate and run a migration or enable synchronize in development to update the schema.
+
 # [4.0.0](https://github.com/patarok/godot-development/compare/v3.0.0...v4.0.0) (2025-09-04)
 
 
