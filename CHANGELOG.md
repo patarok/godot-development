@@ -1,3 +1,10 @@
+# [5.1.0](https://github.com/patarok/godot-development/compare/v5.0.0...v5.1.0) (2025-09-05)
+
+
+### Features
+
+* **db:** add impediment domain (Impediment, Solution, ImpedimentMedian) and wire relations ([961fff3](https://github.com/patarok/godot-development/commit/961fff379563a92f9dea3b31857b150b5cf0b096))
+
 # [5.0.0](https://github.com/patarok/godot-development/compare/v4.0.0...v5.0.0) (2025-09-05)
 
 
