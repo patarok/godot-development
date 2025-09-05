@@ -31,3 +31,7 @@ export * from './entities/project/ProjectResponsibleUser';
 // Deadlines
 export * from './entities/deadline/Deadline';
 export * from './entities/deadline/DeadlineTag';
+// Impediments & Solutions
+export * from './entities/impediment/Solution';
+export * from './entities/impediment/Impediment';
+export * from './entities/impediment/ImpedimentMedian';

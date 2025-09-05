@@ -16,9 +16,9 @@ export class Deadline {
   @Column({ type: 'varchar', nullable: true })
   description?: string | null;
 
-  @ManyToOne(() => Project, { onDelete: 'CASCADE', nullable: false })
+  @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'projectId' })
-  project: Project;
+  project?: Project | null;
 
   @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'priorityId' })

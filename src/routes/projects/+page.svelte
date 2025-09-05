@@ -1,16 +1,10 @@
 <script lang="ts">
-
-  //projects: plainProjects,
-  //        priorities: toPlainArray(priorities),
-  //        states: toPlainArray(states),
-  //        users: toPlainArray(users),
-  //        tasks: toPlainArray(allTasks),
-  //        user: locals.user
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
   import { page } from '$app/stores';
-
   import type { PageData } from './$types';
+  import { tick } from 'svelte';
+
   let { data }: { data: PageData } = $props();
   const { priorities, states, riskLevels, users, tasks } = data as any;
 
@@ -37,20 +31,82 @@
   let riskLevelId = $state<string | null>(null);
   let mainResponsibleId = $state<string | null>(null);
 
+  // NEW: client-side pick-lists for create (no submit until Create)
+  let selectedResponsibleIds = $state<string[]>([]);
+  let selectedAssignedIds = $state<string[]>([]);
+  let responsiblePicker = $state<string | null>(null);
+  let assignedPicker = $state<string | null>(null);
+
+  // Make sure mainResponsible is also in Responsible users
+  $effect(() => {
+    if (mainResponsibleId && !selectedResponsibleIds.includes(mainResponsibleId)) {
+      selectedResponsibleIds = [...selectedResponsibleIds, mainResponsibleId];
+    }
+  });
+
+  function addResponsible() {
+    if (responsiblePicker && !selectedResponsibleIds.includes(responsiblePicker)) {
+      selectedResponsibleIds = [...selectedResponsibleIds, responsiblePicker];
+      responsiblePicker = null;
+    }
+  }
+  function removeResponsible(id: string) {
+    if (id === mainResponsibleId) return; // keep mainResponsible
+    selectedResponsibleIds = selectedResponsibleIds.filter((x) => x !== id);
+  }
+
+  function addAssigned() {
+    if (assignedPicker && !selectedAssignedIds.includes(assignedPicker)) {
+      selectedAssignedIds = [...selectedAssignedIds, assignedPicker];
+      assignedPicker = null;
+    }
+  }
+  function removeAssigned(id: string) {
+    selectedAssignedIds = selectedAssignedIds.filter((x) => x !== id);
+  }
+
+  // Helper lists: available users for each picker (exclude already picked)
+  const availableResponsible = $derived(users.filter((u: any) => !selectedResponsibleIds.includes(u.id)));
+  const availableAssigned = $derived(users.filter((u: any) => !selectedAssignedIds.includes(u.id)));
 
   // Reusable enhance function
   const enhanceWithForm = () => {
     return async ({ result, update }) => {
-      form = result.data;
+      form = result?.data;
       await update();
+
+      if (result?.data?.success) {
+        await tick(); // Wait for DOM to update
+        invalidateAll();
+        await tick(); // Wait for invalidation to complete
+
+        // Now clear the fields
+        projectStateId = null;
+        title = '';
+        description = '';
+        priorityId = null;
+        isActive = true;
+        isDone = false;
+        currentIterationNumber = null;
+        iterationWarnAt = null;
+        maxIterations = null;
+        estimatedBudget = null;
+        actualCost = null;
+        estimatedHours = null;
+        actualHours = null;
+        startDate = '';
+        endDate = '';
+        actualStartDate = '';
+        actualEndDate = '';
+        riskLevelId = null;
+        mainResponsibleId = null;
+        selectedResponsibleIds = [];
+        selectedAssignedIds = [];
+        responsiblePicker = null;
+        assignedPicker = null;
+      }
     };
   };
-
-  $effect(() => {
-    if (form?.success) {
-      invalidateAll();
-    }
-  });
 </script>
 
 <svelte:head>
@@ -65,21 +121,21 @@
   <div class="mb-2"><label>Description<br /><textarea class="input" bind:value={description} name="description" placeholder="Description"></textarea></label></div>
   <div class="mb-2">
     <label>Project state<br />
-    <select class="input" name="projectStateId" bind:value={projectStateId} required>
-      <option value="" disabled selected>(choose state)</option>
-      {#each states as s}
-        <option value={s.id}>{s.name}</option>
-      {/each}
-    </select></label>
+      <select class="input" name="projectStateId" bind:value={projectStateId} required>
+        <option value="" disabled selected>(choose state)</option>
+        {#each states as s}
+          <option value={s.id}>{s.name}</option>
+        {/each}
+      </select></label>
   </div>
   <div class="mb-2">
     <label>Priority<br />
-    <select class="input" name="priorityId" bind:value={priorityId}>
-      <option value="">(no priority)</option>
-      {#each priorities as p}
-        <option value={p.id}>{p.name}</option>
-      {/each}
-    </select></label>
+      <select class="input" name="priorityId" bind:value={priorityId}>
+        <option value="">(no priority)</option>
+        {#each priorities as p}
+          <option value={p.id}>{p.name}</option>
+        {/each}
+      </select></label>
   </div>
   <div class="mb-2"><label><input type="checkbox" bind:checked={isDone} name="isDone" /> Done</label></div>
   <div class="mb-2"><label><input type="checkbox" bind:checked={isActive} name="isActive" /> Active</label></div>
@@ -116,21 +172,57 @@
     </select>
   </label></div>
 
-  <div class="mb-2"><label>Responsible users<br />
-    <select class="input" name="responsibleUserIds" multiple size="5">
-      {#each users as u}
-        <option value={u.id}>{u.email}</option>
+  <!-- Responsible users pick-list (no submit) -->
+  <div class="mb-2">
+    <label>Responsible users</label>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+      <select class="input" bind:value={responsiblePicker}>
+        <option value={null} disabled selected>(select user)</option>
+        {#each availableResponsible as u}
+          <option value={u.id}>{u.email}</option>
+        {/each}
+      </select>
+      <button class="btn" type="button" on:click={addResponsible}>Add</button>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+      {#each selectedResponsibleIds as id}
+        <span style="border:1px solid #ccc; padding:2px 6px; border-radius:4px; display:inline-flex; gap:6px; align-items:center;">
+          {(users.find((x: any) => x.id === id))?.email ?? id}
+          <button class="btn" type="button" title="Remove" on:click={() => removeResponsible(id)} disabled={id === mainResponsibleId}>×</button>
+        </span>
       {/each}
-    </select>
-  </label></div>
+    </div>
+    <!-- Hidden inputs to submit on Create -->
+    {#each selectedResponsibleIds as id}
+      <input type="hidden" name="responsibleUserIds" value={id} />
+    {/each}
+  </div>
 
-  <div class="mb-2"><label>Assigned users<br />
-    <select class="input" name="assignedUserIds" multiple size="5">
-      {#each users as u}
-        <option value={u.id}>{u.email}</option>
+  <!-- Assigned users pick-list (no submit) -->
+  <div class="mb-2">
+    <label>Assigned users</label>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+      <select class="input" bind:value={assignedPicker}>
+        <option value={null} disabled selected>(select user)</option>
+        {#each availableAssigned as u}
+          <option value={u.id}>{u.email}</option>
+        {/each}
+      </select>
+      <button class="btn" type="button" on:click={addAssigned}>Add</button>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+      {#each selectedAssignedIds as id}
+        <span style="border:1px solid #ccc; padding:2px 6px; border-radius:4px; display:inline-flex; gap:6px; align-items:center;">
+          {(users.find((x: any) => x.id === id))?.email ?? id}
+          <button class="btn" type="button" title="Remove" on:click={() => removeAssigned(id)}>×</button>
+        </span>
       {/each}
-    </select>
-  </label></div>
+    </div>
+    <!-- Hidden inputs to submit on Create -->
+    {#each selectedAssignedIds as id}
+      <input type="hidden" name="assignedUserIds" value={id} />
+    {/each}
+  </div>
 
 
   <button class="btn" type="submit">Create</button>

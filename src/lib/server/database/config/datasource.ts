@@ -27,6 +27,10 @@ import { ProjectResponsibleUser } from '../entities/project/ProjectResponsibleUs
 // Deadlines
 import { Deadline } from '../entities/deadline/Deadline';
 import { DeadlineTag } from '../entities/deadline/DeadlineTag';
+// Impediments & Solutions
+import { Solution } from '../entities/impediment/Solution';
+import { Impediment } from '../entities/impediment/Impediment';
+import { ImpedimentMedian } from '../entities/impediment/ImpedimentMedian';
 
 const DATABASE_URL = process.env.DATABASE_URL as string | undefined;
 const NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
@@ -54,7 +58,11 @@ export const AppDataSource = new DataSource({
         ProjectResponsibleUser,
         // Deadlines
         Deadline,
-        DeadlineTag
+        DeadlineTag,
+        // Impediments & Solutions
+        Solution,
+        Impediment,
+        ImpedimentMedian
     ],
     migrations: ['src/lib/server/database/migrations/*.ts'],
     subscribers: ['src/lib/server/database/subscribers/*.ts']

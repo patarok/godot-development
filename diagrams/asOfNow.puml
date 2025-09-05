@@ -1,0 +1,379 @@
+@startuml
+' Legend colors
+!define ENTITY class
+!define CONFIG_TABLE #lightblue
+!define CORE_TABLE #lightgreen
+!define JUNCTION_TABLE #lightyellow
+!define AUTH_TABLE #lightcoral
+!define AUDIT_TABLE #lightgray
+
+skinparam classAttributeIconSize 0
+hide methods
+
+' =============================
+' Auth & Identity
+' =============================
+package "Auth & Identity" {
+  ENTITY User AUTH_TABLE {
+    +id: uuid @id
+    +email: varchar(255) @unique
+    +forename: varchar(255)?
+    +surname: varchar(255)?
+    +username: varchar(255)?
+    +password: varchar(255)
+    +isActive: boolean
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY Role AUTH_TABLE {
+    +id: uuid @id
+    +name: varchar @unique
+  }
+
+  ENTITY Permission AUTH_TABLE {
+    +id: uuid @id
+    +name: varchar @unique
+    +description: varchar?
+    +category: varchar
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ' Junctions for RBAC
+  ENTITY UserRole JUNCTION_TABLE {
+    +id: uuid @id
+    +userId: uuid @index
+    +roleId: uuid @index
+    +assignedAt: timestamptz
+    --
+    <<unique(userId, roleId)>>
+  }
+
+  ENTITY RolePermission JUNCTION_TABLE {
+    +id: uuid @id
+    +roleId: uuid @index
+    +permissionId: uuid @index
+    +createdAt: timestamptz
+    --
+    <<unique(roleId, permissionId)>>
+  }
+
+  ENTITY Session AUTH_TABLE {
+    +id: uuid @id
+    +userId: uuid @index
+    +tokenHash: varchar(128) @index
+    +createdAt: timestamptz
+    +expiresAt: timestamptz
+    +lastUsedAt: timestamptz?
+    +userAgent: varchar?
+    +ip: inet?
+    +revokedAt: timestamptz?
+  }
+
+  ENTITY PasswordResetToken AUTH_TABLE {
+    +id: uuid @id
+    +userId: uuid @index
+    +tokenHash: varchar(128) @index
+    +createdAt: timestamptz
+    +expiresAt: timestamptz
+    +usedAt: timestamptz?
+  }
+}
+
+User "1" -- "*" Session : userId
+User "1" -- "*" PasswordResetToken : userId
+User "1" -- "*" UserRole : userId
+Role "1" -- "*" UserRole : roleId
+Role "1" -- "*" RolePermission : roleId
+Permission "1" -- "*" RolePermission : permissionId
+
+' =============================
+' Configuration
+' =============================
+package "Configuration" {
+  ENTITY SystemSetting CONFIG_TABLE {
+    +id: uuid @id
+    +key: varchar @unique
+    +value: varchar
+    +description: varchar?
+    +category: varchar?
+    +isPublic: boolean
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+}
+
+' =============================
+' State / Lookups
+' =============================
+package "State / Lookups" {
+  ENTITY ProjectState CORE_TABLE {
+    +id: uuid @id
+    +name: varchar(64) @unique
+    +rank: int
+    +color: varchar(16)?
+    +description: varchar?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY TaskState CORE_TABLE {
+    +id: uuid @id
+    +name: varchar(64) @unique
+    +rank: int
+    +color: varchar(16)?
+    +description: varchar?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY Priority CORE_TABLE {
+    +id: uuid @id
+    +name: varchar(64) @unique
+    +rank: int
+    +color: varchar(16)?
+    +description: varchar?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY RiskLevel CORE_TABLE {
+    +id: uuid @id
+    +name: varchar(64) @unique
+    +rank: int
+    +color: varchar(16)?
+    +description: varchar?
+    +isActive: boolean
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+}
+
+' =============================
+' Project
+' =============================
+package "Project" {
+  ENTITY Project CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(256)
+    +description: varchar?
+    +isDone: boolean
+    +isActive: boolean
+    +currentIterationNumber: int
+    +iterationWarnAt: int
+    +maxIterations: int?
+    +estimatedBudget: numeric(14,2)?
+    +actualCost: numeric(14,2)?
+    +estimatedHours: int?
+    +actualHours: int?
+    +startDate: timestamptz?
+    +endDate: timestamptz?
+    +actualStartDate: timestamptz?
+    +actualEndDate: timestamptz?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ' Project↔User junctions
+  ENTITY ProjectAssignedUser JUNCTION_TABLE {
+    +id: uuid @id
+    +projectId: uuid
+    +userId: uuid
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(projectId, userId)>>
+  }
+
+  ENTITY ProjectResponsibleUser JUNCTION_TABLE {
+    +id: uuid @id
+    +projectId: uuid
+    +userId: uuid
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(projectId, userId)>>
+  }
+
+  ENTITY ProjectUser JUNCTION_TABLE {
+    +id: uuid @id
+    +projectId: uuid
+    +userId: uuid
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(projectId, userId)>>
+  }
+
+  ENTITY ProjectCreator JUNCTION_TABLE {
+    +id: uuid @id
+    +projectId: uuid
+    +userId: uuid
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(projectId, userId)>>
+  }
+}
+
+Project "*" -- "1" ProjectState : projectStateId
+Project "*" -- "0..1" Priority : priorityId
+Project "*" -- "0..1" RiskLevel : riskLevelId
+Project "*" -- "0..1" User : creatorId
+Project "*" -- "0..1" User : mainResponsibleId
+
+ProjectAssignedUser "*" -- "1" Project : projectId
+ProjectAssignedUser "*" -- "1" User : userId
+ProjectResponsibleUser "*" -- "1" Project : projectId
+ProjectResponsibleUser "*" -- "1" User : userId
+ProjectUser "*" -- "1" Project : projectId
+ProjectUser "*" -- "1" User : userId
+ProjectCreator "*" -- "1" Project : projectId
+ProjectCreator "*" -- "1" User : userId
+
+' =============================
+' Task & Tags
+' =============================
+package "Task & Tags" {
+  ENTITY Task CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(512)
+    +description: varchar?
+    +isDone: boolean
+    +actualHours: int?
+    +hasSegmentGroupCircle: boolean
+    +segmentGroupCircleId: uuid?
+    +projectId: uuid?
+    +dueDate: timestamptz
+    +startDate: timestamptz
+    +iterationSegmentId: uuid?
+    +lastUsedAt: timestamptz?
+    +isActive: boolean
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY UserTask JUNCTION_TABLE {
+    +id: uuid @id
+    +userId: uuid @index
+    +taskId: uuid @index
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(userId, taskId)>>
+  }
+
+  ENTITY Tag CORE_TABLE {
+    +id: uuid @id
+    +slug: varchar(64) @unique
+    +name: varchar(128)
+    +color: varchar(16)?
+    +description: varchar?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY TaskTag JUNCTION_TABLE {
+    +id: uuid @id
+    +taskId: uuid @index
+    +tagId: uuid @index
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(taskId, tagId)>>
+  }
+}
+
+Task "*" -- "1" TaskState : taskStateId
+Task "*" -- "0..1" Priority : priorityId
+Task "*" -- "0..1" Project : projectId
+Task "*" -- "0..1" User : creatorId
+Task "*" -- "0..1" User : activeUserId
+Task "0..*" -- "0..1" Task : parentTaskId
+
+UserTask "*" -- "1" User : userId
+UserTask "*" -- "1" Task : taskId
+TaskTag "*" -- "1" Task : taskId
+TaskTag "*" -- "1" Tag : tagId
+
+' =============================
+' Deadline
+' =============================
+package "Deadline" {
+  ENTITY Deadline CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(256)
+    +description: varchar?
+    +dueAt: timestamptz
+    +isDone: boolean
+    +isActive: boolean
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY DeadlineTag JUNCTION_TABLE {
+    +id: uuid @id
+    +deadlineId: uuid
+    +tagId: uuid
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+    --
+    <<unique(deadlineId, tagId)>>
+  }
+}
+
+Deadline "*" -- "0..1" Project : projectId
+Deadline "*" -- "0..1" Priority : priorityId
+Deadline "*" -- "0..1" User : creatorId
+DeadlineTag "*" -- "1" Deadline : deadlineId
+DeadlineTag "*" -- "1" Tag : tagId
+
+' =============================
+' Impediment
+' =============================
+package "Impediment" {
+  ENTITY Impediment CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(256)
+    +description: varchar?
+    +statusId: int
+    +estimatedHours: int?
+    +actualHours: int?
+    +isDone: boolean
+    +similarityScore: float?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY Solution CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(256)
+    +explanation: varchar
+    +link: varchar?
+    +category: varchar?
+    +effectiveness: float?
+    +usageCount: int
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+
+  ENTITY ImpedimentMedian CORE_TABLE {
+    +id: uuid @id
+    +title: varchar(256)
+    +description: varchar?
+    +hasSolution: boolean
+    +averageHours: float?
+    +occurrenceCount: int
+    +confidenceScore: float?
+    +createdAt: timestamptz
+    +updatedAt: timestamptz
+  }
+}
+
+Impediment "*" -- "0..1" Solution : solutionId
+Impediment "*" -- "0..1" User : assigneeId
+Impediment "*" -- "0..1" Task : taskId
+Solution "*" -- "0..1" User : authorId
+
+@enduml
