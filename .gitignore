@@ -73,6 +73,8 @@ dist
 users.json
 user.json
 
+.github
+.github/*
 
 # Editor/IDE
 .idea

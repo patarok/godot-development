@@ -11,6 +11,7 @@ import { User } from '../user/User'
 
 import { Priority } from '../state/Priority'
 import { TaskState } from '../state/TaskState'
+import { Project } from '../project/Project'
 
 
 @Entity()
@@ -53,19 +54,19 @@ export class Task {
     @Column({ type: 'boolean', default: true })
     hasSegmentGroupCircle: boolean;
 
-    // OPTIONAL: segmentGroupCircleId: Int? (relation commented until entity exists)
-    @Column({ type: 'int', nullable: true })
-    segmentGroupCircleId?: number | null;
+    // OPTIONAL: segmentGroupCircleId: UUID? (relation commented until entity exists)
+    @Column({ type: 'uuid', nullable: true })
+    segmentGroupCircleId?: string | null;
     // @ManyToOne(() => SegmentGroupCircle, { onDelete: 'SET NULL', nullable: true })
     // @JoinColumn({ name: 'segmentGroupCircleId' })
     // segmentGroupCircle?: SegmentGroupCircle | null;
 
-    // OPTIONAL: projectId: String? (relation commented until entity exists)
+    // Project relation (optional)
     @Column({ type: 'uuid', nullable: true })
     projectId?: string | null;
-    // @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
-    // @JoinColumn({ name: 'projectId' })
-    // project?: Project | null;
+    @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'projectId' })
+    project?: Project | null;
 
     @ManyToOne(() => Task, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'parentTaskId' })
@@ -77,9 +78,9 @@ export class Task {
     @Column({ type: 'timestamptz', default: () => 'now()' })
     startDate: Date;
 
-    // OPTIONAL: iterationSegmentId: Int? (relation commented until entity exists)
-    @Column({ type: 'int', nullable: true })
-    iterationSegmentId?: number | null;
+    // OPTIONAL: iterationSegmentId: UUID? (relation commented until entity exists)
+    @Column({ type: 'uuid', nullable: true })
+    iterationSegmentId?: string | null;
     // @ManyToOne(() => IterationSegment, { onDelete: 'SET NULL', nullable: true })
     // @JoinColumn({ name: 'iterationSegmentId' })
     // iterationSegment?: IterationSegment | null;

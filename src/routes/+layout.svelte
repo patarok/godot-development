@@ -54,13 +54,13 @@
 {#if browser}
 	<button
 			onclick={accountToggle}
-			style="aspect-ratio: 1 / 1; border: none; position: absolute; top: 0; right: 0; margin: 1rem;"
+			style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
 	>
 		🔒
 	</button>
 	<button
 			onclick={toggleTheme}
-			style="aspect-ratio: 1 / 1; border: none; position: absolute; bottom: 0; right: 0; margin: 1rem;"
+			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
 	>
 		🌙
 	</button>

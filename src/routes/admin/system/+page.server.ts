@@ -1,6 +1,6 @@
 import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { AppDataSource, SystemSetting, Priority, TaskState, initializeDatabase } from '$lib/server/database';
+import { AppDataSource, SystemSetting, Priority, TaskState, ProjectState, RiskLevel, initializeDatabase } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -12,8 +12,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     const settings = await AppDataSource.getRepository(SystemSetting).find({ order: { key: 'ASC' } });
     const priorities = await AppDataSource.getRepository(Priority).find({ order: { rank: 'ASC', name: 'ASC' } });
     const taskStates = await AppDataSource.getRepository(TaskState).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const projectStates = await AppDataSource.getRepository(ProjectState).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const riskLevels = await AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } });
 
-    return { plainSettings: toPlainArray(settings), priorities: toPlainArray(priorities), taskStates: toPlainArray(taskStates) };
+    return { plainSettings: toPlainArray(settings), priorities: toPlainArray(priorities), taskStates: toPlainArray(taskStates), projectStates: toPlainArray(projectStates), riskLevels: toPlainArray(riskLevels) };
 };
 
 export const actions: Actions = {
@@ -128,5 +130,108 @@ export const actions: Actions = {
             return fail(400, { message: 'Cannot delete state in use' });
         }
         return { message: 'Task state deleted' };
+    },
+    // Project States CRUD
+    create_project_state: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const name = String(fd.get('name') ?? '').trim();
+        const rank = Number(fd.get('rank') ?? 0) || 0;
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+        if (!name) return fail(400, { message: 'Project state name required' });
+        const repo = AppDataSource.getRepository(ProjectState);
+        try {
+            const s = repo.create({ name, rank, color: color || null, description: description || null });
+            await repo.save(s);
+        } catch (e) {
+            return fail(400, { message: 'Project state name must be unique' });
+        }
+        return { message: 'Project state created' };
+    },
+    update_project_state: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        const name = String(fd.get('name') ?? '').trim();
+        const rank = Number(fd.get('rank') ?? 0) || 0;
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+        if (!id || !name) return fail(400, { message: 'Missing id or name' });
+        const repo = AppDataSource.getRepository(ProjectState);
+        try {
+            await repo.update(id, { name, rank, color: color || null, description: description || null });
+        } catch (e) {
+            return fail(400, { message: 'Project state update failed (unique name?)' });
+        }
+        return { message: 'Project state updated' };
+    },
+    delete_project_state: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        if (!id) return fail(400, { message: 'Missing id' });
+        const repo = AppDataSource.getRepository(ProjectState);
+        try {
+            await repo.delete(id);
+        } catch (e) {
+            return fail(400, { message: 'Cannot delete project state in use' });
+        }
+        return { message: 'Project state deleted' };
+    },
+    // Risk Levels CRUD
+    create_risk_level: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const name = String(fd.get('name') ?? '').trim();
+        const rank = Number(fd.get('rank') ?? 0) || 0;
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+        if (!name) return fail(400, { message: 'Risk level name required' });
+        const repo = AppDataSource.getRepository(RiskLevel);
+        try {
+            const r = repo.create({ name, rank, color: color || null, description: description || null, isActive: true });
+            await repo.save(r);
+        } catch (e) {
+            return fail(400, { message: 'Risk level name must be unique' });
+        }
+        return { message: 'Risk level created' };
+    },
+    update_risk_level: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        const name = String(fd.get('name') ?? '').trim();
+        const rank = Number(fd.get('rank') ?? 0) || 0;
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+        const isActive = fd.get('isActive') ? true : false;
+        if (!id || !name) return fail(400, { message: 'Missing id or name' });
+        const repo = AppDataSource.getRepository(RiskLevel);
+        try {
+            await repo.update(id, { name, rank, color: color || null, description: description || null, isActive });
+        } catch (e) {
+            return fail(400, { message: 'Risk level update failed (unique name?)' });
+        }
+        return { message: 'Risk level updated' };
+    },
+    delete_risk_level: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        if (!id) return fail(400, { message: 'Missing id' });
+        const repo = AppDataSource.getRepository(RiskLevel);
+        try {
+            await repo.delete(id);
+        } catch (e) {
+            return fail(400, { message: 'Cannot delete risk level in use' });
+        }
+        return { message: 'Risk level deleted' };
     }
 };

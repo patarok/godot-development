@@ -19,3 +19,15 @@ export * from './entities/task/Tag';
 export * from './entities/state/Priority';
 export * from './entities/state/TaskState';
 export * from './entities/state/ProjectState';
+export * from './entities/state/RiskLevel';
+// Project domain
+export * from './entities/project/Project';
+export * from './entities/project/ProjectUser';
+export * from './entities/project/ProjectTag';
+export * from './entities/project/ProjectCreator';
+export * from './entities/project/ProjectCircle';
+export * from './entities/project/ProjectAssignedUser';
+export * from './entities/project/ProjectResponsibleUser';
+// Deadlines
+export * from './entities/deadline/Deadline';
+export * from './entities/deadline/DeadlineTag';
