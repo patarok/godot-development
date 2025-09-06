@@ -1,3 +1,15 @@
+# [5.2.0](https://github.com/patarok/godot-development/compare/v5.1.1...v5.2.0) (2025-09-06)
+
+
+### Bug Fixes
+
+* fixes casing in entities ([6557dd3](https://github.com/patarok/godot-development/commit/6557dd3597cc9d938e56276bd161022f92dd419d))
+
+
+### Features
+
+* decides for bits-ui, introduces a clean way of styling bits-ui headless components ([de59b10](https://github.com/patarok/godot-development/commit/de59b10874f13f9c80e173c5963f64507ed36917))
+
 ## [5.1.1](https://github.com/patarok/godot-development/compare/v5.1.0...v5.1.1) (2025-09-06)
 
 
