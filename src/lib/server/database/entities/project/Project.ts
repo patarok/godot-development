@@ -21,16 +21,16 @@ export class Project {
   description?: string | null;
 
   @ManyToOne(() => ProjectState, { onDelete: 'RESTRICT', nullable: false })
-  @JoinColumn({ name: 'projectStateId' })
+  @JoinColumn({ name: 'project_state_id' })
   projectState: ProjectState;
 
   @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'priorityId' })
+  @JoinColumn({ name: 'priority_id' })
   priority?: Priority | null;
 
   // Creator/auditor of the project (nullable)
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'creatorId' })
+  @JoinColumn({ name: 'creator_id' })
   creator?: User | null;
 
   @Column({ type: 'boolean', default: false })
@@ -74,11 +74,11 @@ export class Project {
 
   // Optional relation to RiskLevel
   @ManyToOne(() => RiskLevel, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'riskLevelId' })
+  @JoinColumn({ name: 'risk_level_id' })
   riskLevel?: RiskLevel | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'mainResponsibleId' })
+  @JoinColumn({ name: 'main_responsible_id' })
   mainResponsible?: User | null;
 
   // @ManyToOne(() => User, { onDelete: 'SET NULL' })

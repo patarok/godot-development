@@ -6,7 +6,7 @@ export class PasswordResetToken {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ type: 'uuid', name: 'user_id' })
     @Index()
     userId: string;
 
@@ -24,6 +24,6 @@ export class PasswordResetToken {
     usedAt?: Date | null;
 
     @ManyToOne(() => User, (user) => user.passwordResetTokens, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 }

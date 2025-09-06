@@ -17,15 +17,15 @@ export class Deadline {
   description?: string | null;
 
   @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'projectId' })
+  @JoinColumn({ name: 'project_id' })
   project?: Project | null;
 
   @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'priorityId' })
+  @JoinColumn({ name: 'priority_id' })
   priority?: Priority | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'creatorId' })
+  @JoinColumn({ name: 'creator_id' })
   creator?: User | null;
 
   @Column({ type: 'timestamptz' })

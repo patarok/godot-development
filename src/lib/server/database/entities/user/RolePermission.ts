@@ -10,18 +10,19 @@ export class RolePermission {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'uuid' })
+    // Align to existing snake_case columns
+    @Column({ type: 'uuid', name: 'role_id' })
     roleId: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ type: 'uuid', name: 'permission_id' })
     permissionId: string;
 
     @ManyToOne(() => Role, role => role.rolePermissions, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'roleId' })
+    @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @ManyToOne(() => Permission, permission => permission.roles, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'permissionId' })
+    @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
     @CreateDateColumn()

@@ -33,19 +33,19 @@ export class Task {
 
     // creatorId: who initially created the task
     @ManyToOne(() => User, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: 'creatorId' })
+    @JoinColumn({ name: 'creator_id' })
     creator?: User | null;
 
     @ManyToOne(() => TaskState, { onDelete: 'RESTRICT', nullable: false })
-    @JoinColumn({ name: 'taskStateId' })
+    @JoinColumn({ name: 'task_state_id' })
     taskState: TaskState;
 
     @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: 'priorityId' })
+    @JoinColumn({ name: 'priority_id' })
     priority?: Priority;
 
     @ManyToOne(() => User, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: 'activeUserId' })
+    @JoinColumn({ name: 'active_user_id' })
     user?: User;
 
     @Column({ type: 'int', nullable: true })
@@ -62,14 +62,14 @@ export class Task {
     // segmentGroupCircle?: SegmentGroupCircle | null;
 
     // Project relation (optional)
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ type: 'uuid', nullable: true, name: 'project_id' })
     projectId?: string | null;
     @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'projectId' })
+    @JoinColumn({ name: 'project_id' })
     project?: Project | null;
 
     @ManyToOne(() => Task, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: 'parentTaskId' })
+    @JoinColumn({ name: 'parent_task_id' })
     parent?: Task;
 
     @Column({ type: 'timestamptz' })

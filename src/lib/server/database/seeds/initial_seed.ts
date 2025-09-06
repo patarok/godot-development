@@ -1,4 +1,4 @@
-import { AppDataSource } from '../index';
+import { AppDataSource } from '../config/datasource';
 import { Role } from '../entities/user/Role';
 import { Permission } from '../entities/user/Permission';
 import { User } from '../entities/user/User';

@@ -29,15 +29,15 @@ export class Impediment {
   isDone: boolean;
 
   @ManyToOne(() => Solution, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'solutionId' })
+  @JoinColumn({ name: 'solution_id' })
   solution?: Solution | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'assigneeId' })
+  @JoinColumn({ name: 'assignee_id' })
   assignee?: User | null;
 
   @ManyToOne(() => Task, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'taskId' })
+  @JoinColumn({ name: 'task_id' })
   task?: Task | null;
 
   @Column({ type: 'float', nullable: true })

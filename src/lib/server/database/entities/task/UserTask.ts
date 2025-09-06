@@ -16,18 +16,18 @@ export class UserTask {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'user_id' })
   userId: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'task_id' })
   taskId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToOne(() => Task, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'taskId' })
+  @JoinColumn({ name: 'task_id' })
   task: Task;
 
   @CreateDateColumn()

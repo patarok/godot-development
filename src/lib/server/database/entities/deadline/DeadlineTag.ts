@@ -8,18 +8,18 @@ export class DeadlineTag {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'deadline_id' })
   deadlineId: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'tag_id' })
   tagId: string;
 
   @ManyToOne(() => Deadline, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'deadlineId' })
+  @JoinColumn({ name: 'deadline_id' })
   deadline: Deadline;
 
   @ManyToOne(() => Tag, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'tagId' })
+  @JoinColumn({ name: 'tag_id' })
   tag: Tag;
 
   @CreateDateColumn()

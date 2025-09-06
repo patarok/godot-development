@@ -10,18 +10,19 @@ export class UserRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'uuid' })
+    // Map to existing snake_case columns to avoid sync issues in existing DBs
+    @Column({ type: 'uuid', name: 'user_id' })
     userId: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ type: 'uuid', name: 'role_id' })
     roleId: string;
 
     @ManyToOne(() => User, user => user.roles, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
     @ManyToOne(() => Role, role => role.userRoles, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'roleId' })
+    @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @CreateDateColumn()

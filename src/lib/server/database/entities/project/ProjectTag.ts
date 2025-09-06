@@ -8,18 +8,18 @@ export class ProjectTag {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'project_id' })
   projectId: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'tag_id' })
   tagId: string;
 
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'projectId' })
+  @JoinColumn({ name: 'project_id' })
   project: Project;
 
   @ManyToOne(() => Tag, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'tagId' })
+  @JoinColumn({ name: 'tag_id' })
   tag: Tag;
 
   @CreateDateColumn()

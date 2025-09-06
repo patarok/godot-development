@@ -6,7 +6,7 @@ export class Session {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ type: 'uuid', name: 'user_id' })
     @Index()
     userId: string;
 
@@ -33,6 +33,6 @@ export class Session {
     revokedAt?: Date | null;
 
     @ManyToOne(() => User, (user) => user.sessions, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 }
