@@ -1,3 +1,10 @@
+## [5.1.1](https://github.com/patarok/godot-development/compare/v5.1.0...v5.1.1) (2025-09-06)
+
+
+### Bug Fixes
+
+* schema drop, seed now working via npm scripts ([9350da9](https://github.com/patarok/godot-development/commit/9350da94ae65400e810ed6851491a068113d9f9d))
+
 # [5.1.0](https://github.com/patarok/godot-development/compare/v5.0.0...v5.1.0) (2025-09-05)
 
 
