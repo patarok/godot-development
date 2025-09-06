@@ -201,8 +201,10 @@ export default defineConfig({
           }
         }
       },
-      recipes: {
-      },
+      // automatic discovery of recipes
+      // recipes: {
+      //
+      // },
       patterns: {
       },
       layerStyles: {

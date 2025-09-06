@@ -45,6 +45,32 @@
 			window.location.href = '/login';
 		}
 	}
+
+    //menubar example on how we are gonna deal with bits-ui headless components
+    // Menu action handlers
+    function newFile() {
+        console.log("New file clicked");
+    }
+
+    function openFile() {
+        console.log("Open file clicked");
+    }
+
+    function saveFile() {
+        console.log("Save file clicked");
+    }
+
+    function cut() {
+        console.log("Cut clicked");
+    }
+
+    function copy() {
+        console.log("Copy clicked");
+    }
+
+    function paste() {
+        console.log("Paste clicked");
+    }
 </script>
 
 <svelte:head>
@@ -52,6 +78,8 @@
 </svelte:head>
 
 {#if browser}
+
+
 	<button
 			onclick={accountToggle}
 			style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
