@@ -2,8 +2,7 @@
 import { randomBytes, createHash } from 'crypto';
 import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
 import { IsNull } from 'typeorm';
-import pkg from '@node-rs/argon2';
-const { hash: argon2hash, verify: argon2verify, argon2id } = pkg;
+import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
 
 function sha256(s: string) { return createHash('sha256').update(s).digest('hex'); }
 
@@ -21,7 +20,7 @@ export async function registerUser(input: { email: string; username?: string; fo
     const username = input.username?.trim() ?? email;
     const existing = await repo.findOne({ where: [{ email }, { username }] });
     if (existing) throw new Error('User already exists');
-    const password = await argon2hash(input.password, { algorithm: argon2id, memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 });
+    const password = await argon2hash(input.password, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
     return repo.save(repo.create({ email, username, forename: input.forename?.trim(), surname: input.surname?.trim(), password, isActive: true }));
 }
 
@@ -84,7 +83,7 @@ export async function resetPasswordWithToken(rawToken: string, newPassword: stri
     if (!prt || prt.expiresAt <= new Date()) return false;
     const user = await userRepo.findOne({ where: { id: prt.userId } });
     if (!user) return false;
-    user.password = await argon2hash(newPassword, { algorithm: argon2id, memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 });
+    user.password = await argon2hash(newPassword, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
     await userRepo.save(user);
     prt.usedAt = new Date();
     await prRepo.save(prt);
