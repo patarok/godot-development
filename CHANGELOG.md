@@ -1,3 +1,11 @@
+# [5.3.0](https://github.com/patarok/godot-development/compare/v5.2.0...v5.3.0) (2025-09-07)
+
+
+### Features
+
+* pulls in components, scaffolds a login-component, uses login-component ([4a75e0c](https://github.com/patarok/godot-development/commit/4a75e0c86048fb80111334206695e6f485d90605))
+* uses bits-ui via shadcn now, uses tailwind instead of panda ([a3b57b1](https://github.com/patarok/godot-development/commit/a3b57b16cedb909922de0f399ab36eda1c77e734))
+
 # [5.2.0](https://github.com/patarok/godot-development/compare/v5.1.1...v5.2.0) (2025-09-06)
 
 
