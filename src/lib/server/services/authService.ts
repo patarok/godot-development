@@ -18,9 +18,15 @@ export async function registerUser(input: { email: string; username?: string; fo
     const repo = AppDataSource.getRepository(User);
     const email = input.email.trim().toLowerCase();
     const username = input.username?.trim() ?? email;
+
     const existing = await repo.findOne({ where: [{ email }, { username }] });
-    if (existing) throw new Error('User already exists');
+
+    if (existing) {
+        console.log('User already exists:', existing);
+        throw new Error('User already exists');
+    }
     const password = await argon2hash(input.password, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
+
     return repo.save(repo.create({ email, username, forename: input.forename?.trim(), surname: input.surname?.trim(), password, isActive: true }));
 }
 

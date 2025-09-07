@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { AppDataSource, initializeDatabase, Task, Priority, TaskState, Tag, TaskTag, User } from '$lib/server/database';
-import { toPlainArray } from '$lib/utils';
+import { toPlainArray } from '$lib/utils/index';
 import { In } from 'typeorm';
 
 function slugifyTag(s: string) {

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { AppDataSource, initializeDatabase, Project, Priority, ProjectState, RiskLevel, User, Task, ProjectAssignedUser, ProjectResponsibleUser } from '$lib/server/database';
-import { toPlainArray } from '$lib/utils';
+import { toPlainArray } from '$lib/utils/index';
 import { In } from 'typeorm';
 
 

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { AppDataSource, User } from '$lib/server/database';
-import { toPlainArray } from '$lib/utils';
+import { toPlainArray } from '$lib/utils/index';
 
 // For now, fetch from Mailhog HTTP API
 async function fetchMailhogMessages(): Promise<any[]> {

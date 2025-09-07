@@ -4,6 +4,15 @@
 	import { writable } from 'svelte/store';
 	import { browser } from '$app/environment';
 	import type { LayoutData } from './$types';
+    import { Button } from "$lib/components/ui/button"
+    import {
+        Menubar,
+        MenubarMenu,
+        MenubarTrigger,
+        MenubarContent,
+        MenubarItem,
+        MenubarSeparator
+    } from "$lib/components/ui/menubar";
 
 	// Svelte 5 way: get props via $props(), no $: and no $page
 	let { data, children }: { data: LayoutData; children: any } = $props();
@@ -71,6 +80,36 @@
     function paste() {
         console.log("Paste clicked");
     }
+
+
+    const sales = [
+        { label: "Michael Scott", value: "michael" },
+        { label: "Dwight Schrute", value: "dwight" },
+        { label: "Jim Halpert", value: "jim" },
+        { label: "Stanley Hudson", value: "stanley" },
+        { label: "Phyllis Vance", value: "phyllis" },
+        { label: "Pam Beesly", value: "pam" },
+        { label: "Andy Bernard", value: "andy" },
+    ];
+
+    const hr = [
+        { label: "Toby Flenderson", value: "toby" },
+        { label: "Holly Flax", value: "holly" },
+        { label: "Jan Levinson", value: "jan" },
+    ];
+
+    const accounting = [
+        { label: "Angela Martin", value: "angela" },
+        { label: "Kevin Malone", value: "kevin" },
+        { label: "Oscar Martinez", value: "oscar" },
+    ];
+
+    const menubarMenus = [
+        { title: "Sales", items: sales },
+        { title: "HR", items: hr },
+        { title: "Accounting", items: accounting },
+        { title: "EMPTY", items: ['']}
+    ];
 </script>
 
 <svelte:head>
@@ -78,20 +117,38 @@
 </svelte:head>
 
 {#if browser}
+    <Menubar class="px-2">
+        {#each menubarMenus as { title, items }}
+            <MenubarMenu>
+                <MenubarTrigger class="px-3 py-2 font-medium">{title}</MenubarTrigger>
+                <MenubarContent class="min-w-48">
+                    {#each items as item, i}
+                        <MenubarItem class="cursor-pointer">
+                            {typeof item === 'string' ? item : item.label}
+                        </MenubarItem>
+                        {#if i < items.length - 1}
+                            <MenubarSeparator />
+                        {/if}
+                    {/each}
+                </MenubarContent>
+            </MenubarMenu>
+        {/each}
+    </Menubar>
 
-
-	<button
+    {#if user}
+	<Button
 			onclick={accountToggle}
 			style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
 	>
 		🔒
-	</button>
-	<button
+	</Button>
+        {/if}
+	<Button
 			onclick={toggleTheme}
 			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
 	>
 		🌙
-	</button>
+	</Button>
 {/if}
 
 {@render children?.()}

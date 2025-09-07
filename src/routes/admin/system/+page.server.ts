@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { AppDataSource, SystemSetting, Priority, TaskState, ProjectState, RiskLevel, initializeDatabase } from '$lib/server/database';
-import { toPlainArray } from '$lib/utils';
+import { toPlainArray } from '$lib/utils/index';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw error(401, 'Unauthorized');

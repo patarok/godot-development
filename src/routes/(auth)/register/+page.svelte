@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
-    import Alert from "$lib/components/alert.svelte";
+
     import type { ActionData } from "./$types";
 
     let { form }: { form: ActionData } = $props();
@@ -11,7 +11,7 @@
 </svelte:head>
 
 {#if form?.error}
-    <Alert>{@html form?.message}</Alert>
+    <h1>{@html form?.message}</h1>
 {/if}
 
 <form method="post" use:enhance>

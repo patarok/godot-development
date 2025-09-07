@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { AppDataSource, User } from '$lib/server/database';
-import { toPlain } from '$lib/utils';
+import { toPlain } from '$lib/utils/index';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 

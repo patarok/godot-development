@@ -4,10 +4,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import { loginWithPassword } from '$lib/server/services';
 
 export const actions: Actions = {
-    default: async ({ request, cookies, getClientAddress }) => {
+    login: async ( event ) => {
 
+        let { request, cookies, getClientAddress } = event;
         const form = await request.formData();
-        const identifier = String(form.get('username') ?? '');
+
+        const identifier = String(form.get('email') ?? '');
         const password = String(form.get('password') ?? '');
         if (!identifier || !password) return fail(400, { message: 'Missing credentials' });
 
@@ -18,4 +20,4 @@ export const actions: Actions = {
         //throw redirect(303, '/');
         redirect(302, '/');
     }
-};
+} satisfies Actions;
