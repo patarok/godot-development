@@ -1,4 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import tailwind from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig( ({mode}) => {
@@ -7,7 +8,10 @@ export default defineConfig( ({mode}) => {
 	const env = loadEnv(mode, process.cwd(), '');
 
 	return {
-	plugins: [sveltekit()],
+	plugins: [
+        tailwind(),
+        sveltekit(),
+    ],
 	server: {
 		host: '0.0.0.0',
 		port: 5173,
