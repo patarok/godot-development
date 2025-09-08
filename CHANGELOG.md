@@ -1,3 +1,10 @@
+## [5.3.1](https://github.com/patarok/godot-development/compare/v5.3.0...v5.3.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* adds component for register, fixes component usage ([6de114b](https://github.com/patarok/godot-development/commit/6de114b264520d8daca4ad4a3a030edf4860d3ed))
+
 # [5.3.0](https://github.com/patarok/godot-development/compare/v5.2.0...v5.3.0) (2025-09-07)
 
 
