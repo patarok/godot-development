@@ -68,7 +68,7 @@
                             <Label for="email-{uid}">Email</Label>
                             <Input id="email-{uid}" name="email" type="email" placeholder="m@example.com" required />
                         </div>
-                        <Button type="submit" class="w-full">Reset</Button>
+                        <Button type="submit" class="w-full">Request</Button>
                     </div>
                     <div class="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                         <span class="bg-card text-muted-foreground relative z-10 px-2">or quickly login with</span>

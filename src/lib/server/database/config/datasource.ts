@@ -31,6 +31,10 @@ import { DeadlineTag } from '../entities/deadline/DeadlineTag.ts';
 import { Solution } from '../entities/impediment/Solution.ts';
 import { Impediment } from '../entities/impediment/Impediment.ts';
 import { ImpedimentMedian } from '../entities/impediment/ImpedimentMedian.ts';
+// Mail
+import { Mail } from '../entities/mail/Mail.ts';
+import { SimpleMail } from "../entities/mail/SimpleMail";
+import { ContractorMail } from "../entities/mail/SimpleMail";
 
 const DATABASE_URL = process.env.DATABASE_URL as string | undefined;
 const NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
@@ -62,9 +66,12 @@ export const AppDataSource = new DataSource({
         // Impediments & Solutions
         Solution,
         Impediment,
-        ImpedimentMedian
+        ImpedimentMedian,
+        // Mail
+        Mail,
+        SimpleMail,
+        ContractorMail
     ],
     migrations: ['src/lib/server/database/migrations/*.ts'],
     subscribers: ['src/lib/server/database/subscribers/*.ts']
 });
-
