@@ -6,4 +6,4 @@
 
 <svelte:head><title>Login</title></svelte:head>
 
-<LoginForm class="mx-auto max-w-sm mt-[48px]" action="?/login"  error={form?.error} message={form?.message} />
+<LoginForm class="mx-auto max-w-sm mt-[48px]" method="POST" action="?/login" enhanceForm={true} error={form?.error} message={form?.message} />

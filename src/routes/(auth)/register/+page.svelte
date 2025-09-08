@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { enhance } from "$app/forms";
+    import RegisterForm from "$lib/components/register-form.svelte"
 
     import type { ActionData } from "./$types";
+    import LoginForm from "$lib/components/login-form.svelte";
 
     let { form }: { form: ActionData } = $props();
 </script>
@@ -10,62 +11,4 @@
     <title>Register New User</title>
 </svelte:head>
 
-{#if form?.error}
-    <h1>{@html form?.message}</h1>
-{/if}
-
-<form method="post" use:enhance>
-    <div class="mb-3">
-        <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                class="input"
-                required
-        />
-    </div>
-    <div class="mb-3">
-        <input
-                type="text"
-                name="forename"
-                placeholder="Forename"
-                class="input"
-        />
-    </div>
-    <div class="mb-3">
-        <input
-                type="text"
-                name="surname"
-                placeholder="Surname"
-                class="input"
-        />
-    </div>
-    <div class="mb-3">
-        <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                class="input"
-                required
-        />
-    </div>
-    <div class="mb-3">
-        <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                class="input"
-                required
-        />
-    </div>
-    <div class="mb-3">
-        <label for="role">Role</label>
-        <select id="role" name="role" class="input" required>
-            <option value="user" selected>User</option>
-            <option value="admin">Admin</option>
-        </select>
-    </div>
-    <div class="inline-flex items-center gap-3">
-        <button type="submit" class="btn">Register</button>
-    </div>
-</form>
+<RegisterForm class="mx-auto max-w-sm mt-[48px]" method="POST" action="?/login" enhanceForm={true} error={form?.error} message={form?.message} />
