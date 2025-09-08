@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as RadioGroup from "$lib/components/ui/radio-group";
     import { Button } from "$lib/components/ui/button";
     import * as Card from "$lib/components/ui/card";
     import { Label } from "$lib/components/ui/label";
@@ -108,6 +109,19 @@
                                 <a href="/forgot" class="ml-auto text-sm underline-offset-4 hover:underline">Forgot your password?</a>
                             </div>
                             <Input id="password-{uid}" name="password" type="password" required />
+                        </div>
+                        <div class="grid gap-3">
+                            <Label for="role-{uid}">Role</Label>
+                            <RadioGroup.Root name="role">
+                                <div class="flex items-center space-x-2">
+                                    <RadioGroup.Item value="admin" id="role-admin-{uid}" />
+                                    <Label for="role-admin-{uid}">Admin</Label>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <RadioGroup.Item value="user" id="role-user-{uid}" />
+                                    <Label for="role-user-{uid}">User</Label>
+                                </div>
+                            </RadioGroup.Root>
                         </div>
 
                         <Button type="submit" class="w-full">Create</Button>

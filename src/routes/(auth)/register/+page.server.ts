@@ -3,7 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { registerUser, createSession, assignRoleToUser } from '$lib/server/services';
 
 export const actions: Actions = {
-    default: async ({ request, cookies, getClientAddress }) => {
+    register: async ({ request, cookies, getClientAddress }) => {
         if (process.env.DEBUG_REGISTER === '1') debugger;
 
         const form = await request.formData();
@@ -34,4 +34,4 @@ export const actions: Actions = {
         }
         redirect(302, '/');
     }
-};
+} satisfies Actions;

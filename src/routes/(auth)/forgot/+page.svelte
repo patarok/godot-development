@@ -6,4 +6,4 @@
 
 <svelte:head><title>Forgot</title></svelte:head>
 
-<ForgotForm class="mx-auto max-w-sm mt-[48px]" method="POST" action="?/login" enhanceForm={true} error={form?.error} message={form?.message} />
+<ForgotForm class="mx-auto max-w-sm mt-[48px]" method="POST" action="?/forgot" enhanceForm={true} error={form?.error} message={form?.message} />
