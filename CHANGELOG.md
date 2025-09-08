@@ -1,3 +1,10 @@
+# [5.4.0](https://github.com/patarok/godot-development/compare/v5.3.1...v5.4.0) (2025-09-08)
+
+
+### Features
+
+* adds forgot-form ([bfc2dd4](https://github.com/patarok/godot-development/commit/bfc2dd4d5da132b01c658e4b9e7bb2f8e4c19929))
+
 ## [5.3.1](https://github.com/patarok/godot-development/compare/v5.3.0...v5.3.1) (2025-09-08)
 
 
