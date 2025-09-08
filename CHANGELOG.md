@@ -1,3 +1,11 @@
+## [5.4.1](https://github.com/patarok/godot-development/compare/v5.4.0...v5.4.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* adds missed files ([30ef920](https://github.com/patarok/godot-development/commit/30ef920958ee356202cb29017368450d7df82a25))
+* fixes other attributes, adds radio group for role in register ([02aca0b](https://github.com/patarok/godot-development/commit/02aca0b17beab6bdc5c308dbf1106a47d0d3b4f6))
+
 # [5.4.0](https://github.com/patarok/godot-development/compare/v5.3.1...v5.4.0) (2025-09-08)
 
 
