@@ -1,3 +1,10 @@
+# [5.5.0](https://github.com/patarok/godot-development/compare/v5.4.1...v5.5.0) (2025-09-08)
+
+
+### Features
+
+* MailEntities, MailService, MailSender ([6c4bcba](https://github.com/patarok/godot-development/commit/6c4bcba2f47da26a7afd75f012065f3bc72ed528))
+
 ## [5.4.1](https://github.com/patarok/godot-development/compare/v5.4.0...v5.4.1) (2025-09-08)
 
 
