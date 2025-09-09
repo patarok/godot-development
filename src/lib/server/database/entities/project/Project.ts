@@ -1,9 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { User } from '../user/User';
-import { Priority } from '../state/Priority';
-import { ProjectState } from '../state/ProjectState';
-import { RiskLevel } from '../state/RiskLevel';
-import { Task } from '../task/Task';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         ManyToOne,
+         JoinColumn,
+         OneToMany }
+from 'typeorm';
+
+import { User,
+         Priority,
+         ProjectState,
+         RiskLevel,
+         Task }
+from '$lib/server/database/entities';
+
 import { ProjectAssignedUser } from './ProjectAssignedUser';
 import { ProjectResponsibleUser } from './ProjectResponsibleUser';
 

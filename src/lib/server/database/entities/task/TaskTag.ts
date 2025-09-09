@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         ManyToOne,
+         JoinColumn,
+         CreateDateColumn,
+         UpdateDateColumn,
+         Index }
+from 'typeorm';
+
 import { Task } from './Task';
 import { Tag } from './Tag';
 

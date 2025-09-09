@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
 
 /**
  * Tag dictionary entity for reusable task tags.

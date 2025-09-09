@@ -1,7 +1,10 @@
-import {
-    Entity, PrimaryGeneratedColumn, Column,
-    CreateDateColumn, UpdateDateColumn
-} from "typeorm";
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         CreateDateColumn,
+         UpdateDateColumn
+}
+from "typeorm";
 
 export type MailStatus = "pending" | "sent" | "error";
 export type MailType = "templateMail" | "readyMail";

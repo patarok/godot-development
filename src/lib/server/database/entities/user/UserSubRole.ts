@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column, 
+         Index,
+         CreateDateColumn,
+         ManyToOne,
+         JoinColumn }
+from 'typeorm';
+
 import { User } from './User';
-import { SubRoleCfg } from '../config/SubRoleCfg';
+import { SubRoleCfg } from './SubRoleCfg';
 
 
 // since a SubRole(Cfg=configurable) can appear in a multitude of users
@@ -8,8 +16,8 @@ import { SubRoleCfg } from '../config/SubRoleCfg';
 // we bind them m:n -- so many explicit m:n can "pretzel" your brain, but it is good for understanding what happens.
 @Entity()
 @Index(['userId'])
-@Index(['roleId'])
-@Index(['userId', 'roleId'], { unique: true })
+@Index(['subRoleCfgId'])
+@Index(['userId', 'subRoleCfgId'], { unique: true })
 export class UserSubRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -18,8 +26,8 @@ export class UserSubRole {
     @Column({ type: 'uuid', name: 'user_id' })
     userId: string;
 
-    @Column({ type: 'uuid', name: 'role_id' })
-    roleId: string;
+    @Column({ type: 'uuid', name: 'subrole_id' })
+    subRoleCfgId: string;
 
     @ManyToOne(() => User, user => user.subRoles, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })

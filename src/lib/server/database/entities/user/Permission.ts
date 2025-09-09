@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         OneToMany }
+from 'typeorm';
+
 import { RolePermission } from './RolePermission';
 
 @Entity()

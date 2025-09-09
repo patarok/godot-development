@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
 
 /**
  * ProjectCircle stands on its own for now. Relations to Project or SegmentGroupCircle are commented out

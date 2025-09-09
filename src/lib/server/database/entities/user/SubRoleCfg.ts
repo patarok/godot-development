@@ -1,5 +1,14 @@
-import {Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany} from 'typeorm';
-import {RolePermission, UserRole, UserSubRole } from "$lib/server/database";
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         OneToMany }
+from 'typeorm';
+
+import { UserSubRole } from "./UserSubRole";
+import { SubRolePermissionPermission } from "./SubRolePermissionPermission";
 
 // this means SubRoleConfigurable
 /**
@@ -11,8 +20,7 @@ import {RolePermission, UserRole, UserSubRole } from "$lib/server/database";
  * - description: optional
  */
 @Entity()
-@Index(['name'], { unique: true })
-@Index(['rank'])
+@Index(['title'], { unique: true })
 export class SubRoleCfg {
     @PrimaryGeneratedColumn('uuid')
     id: string;

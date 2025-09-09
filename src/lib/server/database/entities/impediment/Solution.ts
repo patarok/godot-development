@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         ManyToOne,
+         JoinColumn }
+from 'typeorm';
+
 import { User } from '../user/User';
 
 @Entity()
@@ -17,7 +26,7 @@ export class Solution {
   link?: string | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'authorId' })
+  @JoinColumn({ name: 'author_id' })
   author?: User | null;
 
   @Column({ type: 'varchar', nullable: true })

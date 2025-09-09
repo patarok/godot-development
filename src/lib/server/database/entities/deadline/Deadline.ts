@@ -1,7 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Project } from '../project/Project';
-import { Priority } from '../state/Priority';
-import { User } from '../user/User';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         ManyToOne,
+         JoinColumn }
+from 'typeorm';
+
+import { Project,
+         Priority,
+         User }
+from '$lib/server/database/entities';
+
 
 @Entity()
 @Index(['title'])

@@ -1,7 +1,12 @@
-import {Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne} from 'typeorm';
-import { UserRole } from './UserRole';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         OneToMany }
+from 'typeorm';
+
+
 import { RolePermission } from './RolePermission';
-import type {User} from "$lib/server/database";
+import { User } from './User';
 
 @Entity()
 export class Role {
@@ -14,7 +19,7 @@ export class Role {
     @Column({ type: 'varchar', unique: true })
     name: string; // e.g., 'admin', 'user'
 
-    @OneToMany(() => User, (user) => user.roles, { onDelete: 'CASCADE' })
+    @OneToMany(() => User, (user) => user.role, { cascade: false })
     users: User[];
 
     @OneToMany(() => RolePermission, (rp) => rp.role)

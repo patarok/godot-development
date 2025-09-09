@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
 // import { ProjectStateKind } from '../config/ProjectStateKind'; // Uncomment when implemented
 
 /**

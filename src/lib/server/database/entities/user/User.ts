@@ -6,13 +6,17 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
-    JoinColumn
-} from 'typeorm';
-import { UserRole } from './UserRole';
-import { SubRoleCfg } from './SubRoleCfg';
-import { Session } from '../session/Session';
-import { PasswordResetToken } from '../session/PasswordResetToken';
-import {UserSubRole} from "$lib/server/database";
+    JoinColumn,
+    ManyToOne
+}
+from 'typeorm';
+
+import { Session,
+         PasswordResetToken }
+from '$lib/server/database/entities';
+
+import { Role } from './Role';
+import { UserSubRole } from "./UserSubRole";
 
 @Entity()
 @Index(['email'])
@@ -41,6 +45,7 @@ export class User {
     isActive: boolean;
 
     @ManyToOne(() => Role, (role) => role.users)
+    @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @OneToMany(() => UserSubRole, (usr) => usr.user)

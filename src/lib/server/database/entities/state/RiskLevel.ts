@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
 
 /**
  * RiskLevel represents qualitative/quantitative risk classification for Projects (e.g., Low, Medium, High).

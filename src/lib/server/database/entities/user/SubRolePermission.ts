@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { RolePermission } from './RolePermission';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         OneToMany }
+from 'typeorm';
+
+import { SubRolePermissionPermission } from './SubRolePermissionPermission';
 
 // not a junction table, permissions distinct to subroles
 @Entity()

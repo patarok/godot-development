@@ -1,6 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Unique,
+         ManyToOne,
+         JoinColumn,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
+
+import { Tag } from '$lib/server/database/entities';
+
 import { Project } from './Project';
-import { Tag } from '../task/Tag';
 
 @Entity()
 @Unique('UQ_ProjectTag_project_tag', ['projectId', 'tagId'])

@@ -1,6 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../user/User';
-import { Task } from '../task/Task';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         CreateDateColumn,
+         UpdateDateColumn,
+         ManyToOne,
+         JoinColumn }
+from 'typeorm';
+
+import { User,
+         Task }
+from '$lib/server/database/entities';
+
 import { Solution } from './Solution';
 
 @Entity()

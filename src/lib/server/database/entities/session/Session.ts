@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../user/User';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Index,
+         ManyToOne,
+         JoinColumn }
+from 'typeorm';
+
+import { User } from '$lib/server/database/entities';
 
 @Entity()
 export class Session {

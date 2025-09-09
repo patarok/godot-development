@@ -1,8 +1,17 @@
-import {
-    Entity, PrimaryGeneratedColumn, Column,
-    ManyToOne, OneToMany, CreateDateColumn, JoinColumn
-} from "typeorm";
-import {User} from "$lib/server/database";
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         ManyToOne,
+         OneToMany,
+         CreateDateColumn,
+         JoinColumn
+}
+from "typeorm";
+
+import {User} from '$lib/server/database/entities';
+
+import { Attachment } from './Attachment';
+import { MailAudit } from './MailAudit';
 
 @Entity()
 export class ContractorMail {
@@ -27,13 +36,13 @@ export class ContractorMail {
     @Column("text", { nullable: true })
     body_html?: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'timestamptz', nullable: true })
     sent_at?: Date;
 
     @CreateDateColumn()
     created_at: Date;
 
-    @Column({ nullable: true })
+    @Column({ type: 'timestamptz', nullable: true })
     retention_until?: Date;
 
     @Column({ default: false })
@@ -57,61 +66,8 @@ export class ContractorMail {
     @OneToMany(() => MailAudit, audit => audit.mail, { cascade: true })
     audits: MailAudit[];
 
-    @ManyToOne(() => User, user => user.roles, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
 }
 
-@Entity()
-export class Attachment {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
-
-    @Column()
-    mailId: string;
-
-    @Column()
-    filename: string;
-
-    @Column()
-    content_type: string;
-
-    @Column()
-    size: number;
-
-    @Column()
-    storage_path: string;
-
-    @Column()
-    sha256: string;
-
-    @CreateDateColumn()
-    created_at: Date;
-
-    @ManyToOne(() => ContractorMail, mail => mail.attachments)
-    mail: ContractorMail;
-}
-
-@Entity()
-export class MailAudit {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
-
-    @Column()
-    mailId: string;
-
-    @Column()
-    action: string; // created | updated | archived | retention-changed
-
-    @Column({ nullable: true })
-    performedBy?: string;
-
-    @Column("json", { nullable: true })
-    meta?: any;
-
-    @CreateDateColumn()
-    created_at: Date;
-
-    @ManyToOne(() => ContractorMail, mail => mail.audits)
-    mail: ContractorMail;
-}

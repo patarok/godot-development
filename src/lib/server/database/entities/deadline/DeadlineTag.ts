@@ -1,6 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Unique,
+         ManyToOne,
+         JoinColumn,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
+
+import { Tag } from '$lib/server/database/entities';
+
 import { Deadline } from './Deadline';
-import { Tag } from '../task/Tag';
 
 @Entity()
 @Unique('UQ_DeadlineTag_deadline_tag', ['deadlineId', 'tagId'])

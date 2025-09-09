@@ -1,6 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity,
+         PrimaryGeneratedColumn,
+         Column,
+         Unique,
+         ManyToOne,
+         JoinColumn,
+         CreateDateColumn,
+         UpdateDateColumn }
+from 'typeorm';
+
+import { User } from '$lib/server/database/entities';
+
 import { Project } from './Project';
-import { User } from '../user/User';
 
 @Entity()
 @Unique('UQ_ProjectAssigned_project_user', ['projectId', 'userId'])
