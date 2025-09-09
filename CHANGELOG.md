@@ -1,3 +1,10 @@
+## [5.5.3](https://github.com/patarok/godot-development/compare/v5.5.2...v5.5.3) (2025-09-09)
+
+
+### Bug Fixes
+
+* **entities:** fixes wrong relation, missing imports, reduces risk of circular reference but keeps grouped imports by introducing an entities-distinct barrel file. ([f4081e4](https://github.com/patarok/godot-development/commit/f4081e4e5eb016edfe19e100b5c076c63e069abe))
+
 ## [5.5.2](https://github.com/patarok/godot-development/compare/v5.5.1...v5.5.2) (2025-09-09)
 
 
