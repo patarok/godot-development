@@ -1,3 +1,10 @@
+## [5.5.4](https://github.com/patarok/godot-development/compare/v5.5.3...v5.5.4) (2025-09-09)
+
+
+### Bug Fixes
+
+* **entities:** fixes missing ref in entities barrel file, fixes missing UserSubRole class/model in datasource, 1st fix to db-typing ([81e79ae](https://github.com/patarok/godot-development/commit/81e79aea6bd3ebd577bdba34723ada4c4f0076a6))
+
 ## [5.5.3](https://github.com/patarok/godot-development/compare/v5.5.2...v5.5.3) (2025-09-09)
 
 
