@@ -75,3 +75,9 @@ export const AppDataSource = new DataSource({
     migrations: ['src/lib/server/database/migrations/*.ts'],
     subscribers: ['src/lib/server/database/subscribers/*.ts']
 });
+
+try {
+    await AppDataSource.initialize()
+} catch (error) {
+    console.log(error)
+}

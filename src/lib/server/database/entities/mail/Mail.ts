@@ -1,4 +1,3 @@
-// src/lib/db/entities/Mail.ts
 import {
     Entity, PrimaryGeneratedColumn, Column,
     CreateDateColumn, UpdateDateColumn

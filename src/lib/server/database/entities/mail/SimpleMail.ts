@@ -7,17 +7,17 @@ export class SimpleMail {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column("text")
     sender: string;
 
-    @Column()
+    @Column("text")
     recipient: string;
 
-    @Column({ nullable: true })
+    @Column("text", { nullable: true })
     cc?: string;
 
-    @Column()
-    subject: string;
+    @Column("text", { nullable: true })
+    subject?: string;
 
     @Column("text", { nullable: true })
     body_text?: string;

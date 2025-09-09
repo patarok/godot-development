@@ -1,5 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    Index,
+    CreateDateColumn,
+    UpdateDateColumn,
+    OneToMany,
+    JoinColumn
+} from 'typeorm';
 import { UserRole } from './UserRole';
+import { SubRoleCfg } from './SubRoleCfg';
 import { Session } from '../session/Session';
 import { PasswordResetToken } from '../session/PasswordResetToken';
 
@@ -29,8 +39,11 @@ export class User {
     @Column({ type: 'boolean', default: true })
     isActive: boolean;
 
-    @OneToMany(() => UserRole, (userRole) => userRole.user)
-    roles: UserRole[];
+    @ManyToOne(() => Role, (role) => role.users)
+    role: Role;
+
+    @OneToMany(() => SubRoleCfg, (src) => src.user)
+    subRoles: SubRoleCfg[];
 
     @OneToMany(() => Session, (session) => session.user)
     sessions: Session[];

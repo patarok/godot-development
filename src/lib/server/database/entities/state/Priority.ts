@@ -12,24 +12,24 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, Update
 @Index(['name'], { unique: true })
 @Index(['rank'])
 export class Priority {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column({ type: 'varchar', length: 64 })
-  name: string;
+    @Column({type: 'varchar', length: 64})
+    name: string;
 
-  @Column({ type: 'int', default: 0 })
-  rank: number;
+    @Column({type: 'int', default: 0})
+    rank: number;
 
-  @Column({ type: 'varchar', length: 16, nullable: true })
-  color?: string | null;
+    @Column({type: 'varchar', length: 16, nullable: true})
+    color?: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
-  description?: string | null;
+    @Column({type: 'varchar', nullable: true})
+    description?: string | null;
 
-  @CreateDateColumn()
-  createdAt: Date;
+    @CreateDateColumn()
+    createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+    @UpdateDateColumn()
+    updatedAt: Date;
 }
