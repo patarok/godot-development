@@ -1,3 +1,10 @@
+## [5.5.2](https://github.com/patarok/godot-development/compare/v5.5.1...v5.5.2) (2025-09-09)
+
+
+### Bug Fixes
+
+* fixes relations ([0c397e3](https://github.com/patarok/godot-development/commit/0c397e3144fa35f779e201467665396cf1d45792))
+
 ## [5.5.1](https://github.com/patarok/godot-development/compare/v5.5.0...v5.5.1) (2025-09-09)
 
 
