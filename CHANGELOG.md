@@ -1,3 +1,11 @@
+## [5.5.1](https://github.com/patarok/godot-development/compare/v5.5.0...v5.5.1) (2025-09-09)
+
+
+### Bug Fixes
+
+* adds lots of Entities ([0994966](https://github.com/patarok/godot-development/commit/0994966f08b16387ccc5a4fe9903cf85c13e821f))
+* **entities:** comments for better understanding what should happen. ([39e5b24](https://github.com/patarok/godot-development/commit/39e5b24b14d08a79aab4be217f45b39a573dc39d))
+
 # [5.5.0](https://github.com/patarok/godot-development/compare/v5.4.1...v5.5.0) (2025-09-08)
 
 
