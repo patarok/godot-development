@@ -17,23 +17,23 @@ export class Attachment {
     @Column({ type: 'uuid', name: 'mail_id' })
     mailId: string;
 
-    @Column()
-    filename: string;
+    @Column({ type: 'varchar', length: 256 })
+    title: string;
 
-    @Column()
-    content_type: string;
+    @Column({ type: 'varchar', length: 127, nullable: true })
+    contentType: string;
 
-    @Column()
+    @Column({ type: 'int', nullable: true })
     size: number;
 
-    @Column()
-    storage_path: string;
+    @Column({ type: 'varchar', length: 4096, nullable: false })
+    storagePath: string;
 
-    @Column()
-    sha256: string;
+    @Column({ type: 'char', length: 64, nullable: true })
+    sha256Hash: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ type: 'timestamptz' })
+    createdAt: Date;
 
     @ManyToOne(() => ContractorMail, (mail) => mail.attachments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'mail_id' })

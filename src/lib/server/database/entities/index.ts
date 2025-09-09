@@ -7,6 +7,7 @@ export * from './session/PasswordResetToken';
 
 // User
 export * from './user/User';
+export * from './user/UserSubRole';
 export * from './user/Role';
 export * from './user/Permission';
 export * from './user/RolePermission';

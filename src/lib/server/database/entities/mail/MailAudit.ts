@@ -17,17 +17,17 @@ export class MailAudit {
     @Column({ type: 'uuid', name: 'mail_id' })
     mailId: string;
 
-    @Column()
-    action: string; // created | updated | archived | retention-changed
+    @Column({ type: 'char', length: 18})
+    action: string; // created | updated | archived | retention-changed // maybe a new type.. taking 18 chars seems safe still which is 1 more than the longest
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     performedBy?: string;
 
     @Column("json", { nullable: true })
     meta?: any;
 
     @CreateDateColumn()
-    created_at: Date;
+    createdAt: Date;
 
     @ManyToOne(() => ContractorMail, (mail) => mail.audits, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'mail_id' })

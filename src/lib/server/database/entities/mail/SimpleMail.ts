@@ -23,13 +23,13 @@ export class SimpleMail {
     subject?: string;
 
     @Column("text", { nullable: true })
-    body_text?: string;
+    bodyText?: string;
 
     @Column("text", { nullable: true })
-    body_html?: string;
+    bodyHtml?: string;
 
     @Column("text", { nullable: true })
-    attachments_list?: string;
+    attachmentsList?: string;
 
     @Column({
         type: "enum",
@@ -39,8 +39,8 @@ export class SimpleMail {
     status: "sent" | "error" | "received";
 
     @Column({ type: "timestamptz", nullable: true })
-    sent_at?: Date;
+    sentAt?: Date;
 
     @CreateDateColumn()
-    created_at: Date;
+    createdAt: Date;
 }

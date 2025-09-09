@@ -18,46 +18,46 @@ export class ContractorMail {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
-    contractor_id: string;
+    @Column({ type: 'uuid', name: 'user_id' })
+    contractorId: string;
 
-    @Column()
+    @Column({ type: 'varchar', length: 255, nullable: true })
     subject: string;
 
-    @Column()
+    @Column({ type: 'varchar', length: 512, nullable: false })
     sender: string;
 
-    @Column("text") // JSON oder CSV String
+    @Column({type: "text", nullable: true}) // JSON oder CSV String
     recipients: string;
 
     @Column("text", { nullable: true })
-    body_text?: string;
+    bodyText?: string;
 
     @Column("text", { nullable: true })
-    body_html?: string;
+    bodyHtml?: string;
 
     @Column({ type: 'timestamptz', nullable: true })
-    sent_at?: Date;
+    sentAt?: Date;
 
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ type: 'timestamptz' })
+    createdAt: Date;
 
     @Column({ type: 'timestamptz', nullable: true })
-    retention_until?: Date;
+    retentionUntil?: Date;
 
-    @Column({ default: false })
-    legal_hold: boolean;
+    @Column({ type: 'boolean', default: false })
+    legalHold: boolean;
 
-    @Column()
-    stored_hash: string;
+    @Column({ type: 'varchar', length: 128, nullable: true })
+    storedHash: string;
 
-    @Column({ nullable: true })
-    signed_hash?: string;
+    @Column({ type: 'text', nullable: true })
+    signedHash: string;
 
-    @Column({ nullable: true })
-    archive_path?: string;
+    @Column({ type: 'varchar', length: 4096, nullable: true })
+    archivePath?: string;
 
-    @Column({ default: "queued" }) // queued | sent | archived | failed
+    @Column({ type: 'char', length: 8, default: "queued" }) // queued | sent | archived | failed
     status: string;
 
     @OneToMany(() => Attachment, att => att.mail, { cascade: true })

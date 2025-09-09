@@ -8,7 +8,8 @@ import { User,
          RolePermission,
          SubRoleCfg,
          SubRolePermission,
-         SubRolePermissionPermission
+         SubRolePermissionPermission,
+         UserSubRole
 }
 from '$lib/server/database/entities';
 
@@ -71,6 +72,11 @@ import { Mail,
 }
 from '$lib/server/database/entities';
 
+console.log('Entities being registered:', [
+    User, Role, Permission, RolePermission, SubRoleCfg,
+    SubRolePermission, SubRolePermissionPermission, UserSubRole  // ← Check this logs
+]);
+
 const DATABASE_URL = process.env.DATABASE_URL as string | undefined;
 const NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
 const DROP_SCHEMA = process.env.DROP_SCHEMA === '1';
@@ -91,6 +97,7 @@ export const AppDataSource = new DataSource({
         SubRoleCfg,
         SubRolePermission,
         SubRolePermissionPermission,
+        UserSubRole,
 
         // Config
         SystemSetting,
