@@ -17,8 +17,8 @@ export class SubRolePermission {
     @Column({ type: 'varchar' })
     category: string;
 
-    @OneToMany(() => SubRolePermission, (srp) => srp.permission)
-    subroles: SubRolePermission[];
+    @OneToMany(() => SubRolePermissionPermission, (srpp) => srpp.subRolePermission)
+    subrolePermissionPermissions: SubRolePermissionPermission[];
 
     @CreateDateColumn()
     createdAt: Date;

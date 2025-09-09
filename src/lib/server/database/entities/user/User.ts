@@ -12,6 +12,7 @@ import { UserRole } from './UserRole';
 import { SubRoleCfg } from './SubRoleCfg';
 import { Session } from '../session/Session';
 import { PasswordResetToken } from '../session/PasswordResetToken';
+import {UserSubRole} from "$lib/server/database";
 
 @Entity()
 @Index(['email'])
@@ -42,8 +43,8 @@ export class User {
     @ManyToOne(() => Role, (role) => role.users)
     role: Role;
 
-    @OneToMany(() => SubRoleCfg, (src) => src.user)
-    subRoles: SubRoleCfg[];
+    @OneToMany(() => UserSubRole, (usr) => usr.user)
+    subRoles: UserSubRole[];
 
     @OneToMany(() => Session, (session) => session.user)
     sessions: Session[];

@@ -35,7 +35,7 @@ export class SubRoleCfg {
     @OneToMany(() => UserSubRole, (usr) => usr.subRoleCfg)
     userSubRoles: UserSubRole[];
 
-    @OneToMany(() => SubRolePermissionPermission, (srpp) => srpp.subRoleCfgs)
+    @OneToMany(() => SubRolePermissionPermission, (srpp) => srpp.subRoleCfg)
     subRolePermissionPermissions: SubRolePermissionPermission[];
 
     @CreateDateColumn()
