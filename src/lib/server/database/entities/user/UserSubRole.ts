@@ -2,6 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, ManyTo
 import { User } from './User';
 import { SubRoleCfg } from '../config/SubRoleCfg';
 
+
+// since a SubRole(Cfg=configurable) can appear in a multitude of users
+// and a User should be able to get assigned several Subroles, like pm and contributor(on contributor side)
+// we bind them m:n -- so many explicit m:n can "pretzel" your brain, but it is good for understanding what happens.
 @Entity()
 @Index(['userId'])
 @Index(['roleId'])

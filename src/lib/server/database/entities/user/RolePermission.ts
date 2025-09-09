@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, ManyTo
 import { Role } from './Role';
 import { Permission } from './Permission';
 
+
+// a junction table for binding role to permission n:m
 @Entity()
 @Index(['roleId'])
 @Index(['permissionId'])

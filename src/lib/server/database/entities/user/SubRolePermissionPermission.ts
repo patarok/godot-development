@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, ManyTo
 import { SubRoleCfg } from '../config/SubRoleCfg';
 import { Permission } from './Permission';
 
+//explict junction table  for recapturing the actual concept
+//binding SubRoleCfg(SubRoleConfigurable) to SubRolePermission m:n
 @Entity()
 @Index(['subRoleId'])
 @Index(['permissionId'])

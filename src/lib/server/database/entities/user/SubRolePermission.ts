@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { RolePermission } from './RolePermission';
 
+// not a junction table, permissions distinct to subroles
 @Entity()
 @Index(['category'])
 export class SubRolePermission {

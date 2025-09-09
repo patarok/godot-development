@@ -1,6 +1,7 @@
 import {Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany} from 'typeorm';
 import {RolePermission, UserRole, UserSubRole } from "$lib/server/database";
 
+// this means SubRoleConfigurable
 /**
  * Priority lookup table for tasks.
  * - UUID primary key
