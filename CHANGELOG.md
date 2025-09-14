@@ -1,3 +1,11 @@
+## [5.5.5](https://github.com/patarok/godot-development/compare/v5.5.4...v5.5.5) (2025-09-14)
+
+
+### Bug Fixes
+
+* fixes seed stub to check true for isMainRole on mainroles admin and user ([b9f511b](https://github.com/patarok/godot-development/commit/b9f511be77ea090966bcd0343eae56aa1179107f))
+* mainrole to/in user without junctiontable, introduces subroles, ... improves on checks according to new schema ([177dc12](https://github.com/patarok/godot-development/commit/177dc1259a3909fec4849903f228ef365417ed2a))
+
 ## [5.5.4](https://github.com/patarok/godot-development/compare/v5.5.3...v5.5.4) (2025-09-09)
 
 
