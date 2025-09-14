@@ -1,3 +1,10 @@
+# [5.6.0](https://github.com/patarok/godot-development/compare/v5.5.5...v5.6.0) (2025-09-14)
+
+
+### Features
+
+* **landingpage:** components on landing, new fonts, displays profile in ([c164f66](https://github.com/patarok/godot-development/commit/c164f668d81d7a045f46137575afd788097e1bb9))
+
 ## [5.5.5](https://github.com/patarok/godot-development/compare/v5.5.4...v5.5.5) (2025-09-14)
 
 
