@@ -2,7 +2,7 @@ import { AppDataSource } from '../config/datasource';
 import { Role } from '../entities/user/Role';
 import { Permission } from '../entities/user/Permission';
 import { User } from '../entities/user/User';
-import { UserRole } from '../entities/user/UserRole';
+import { UserSubRole } from '../entities/user/UserSubRole';
 import { RolePermission } from '../entities/user/RolePermission';
 import { SystemSetting } from '../entities/config/SystemSetting';
 import { hash as argon2hash } from '@node-rs/argon2';
@@ -42,21 +42,16 @@ async function upsertSystemSetting(key: string, value: string, opts?: { descript
 
 async function upsertAdminUser(email: string, passwordHash: string, username = 'admin') {
     const userRepo = AppDataSource.getRepository(User);
-    const userRoleRepo = AppDataSource.getRepository(UserRole);
+
 
     const emailNorm = email.trim().toLowerCase();
     let user = await userRepo.findOne({ where: [{ email: emailNorm }, { username }] });
-    if (!user) {
-        user = await userRepo.save(userRepo.create({ email: emailNorm, username, password: passwordHash, isActive: true }));
-    }
-
     const adminRole = await AppDataSource.getRepository(Role).findOne({ where: { name: 'admin' } });
-    if (adminRole) {
-        const has = await userRoleRepo.findOne({ where: { userId: user.id, roleId: adminRole.id } });
-        if (!has) await userRoleRepo.save(userRoleRepo.create({ userId: user.id, roleId: adminRole.id }));
-    }
 
-    return user;
+    if (!user) {
+        user = await userRepo.save(userRepo.create({ email: emailNorm, username, password: passwordHash, isActive: true, role: adminRole }));
+    }
+  return user;
 }
 
 export async function seedInitialData() {
@@ -84,7 +79,14 @@ export async function seedInitialData() {
 }
 
 async function runSeeds() {
-    await AppDataSource.initialize();
+    try {
+        await AppDataSource.initialize();
+    }
+    catch(error){
+        console.log(error.message);
+        console.log("Proceeding anyway.");
+    }
+
     await seedInitialData();
     await AppDataSource.destroy();
     console.log('Seeding completed');

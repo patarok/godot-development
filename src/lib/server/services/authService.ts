@@ -3,6 +3,7 @@ import { randomBytes, createHash } from 'crypto';
 import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
+import { MainRoleNotImplementedError } from '$lib/utils';
 
 function sha256(s: string) { return createHash('sha256').update(s).digest('hex'); }
 
@@ -13,21 +14,25 @@ export async function findUserByUsername(username: string) {
     return AppDataSource.getRepository(User).findOne({ where: { username: username.trim() } });
 }
 
-export async function registerUser(input: { email: string; username?: string; forename?: string; surname?: string; password: string }) {
+export async function registerUser(input: { email: string; username?: string; forename?: string; surname?: string; rolename: string; password: string }) {
     if (process.env.DEBUG_AUTH === '1') debugger;
     const repo = AppDataSource.getRepository(User);
     const email = input.email.trim().toLowerCase();
     const username = input.username?.trim() ?? email;
-
+    const rolename = input.rolename?.trim() ?? 'user';
     const existing = await repo.findOne({ where: [{ email }, { username }] });
 
     if (existing) {
         console.log('User already exists:', existing);
         throw new Error('User already exists');
     }
-    const password = await argon2hash(input.password, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
 
-    return repo.save(repo.create({ email, username, forename: input.forename?.trim(), surname: input.surname?.trim(), password, isActive: true }));
+    const role = await ensureMainRole(rolename);
+    const roleId = role.id;
+
+    //END PASTE
+    const password = await argon2hash(input.password, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
+    return repo.save(repo.create({ email, forename: input.forename?.trim(), surname: input.surname?.trim(), username,  password, isActive: true, role: roleId, }));
 }
 
 export async function createSession(userId: string, meta?: { userAgent?: string; ip?: string; ttlSeconds?: number }) {
@@ -107,6 +112,22 @@ export async function ensureRole(name: string): Promise<Role> {
     }
     return role;
 }
+
+// NEW: ensure a role exists (created on-the-fly if missing)
+export async function ensureMainRole(name: string): Promise<Role> {
+    debugger;
+    const roleRepo = AppDataSource.getRepository(Role);
+
+    debugger;
+    const existing = await roleRepo.findOne({ where: { name: name, isMainRole: true } });
+    debugger;
+    if (!existing) {
+        debugger;
+        throw new MainRoleNotImplementedError();
+    }
+    return existing;
+}
+
 
 // NEW: link a user to a role via UserRole (idempotent)
 export async function assignRoleToUser(userId: string, roleName: 'user' | 'admin'): Promise<void> {

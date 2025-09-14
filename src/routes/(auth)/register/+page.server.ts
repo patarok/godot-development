@@ -5,7 +5,7 @@ import { registerUser, createSession, assignRoleToUser } from '$lib/server/servi
 export const actions: Actions = {
     register: async ({ request, cookies, getClientAddress }) => {
         if (process.env.DEBUG_REGISTER === '1') debugger;
-
+        debugger;
         const form = await request.formData();
         const email = String(form.get('email') ?? '');
         const username = String(form.get('username') ?? '');
@@ -18,10 +18,9 @@ export const actions: Actions = {
         if (!email || !password) return fail(400, { message: 'Missing fields' });
 
         try {
-            const user = await registerUser({ email, username: username || undefined, forename: forename || undefined, surname: surname || undefined, password });
 
-            // Assign role (creates Role row if missing)
-            await assignRoleToUser(user.id, role);
+            const user = await registerUser({ email, username: username || undefined, forename: forename || undefined, surname: surname || undefined, role, password });
+
 
             const { token } = await createSession(user.id, {
                 userAgent: request.headers.get('user-agent') ?? undefined,

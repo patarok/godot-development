@@ -49,13 +49,13 @@ export class User {
     role: Role;
 
     @OneToMany(() => UserSubRole, (usr) => usr.user)
-    subRoles: UserSubRole[];
+    subRoles?: UserSubRole[];
 
     @OneToMany(() => Session, (session) => session.user)
-    sessions: Session[];
+    sessions?: Session[];
 
     @OneToMany(() => PasswordResetToken, (prt) => prt.user)
-    passwordResetTokens: PasswordResetToken[];
+    passwordResetTokens?: PasswordResetToken[];
 
     @CreateDateColumn()
     createdAt: Date;

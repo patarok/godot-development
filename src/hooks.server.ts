@@ -1,9 +1,11 @@
 import type { Handle } from '@sveltejs/kit';
 import { createHash } from 'crypto';
-import { AppDataSource, initializeDatabase, Session, User, UserRole } from '$lib/server/database';
+import { AppDataSource, initializeDatabase, Role, Session, User } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 
-function sha256(s: string) { return createHash('sha256').update(s).digest('hex'); }
+function sha256(s: string) {
+    return createHash('sha256').update(s).digest('hex');
+}
 
 // avoid handle call for resource calls in production: CDN, other alternatives?
 export const handle: Handle = async ({ event, resolve }) => {
@@ -11,29 +13,40 @@ export const handle: Handle = async ({ event, resolve }) => {
     await initializeDatabase();
 
     const token = event.cookies.get('session');
-    if (token) {
-        const tokenHash = sha256(token);
-        const repo = AppDataSource.getRepository(Session);
-        const session = await repo.findOne({ where: { tokenHash, revokedAt: IsNull() }, relations: ['user'] });
-        if (session && session.expiresAt > new Date()) {
-            const u = session.user as User;
-            // Determine role: mark admin if user has 'admin' role assigned
-            const urRepo = AppDataSource.getRepository(UserRole);
-            const userRoles = await urRepo.find({ where: { userId: u.id }, relations: ['role'] });
-            const isAdmin = userRoles.some((ur) => (ur as any).role?.name === 'admin');
-            event.locals.user = {
-                username: u.username ?? u.email,
-                email: u.email,
-                forename: u.forename,
-                surname: u.surname,
-                role: isAdmin ? 'admin' : 'user'
-            };
-        } else {
-            event.locals.user = null;
-        }
-    } else {
+    if (!token) {
         event.locals.user = null;
+        return resolve(event);
     }
+
+    const tokenHash = sha256(token);
+    const sessionRepo = AppDataSource.getRepository(Session);
+    const session = await sessionRepo.findOne({
+        where: { tokenHash, revokedAt: IsNull() },
+        relations: ['user']
+    });
+
+    if (!session || session.expiresAt <= new Date()) {
+        event.locals.user = null;
+        return resolve(event);
+    }
+
+    const user = session.user as User;
+
+    // Get admin role to check if user is admin
+    const roleRepo = AppDataSource.getRepository(Role);
+    const adminRole = await roleRepo.findOne({
+        where: { name: 'admin', isMainRole: true }
+    });
+
+    const isAdmin = user.role === adminRole?.id;
+
+    event.locals.user = {
+        username: user.username ?? user.email,
+        email: user.email,
+        forename: user.forename,
+        surname: user.surname,
+        role: isAdmin ? 'admin' : 'user'
+    };
 
     return resolve(event);
 };
