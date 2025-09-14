@@ -16,7 +16,7 @@
 
 	// Svelte 5 way: get props via $props(), no $: and no $page
 	let { data, children }: { data: LayoutData; children: any } = $props();
-	const user = data.user; // { username } | null
+    const user = $derived(data.user);
 
 	const theme = writable<'light' | 'dark'>('light');
 
@@ -117,6 +117,7 @@
 </svelte:head>
 
 {#if browser}
+    {#if user}
     <Menubar class="px-2">
         {#each menubarMenus as { title, items }}
             <MenubarMenu>
@@ -134,15 +135,24 @@
             </MenubarMenu>
         {/each}
     </Menubar>
+    {/if}
 
     {#if user}
 	<Button
 			onclick={accountToggle}
-			style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
+			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
 	>
 		🔒
 	</Button>
-        {/if}
+    {:else}
+    <Button
+            onclick={accountToggle}
+            style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
+    >
+        🔒
+    </Button>
+    {/if}
+
 	<Button
 			onclick={toggleTheme}
 			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"

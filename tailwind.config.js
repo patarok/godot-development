@@ -5,6 +5,13 @@ module.exports = {
         './src/**/*.{html,js,svelte,ts}'
     ],
     theme: {
-        extend: {} },
+        extend: {
+            fontFamily: {
+                lexendDeca: ['Lexend Deca', 'sans-serif'],
+                lexendMega: ['Lexend Mega', 'sans-serif'],
+                lexendZetta: ['Lexend Zetta', 'sans-serif'],
+            },
+        },
+    },
     plugins: []
 }
