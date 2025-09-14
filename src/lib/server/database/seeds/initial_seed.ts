@@ -7,10 +7,10 @@ import { RolePermission } from '../entities/user/RolePermission';
 import { SystemSetting } from '../entities/config/SystemSetting';
 import { hash as argon2hash } from '@node-rs/argon2';
 
-async function upsertRole(name: string) {
+async function upsertRole(name: string, isMain: boolean = false) {
     const repo = AppDataSource.getRepository(Role);
     let role = await repo.findOne({ where: { name } });
-    if (!role) role = await repo.save(repo.create({ name }));
+    if (!role) role = await repo.save(repo.create({ name, isMainRole: isMain }));
     return role;
 }
 
@@ -55,8 +55,9 @@ async function upsertAdminUser(email: string, passwordHash: string, username = '
 }
 
 export async function seedInitialData() {
-    const admin = await upsertRole('admin');
-    await upsertRole('user');
+    const isMainRole = true;
+    const admin = await upsertRole('admin', isMainRole);
+    await upsertRole('user', isMainRole);
 
     const perms = [
         { name: 'admin.access', category: 'admin', description: 'Access admin area' },
