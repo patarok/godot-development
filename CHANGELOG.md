@@ -1,3 +1,10 @@
+# [5.8.0](https://github.com/patarok/godot-development/compare/v5.7.0...v5.8.0) (2025-09-15)
+
+
+### Features
+
+* encapsulation of all pages by layout, breadcrumbs working, modified some components ([47bfc40](https://github.com/patarok/godot-development/commit/47bfc40cea705293c4c305c9a34afbd57af6ed05))
+
 # [5.7.0](https://github.com/patarok/godot-development/compare/v5.6.0...v5.7.0) (2025-09-15)
 
 
