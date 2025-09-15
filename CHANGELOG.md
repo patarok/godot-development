@@ -1,3 +1,11 @@
+# [5.7.0](https://github.com/patarok/godot-development/compare/v5.6.0...v5.7.0) (2025-09-15)
+
+
+### Features
+
+* adds new components, adds demo-pages, implements dropping to dashboard when pressing infinity symbol on landing ([27cdf99](https://github.com/patarok/godot-development/commit/27cdf991d3412e90fe17fac9b0c09af565dd1158))
+* clock component stub ([26283f6](https://github.com/patarok/godot-development/commit/26283f6735d0cbbc24e93b3ac0b6913de3ff24ad))
+
 # [5.6.0](https://github.com/patarok/godot-development/compare/v5.5.5...v5.6.0) (2025-09-14)
 
 
