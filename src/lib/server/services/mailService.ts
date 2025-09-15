@@ -1,4 +1,3 @@
-// src/lib/server/mailService.ts
 import { randomBytes, createHash } from 'crypto';
 import { AppDataSource } from '$lib/server/database';
 import { Mail } from "../db/entities/Mail";

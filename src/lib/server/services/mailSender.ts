@@ -1,4 +1,3 @@
-// src/lib/services/mailSender.ts
 import { AppDataSource } from "$lib/server/database";
 import { Mail } from "../db/entities/Mail";
 import { getTransporter } from "./mailTransporter";

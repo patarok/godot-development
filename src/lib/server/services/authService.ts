@@ -1,4 +1,3 @@
-// src/lib/server/services/authService.ts
 import { randomBytes, createHash } from 'crypto';
 import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
 import { IsNull } from 'typeorm';
