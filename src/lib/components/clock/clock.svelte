@@ -14,7 +14,7 @@
     let hours = $derived(time.getHours());
     let minutes = $derived(time.getMinutes());
     let seconds = $derived(time.getSeconds());
-    let date = $derived(time.getDate().toLocaleDateString('en-US', myDateFormatProps))
+    let date = $derived(time.toLocaleDateString('en-US', myDateFormatProps));
 
 
 
@@ -31,11 +31,15 @@
     //component call params
     let {
         class: className,
+        dateClass: dateClassString,
+        clockClass: clockClassString,
         isDigital = false,
         showDate = false,
         hour12 = false,
         ...restProps
     }: HTMLAttributes<HTMLDivElement> & {
+        dateClass?: string,
+        clockClass?: string,
         isDigital?: boolean;
         showDate?: boolean;
         hour12?: boolean;
@@ -44,18 +48,20 @@
 
 </script>
 {#if isDigital}
+    <div class="flex flex-col">
     {#if showDate}
-        let date = $derived(time.getDate().toLocaleDateString('en-US', myDateFormatProps))
+        <div class="box-date {dateClassString}">{date}</div>
     {/if}
     <div class="box-time">
-        <span class="text-2xl">{hours}:{minutes}:{seconds}</span>
+        <span class="text-2xl {clockClassString}">{hours}:{minutes}:{seconds}</span>
+    </div>
     </div>
 {:else}
-<div>
+<div class="flex flex-col">
     {#if showDate}
-        <div class="box-date"></div>
+        <div class="box-date mb-4 text-center {dateClassString}">{date}</div>
     {/if}
-<svg viewBox="-50 -50 100 100">
+<svg viewBox="-50 -50 100 100" class="max-w-1/3 mx-auto {clockClassString}">
     <circle class="clock-face" r="48" />
 
     <!-- markers -->

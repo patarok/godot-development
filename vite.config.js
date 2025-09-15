@@ -29,6 +29,7 @@ export default defineConfig( ({mode}) => {
 			exclude: ['typeorm', 'reflect-metadata'], // Exclude from Vite optimization
 	},
 	ssr: {
+			noExternal: ['svelte-sonner'],
 			external: ['typeorm', 'reflect-metadata'], // Treat as external for SSR
 	},
 	}

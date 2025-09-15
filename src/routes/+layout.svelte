@@ -13,6 +13,7 @@
         MenubarItem,
         MenubarSeparator
     } from "$lib/components/ui/menubar";
+    import { appState } from '$lib/state.svelte.ts';
 
 	// Svelte 5 way: get props via $props(), no $: and no $page
 	let { data, children }: { data: LayoutData; children: any } = $props();
@@ -118,33 +119,38 @@
 
 {#if browser}
     {#if user}
-    <Menubar class="px-2">
-        {#each menubarMenus as { title, items }}
-            <MenubarMenu>
-                <MenubarTrigger class="px-3 py-2 font-medium">{title}</MenubarTrigger>
-                <MenubarContent class="min-w-48">
-                    {#each items as item, i}
-                        <MenubarItem class="cursor-pointer">
-                            {typeof item === 'string' ? item : item.label}
-                        </MenubarItem>
-                        {#if i < items.length - 1}
-                            <MenubarSeparator />
-                        {/if}
-                    {/each}
-                </MenubarContent>
-            </MenubarMenu>
-        {/each}
-    </Menubar>
+        {#if appState.current === 'landing'}
+
+        {:else if appState.current === 'admin'}
+            <Menubar class="px-2">
+                {#each menubarMenus as { title, items }}
+                    <MenubarMenu>
+                        <MenubarTrigger class="px-3 py-2 font-medium">{title}</MenubarTrigger>
+                        <MenubarContent class="min-w-48">
+                            {#each items as item, i}
+                                <MenubarItem class="cursor-pointer">
+                                    {typeof item === 'string' ? item : item.label}
+                                </MenubarItem>
+                                {#if i < items.length - 1}
+                                    <MenubarSeparator />
+                                {/if}
+                            {/each}
+                        </MenubarContent>
+                    </MenubarMenu>
+                {/each}
+            </Menubar>
+        {/if}
+
     {/if}
 
-    {#if user}
+    {#if user && appState.current === 'landing'}
 	<Button
 			onclick={accountToggle}
 			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
 	>
 		🔒
 	</Button>
-    {:else}
+    {:else if appState.current === 'landing'}
     <Button
             onclick={accountToggle}
             style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
@@ -159,6 +165,10 @@
 	>
 		🌙
 	</Button>
+
+    {@render children?.()}
+{:else}
+    <!-- Fallback für Server-Side Rendering -->
+    {@render children?.()}
 {/if}
 
-{@render children?.()}

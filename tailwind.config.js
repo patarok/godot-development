@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    corePlugins: {
+        preflight: true   // eigentlich Standard (aktiviert)
+    },
     darkMode: ['class'],
     content: [
         './src/**/*.{html,js,svelte,ts}'
