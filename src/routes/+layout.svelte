@@ -5,6 +5,8 @@
 	import { browser } from '$app/environment';
 	import type { LayoutData } from './$types';
     import { Button } from "$lib/components/ui/button"
+    import { page } from '$app/state';
+
     import {
         Menubar,
         MenubarMenu,
@@ -13,11 +15,47 @@
         MenubarItem,
         MenubarSeparator
     } from "$lib/components/ui/menubar";
-    import { appState } from '$lib/state.svelte.ts';
+    import { appState } from '$lib/state.svelte.js';
+    import { setContext, onMount } from 'svelte';
+    import AppSidebar from "$lib/components/app-sidebar.svelte";
+    import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.ts";
+    import { breadcrumbStore } from '$lib/stores/breadcrumb.svelte.js';
+    import { Separator } from "$lib/components/ui/separator/index.ts";
+    import * as Sidebar from "$lib/components/ui/sidebar/index.ts";
 
-	// Svelte 5 way: get props via $props(), no $: and no $page
+
+    // Svelte 5 way: get props via $props(), no $: and no $page
 	let { data, children }: { data: LayoutData; children: any } = $props();
     const user = $derived(data.user);
+
+    onMount(() => {
+        appState.init();
+    });
+
+    // Route-Mapping
+    const routeLabels: Record<string, string> = {
+        '': 'Home',
+        'dashboard': 'Dashboard',
+        'users': 'Users',
+        'settings': 'Settings'
+    };
+
+    // pathSegments derived directly from page
+    const pathSegments = $derived(
+        page.url.pathname.split('/').filter(Boolean)
+    );
+
+    // breadcrumbs also derived
+    const breadcrumbs = $derived([
+        { href: '/', label: routeLabels[''] ?? 'Home' },
+        ...pathSegments.map((segment, index) => {
+            const href = '/' + pathSegments.slice(0, index + 1).join('/');
+            const label =
+                routeLabels[segment] ??
+                segment.charAt(0).toUpperCase() + segment.slice(1);
+            return { href, label };
+        })
+    ]);
 
 	const theme = writable<'light' | 'dark'>('light');
 
@@ -45,6 +83,7 @@
 			try {
 				const res = await fetch('/api/logout', { method: 'POST' });
 				if (!res.ok) throw new Error('Logout failed');
+                appState.setLanding();
 				// Reload the page to refresh layout data (user from locals)
 				window.location.reload();
 			} catch (e) {
@@ -118,10 +157,13 @@
 </svelte:head>
 
 {#if browser}
+    <!-- debugging weird layout loading behaviour -->
+<!--    <div style="position: fixed; top: 0; left: 50%; background: red; color: white; z-index: 9999; padding: 4px;">-->
+<!--        LAYOUT LOADED - User: {user?.email || 'No user'}-->
+<!--    </div>-->
     {#if user}
-        {#if appState.current === 'landing'}
-
-        {:else if appState.current === 'admin'}
+        <!--if user and appstate is currently 'admin'-->
+        {#if appState.current === 'admin'}
             <Menubar class="px-2">
                 {#each menubarMenus as { title, items }}
                     <MenubarMenu>
@@ -139,34 +181,123 @@
                     </MenubarMenu>
                 {/each}
             </Menubar>
+            <!--no matter if admin or not show logout button in the bottom left-->
+            <Button
+                    onclick={accountToggle}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
+            >
+                🔒
+            </Button>
+            <Button
+                    onclick={toggleTheme}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
+            >
+                🌙
+            </Button>
+
+            <!--do I really want the admin to have this sidebar dashboard setup ?-->
+            {@render children?.()}
+            <!--I don't know yet-->
+        {:else if appState.current === 'main'}
+            <!--no matter if admin or not show both buttons and account toggle bottom-->
+            <Button
+                    onclick={accountToggle}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem; z-index: 99;"
+            >
+                🔒
+            </Button>
+            <Button
+                    onclick={toggleTheme}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem; z-index: 99;"
+            >
+                🌙
+            </Button>
+            <Sidebar.Provider>
+                <AppSidebar />
+                <Sidebar.Inset>
+                    <header
+                            class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear"
+                    >
+                        <div class="flex items-center gap-2 px-4">
+                            <Sidebar.Trigger class="-ml-1" />
+                            <Separator orientation="vertical" class="mr-2 data-[orientation=vertical]:h-4" />
+                            <Breadcrumb.Root>
+                                {#each breadcrumbs as crumb, index}
+                                    <Breadcrumb.Item>
+                                        {#if index === breadcrumbs.length - 1}
+                                            <span class="text-muted-foreground">{crumb.label}</span>
+                                        {:else}
+                                            <a href={crumb.href} class="hover:text-foreground transition-colors">
+                                                {crumb.label}
+                                            </a>
+                                            <span class="text-muted-foreground mx-1">/&nbsp;</span>
+                                        {/if}
+                                    </Breadcrumb.Item>
+                                {/each}
+                            </Breadcrumb.Root>
+                        </div>
+                    </header>
+                    <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+                        <Menubar class="px-2">
+                            {#each menubarMenus as { title, items }}
+                                <MenubarMenu>
+                                    <MenubarTrigger class="px-3 py-2 font-medium">{title}</MenubarTrigger>
+                                    <MenubarContent class="min-w-48">
+                                        {#each items as item, i}
+                                            <MenubarItem class="cursor-pointer">
+                                                {typeof item === 'string' ? item : item.label}
+                                            </MenubarItem>
+                                            {#if i < items.length - 1}
+                                                <MenubarSeparator />
+                                            {/if}
+                                        {/each}
+                                    </MenubarContent>
+                                </MenubarMenu>
+                            {/each}
+                        </Menubar>
+                        {@render children?.()}
+                    </div>
+                </Sidebar.Inset>
+            </Sidebar.Provider>
+        {:else}
+            <Button
+                    onclick={accountToggle}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
+            >
+                🔒
+            </Button>
+            <Button
+                    onclick={toggleTheme}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
+            >
+                🌙
+            </Button>
+            {@render children?.()}
         {/if}
-
+    {:else}
+        {#if user}
+            <Button
+                    onclick={accountToggle}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
+            >
+                🔒
+            </Button>
+        {:else}
+            <Button
+                    onclick={accountToggle}
+                    style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
+            >
+                🔒
+            </Button>
+        {/if}
+        <Button
+                onclick={toggleTheme}
+                style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
+        >
+            🌙
+        </Button>
+        {@render children?.()}
     {/if}
-
-    {#if user && appState.current === 'landing'}
-	<Button
-			onclick={accountToggle}
-			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
-	>
-		🔒
-	</Button>
-    {:else if appState.current === 'landing'}
-    <Button
-            onclick={accountToggle}
-            style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
-    >
-        🔒
-    </Button>
-    {/if}
-
-	<Button
-			onclick={toggleTheme}
-			style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
-	>
-		🌙
-	</Button>
-
-    {@render children?.()}
 {:else}
     <!-- Fallback für Server-Side Rendering -->
     {@render children?.()}
