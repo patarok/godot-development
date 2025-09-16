@@ -1,8 +1,13 @@
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = ({ locals, cookies }) => {
+export const load: LayoutServerLoad = async ({ locals, cookies }) => {
+    const user = locals.user;
     return {
-        user: locals.user,
-        appState: cookies.get('appState') ?? 'landing'  // Always returns a string
+        user: user ? {
+            ...user,
+            isAdmin: user.role?.name === 'admin',
+            permissions: user.role?.permissions || []
+        } : null,
+        appState: cookies.get('appState') ?? 'landing'
     };
 };

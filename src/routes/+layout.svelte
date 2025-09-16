@@ -16,6 +16,7 @@
         MenubarSeparator
     } from "$lib/components/ui/menubar";
     import { appState } from '$lib/state.svelte.js';
+    import { auth } from '$lib/stores/auth.svelte.js';
     import { setContext, onMount } from 'svelte';
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.ts";
@@ -27,7 +28,9 @@
     // Svelte 5 way: get props via $props(), no $: and no $page
 	let { data, children }: { data: LayoutData; children: any } = $props();
     const user = $derived(data.user);
+    const usermail = $derived(user.email);
 
+    debugger;
     onMount(() => {
         appState.init();
     });
@@ -39,6 +42,10 @@
         'users': 'Users',
         'settings': 'Settings'
     };
+
+    // current path
+    const currentPath = $derived(page.url.pathname);
+
 
     // pathSegments derived directly from page
     const pathSegments = $derived(
@@ -198,7 +205,7 @@
             <!--do I really want the admin to have this sidebar dashboard setup ?-->
             {@render children?.()}
             <!--I don't know yet-->
-        {:else if appState.current === 'main'}
+        {:else if appState.current === 'main' && !currentPath.startsWith('/admin') }
             <!--no matter if admin or not show both buttons and account toggle bottom-->
             <Button
                     onclick={accountToggle}
@@ -255,6 +262,7 @@
                                 </MenubarMenu>
                             {/each}
                         </Menubar>
+                        <h1>foo: {user.email}</h1>
                         {@render children?.()}
                     </div>
                 </Sidebar.Inset>

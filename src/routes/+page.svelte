@@ -2,15 +2,12 @@
     import type { PageData } from './$types';
     import * as Card from "$lib/components/ui/card";
     import {cn} from "$lib/utils";
-    import Clock from "$lib/components/clock/clock.svelte"
+    import Clock from "$lib/components/custom/clock/clock.svelte"
     import { getContext } from 'svelte';
     import { appState } from '$lib/state.svelte.js';
     let { data }: { data: PageData } = $props();
     const user = data.user;
     const username = user?.username ?? 'guest';
-
-
-
 </script>
 
 {#if appState.current === 'main'}
