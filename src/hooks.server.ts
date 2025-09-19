@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { createHash } from 'crypto';
-import { AppDataSource, initializeDatabase, Role, Session, User } from '$lib/server/database';
+import { AppDataSource, initializeDatabase, Session, User } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 
 function sha256(s: string) {
@@ -22,7 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const sessionRepo = AppDataSource.getRepository(Session);
     const session = await sessionRepo.findOne({
         where: { tokenHash, revokedAt: IsNull() },
-        relations: ['user']
+        relations: ['user', 'user.role']
     });
 
     if (!session || session.expiresAt <= new Date()) {
@@ -32,20 +32,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     const user = session.user as User;
 
-    // Get admin role to check if user is admin
-    const roleRepo = AppDataSource.getRepository(Role);
-    const adminRole = await roleRepo.findOne({
-        where: { name: 'admin', isMainRole: true }
-    });
-
-    const isAdmin = user.role === adminRole?.id;
+    // Determine admin status based on the user's role
+    const isAdmin = !!user.role && user.role.isMainRole === true && user.role.name === 'admin';
 
     event.locals.user = {
         username: user.username ?? user.email,
         email: user.email,
         forename: user.forename,
         surname: user.surname,
-        role: isAdmin ? 'admin' : 'user'
+        name: user.username ?? user.forename + ' ' + user.surname,
+        role: isAdmin ? 'admin' : 'user',
+        token: token,
+        isAdmin
     };
 
     return resolve(event);

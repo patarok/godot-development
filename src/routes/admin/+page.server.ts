@@ -5,18 +5,29 @@ import { appState } from '$lib/state.svelte.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user = locals.user;
-  return { isAdmin: !!user && user.role === 'admin', user };
+
+  // TODO(authServices): Centralize this admin-check in a dedicated helper in authServices
+  // to keep the logic consistent with hooks and other server code.
+  const isAdmin =
+      !!user &&
+      (
+          user?.isAdmin === true ||
+          (typeof user?.role === 'object'
+                  ? user.role?.name === 'admin' && user.role?.isMainRole === true
+                  : user?.role === 'admin'
+          )
+      );
+
+  return { isAdmin, user };
 };
 
 export const actions: Actions = {
   adminLogin: async ({ request, cookies, getClientAddress }) => {
-
     const { username, password } = Object.fromEntries(await request.formData()) as Record<string, string>;
     if (!username || !password) return fail(400, { message: 'Username and password are required' });
 
     const res = await loginWithPassword(username, password, { userAgent: request.headers.get('user-agent') ?? undefined, ip: getClientAddress() });
     if (!res) return fail(401, { message: 'Invalid credentials' });
-    debugger;
     appState.setAdmin();
     cookies.set('session', res.token, {
       path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30

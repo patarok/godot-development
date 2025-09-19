@@ -43,8 +43,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     userRepo.find({ order: { email: 'ASC' } })
   ]);
 
+  debugger;
   const plainTasks = toPlainArray(tasks).map((t: any) => ({ ...t, tags: tagsByTask[t.id] ?? [] }));
 
+  debugger;
   return {
     tasks: plainTasks,
     priorities: toPlainArray(priorities),
@@ -57,6 +59,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   create: async ({ request, locals }) => {
+    debugger;
     if (!locals.user) return fail(401, { message: 'Not authenticated' });
     const form = await request.formData();
     const title = String(form.get('title') ?? '').trim();
@@ -81,6 +84,7 @@ export const actions: Actions = {
     const userRepo = AppDataSource.getRepository(User);
     const creator = await userRepo.findOne({ where: { email: locals.user.email } });
 
+    debugger;
     const taskRepo = AppDataSource.getRepository(Task);
     const task = taskRepo.create({
       title,
@@ -114,6 +118,7 @@ export const actions: Actions = {
         await taskTagRepo.save(taskTagRepo.create({ taskId: task.id, tagId: tag.id }));
       }
     }
+
 
     // Return a result for runes/reactivity
     return { success: true, message: 'Task created' };

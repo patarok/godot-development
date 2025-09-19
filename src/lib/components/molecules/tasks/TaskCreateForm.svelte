@@ -41,6 +41,7 @@
     let priorityId = $state<string | ''>('');
     let userId = $state<string | ''>('');
     let parentTaskId = $state<string | ''>('');
+    let taskStateId = $state<string | ''>('');
     let projectId = $state('');
     let actualHours = $state<number | null>(null);
     let hasSegmentGroupCircle = $state(true);
@@ -113,10 +114,9 @@
             <Label for="isActive-taskCreateForm">Active</Label>
         </div>
 
-
         <div>
             <Label>State</Label>
-            <Select name="taskStateId" bind:value={parentTaskId} required>
+            <Select name="taskStateId" bind:value={taskStateId} required>
                 <SelectItem value="">(choose state)</SelectItem>
                 {#each states as s}
                     <SelectItem value={s.id}>{s.name}</SelectItem>

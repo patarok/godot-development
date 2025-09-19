@@ -8,11 +8,13 @@
     let { data }: { data: PageData } = $props();
     const user = data.user;
     const username = user?.username ?? 'guest';
+
+
 </script>
 
 {#if appState.current === 'main'}
+<h1> this is it</h1>
 
-    <h1 class="text-4xl">this is where the action goes</h1>
 
 {:else}
     <div class={cn("grid place-items-center min-h-screen mx-auto gap-2 md:gap-6")}>

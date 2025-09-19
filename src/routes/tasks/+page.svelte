@@ -9,13 +9,15 @@
   let { data }: { data: PageData } = $props();
   const { priorities, states, users, tasks: taskList } = data;
 
-  const tasks = derived(page, ($page) => $page.data.tasks);
+  const tasks = $derived(data.tasks);
+
 
   const enhanceCallback = async ({ result, update }) => {
     if (result?.data?.success) {
       invalidateAll();
     }
   };
+  debugger;
 </script>
 
 <h1 class="text-2xl font-bold mb-4">Create Task</h1>

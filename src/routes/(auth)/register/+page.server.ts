@@ -5,7 +5,6 @@ import { registerUser, createSession, assignRoleToUser } from '$lib/server/servi
 export const actions: Actions = {
     register: async ({ request, cookies, getClientAddress }) => {
         if (process.env.DEBUG_REGISTER === '1') debugger;
-        debugger;
         const form = await request.formData();
         const email = String(form.get('email') ?? '');
         const username = String(form.get('username') ?? '');
