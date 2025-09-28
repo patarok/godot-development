@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   // Fetch roles for these users and compute a simple role label (admin/user)
   const ids = users.map((u) => u.id);
-  const urRepo = AppDataSource.getRepository(UserRole);
+
   const userRoles = ids.length
     ? await urRepo.find({ where: { userId: In(ids) }, relations: ['role'] })
     : [];
