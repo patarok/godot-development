@@ -1,3 +1,10 @@
+# [5.9.0](https://github.com/patarok/godot-development/compare/v5.8.0...v5.9.0) (2025-09-28)
+
+
+### Features
+
+* implements basic idea of CQRS models for interacting with User-Domain ([2358038](https://github.com/patarok/godot-development/commit/23580388a04705458d5a7338322553019f09e606))
+
 # [5.8.0](https://github.com/patarok/godot-development/compare/v5.7.0...v5.8.0) (2025-09-15)
 
 
