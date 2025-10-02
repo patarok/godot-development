@@ -10,6 +10,9 @@
     import { Checkbox } from '$lib/components/ui/checkbox';
     import { Select, SelectItem } from '$lib/components/ui/select';
     import { Alert } from '$lib/components/ui/alert';
+    import DatePickerWithRange from '$lib/components/date-picker-with-range.svelte';
+    import type { DateRange } from 'bits-ui';
+    import { getLocalTimeZone } from '@internationalized/date';
 
     // Props via $props() für Runes Mode
     let {
@@ -34,14 +37,21 @@
     // Form State (initialisiert alles, keine null Arrays/Strings)
     let title = $state('');
     let description = $state('');
-    let dueDate = $state('');
-    let startDate = $state('');
+    // Date range picker will supply plannedStartDate (start) and dueDate (end)
+    let dateRange = $state<DateRange | undefined>(undefined);
+    let plannedStartISO = $derived(
+        dateRange?.start ? dateRange.start.toDate(getLocalTimeZone()).toISOString() : ''
+    );
+    let dueDateISO = $derived(
+        dateRange?.end ? dateRange.end.toDate(getLocalTimeZone()).toISOString() : ''
+    );
+
     let isDone = $state(false);
     let isActive = $state(true);
+    let isMeta = $state(false);
     let priorityId = $state<string | ''>('');
-    let userId = $state<string | ''>('');
     let parentTaskId = $state<string | ''>('');
-    let taskStateId = $state<string | ''>('');
+    let taskStatusId = $state<string | ''>('');
     let projectId = $state('');
     let actualHours = $state<number | null>(null);
     let hasSegmentGroupCircle = $state(true);
@@ -62,12 +72,11 @@
                 // Reset Fields
                 title = '';
                 description = '';
-                dueDate = '';
-                startDate = '';
+                dateRange = undefined;
                 isDone = false;
                 isActive = true;
+                isMeta = false;
                 priorityId = '';
-                userId = '';
                 parentTaskId = '';
                 projectId = '';
                 actualHours = null;
@@ -98,13 +107,10 @@
         </div>
 
         <div class="flex flex-col gap-2">
-            <Label>Due date</Label>
-            <Input type="datetime-local" name="dueDate" bind:value={dueDate} required />
-        </div>
-
-        <div class="flex flex-col gap-2">
-            <Label>Start date</Label>
-            <Input type="datetime-local" name="startDate" bind:value={startDate} />
+            <Label>Planned range</Label>
+            <DatePickerWithRange bind:value={dateRange} />
+            <input type="hidden" name="plannedStartDate" value={plannedStartISO} />
+            <input type="hidden" name="dueDate" value={dueDateISO} />
         </div>
 
         <div class="flex gap-4">
@@ -112,11 +118,13 @@
             <Label for="isDone-taskCreateForm">Done</Label>
             <Checkbox id="isActive-taskCreateForm" bind:checked={isActive} name="isActive"/>
             <Label for="isActive-taskCreateForm">Active</Label>
+            <Checkbox id="isMeta-taskCreateForm" bind:checked={isMeta} name="isMeta"/>
+            <Label for="isMeta-taskCreateForm">Meta task</Label>
         </div>
 
         <div>
             <Label>State</Label>
-            <Select name="taskStateId" bind:value={taskStateId} required>
+            <Select type="single" name="taskStatusId" bind:value={taskStatusId} required>
                 <SelectItem value="">(choose state)</SelectItem>
                 {#each states as s}
                     <SelectItem value={s.id}>{s.name}</SelectItem>
@@ -126,7 +134,7 @@
 
         <div>
             <Label>Priority</Label>
-            <Select name="priorityId" bind:value={priorityId}>
+            <Select type="single" name="priorityId" bind:value={priorityId}>
                 <SelectItem value="">(no priority)</SelectItem>
                 {#each priorities as p}
                     <SelectItem value={p.id}>{p.name}</SelectItem>
@@ -134,19 +142,10 @@
             </Select>
         </div>
 
-        <div>
-            <Label>Active user</Label>
-            <Select name="userId" bind:value={userId}>
-                <SelectItem value="">(no active user)</SelectItem>
-                {#each users as u}
-                    <SelectItem value={u.id}>{u.email}</SelectItem>
-                {/each}
-            </Select>
-        </div>
 
         <div>
             <Label>Parent task</Label>
-            <Select name="parentTaskId" bind:value={parentTaskId}>
+            <Select type="single" name="parentTaskId" bind:value={parentTaskId}>
                 <SelectItem value="">(no parent)</SelectItem>
                 {#each tasks as t}
                     <SelectItem value={t.id}>{t.title}</SelectItem>

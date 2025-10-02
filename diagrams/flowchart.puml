@@ -14,12 +14,12 @@ start
 
 partition "Frontend (SvelteKit)" <<frontend>> {
   :Fetch User DTO list (GET /api/admin/users?fields=...);
-  :Hydrate UserList store\n(original snapshots + editable state);
+  :Hydrate UserList store\n(original snapshots + editable status);
 }
 
 repeat
   :Admin edits a row (inputs change);
-  :Update user model editable state;
+  :Update user model editable status;
 
   if (Value changed vs original?) then (yes)
     :Mark field dirty;\nUpdate per-user diff;

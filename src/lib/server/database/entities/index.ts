@@ -20,12 +20,13 @@ export * from './task/Task';
 export * from './task/TaskTag';
 export * from './task/UserTask';
 export * from './task/Tag';
+export * from './task/TimeEntry';
 
-// State
-export * from './state/Priority';
-export * from './state/TaskState';
-export * from './state/ProjectState';
-export * from './state/RiskLevel';
+// Status
+export * from './status/Priority';
+export * from './status/TaskStatus';
+export * from './status/ProjectStatus';
+export * from './status/RiskLevel';
 
 // Project domain
 export * from './project/Project';

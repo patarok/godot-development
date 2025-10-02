@@ -7,7 +7,7 @@ to become a new 'Project Management' tool with an approach which is less 'Scrum'
 and more 'DevOps'.    
 The goal is to also implement an evaluation algorithm for both sides 'customer' and 'contributor'(developer) parties, 
 for which persons to choose for which roles in the project.
-Another goal is to implement a project management circle with project-states and project-state-segments.
+Another goal is to implement a project management circle with project-status and project-status-segments.
 
 ## Getting Started
 

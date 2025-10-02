@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from 'crypto';
-import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
+import { AppDataSource, Session, User, Role, PasswordResetToken } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
 import { MainRoleNotImplementedError } from '$lib/utils';

@@ -26,12 +26,13 @@ export * from './entities/task/Task';
 export * from './entities/task/TaskTag';
 export * from './entities/task/UserTask';
 export * from './entities/task/Tag';
+export * from './entities/task/TimeEntry';
 
-// State
-export * from './entities/state/Priority';
-export * from './entities/state/TaskState';
-export * from './entities/state/ProjectState';
-export * from './entities/state/RiskLevel';
+// Status
+export * from './entities/status/Priority';
+export * from './entities/status/TaskStatus';
+export * from './entities/status/ProjectStatus';
+export * from './entities/status/RiskLevel';
 
 // Project domain
 export * from './entities/project/Project';

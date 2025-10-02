@@ -25,7 +25,7 @@
   </form>
   <hr style="color: lightgrey; margin-bottom: 1rem;">
   <ul style="list-style:none; padding:0;">
-    {#each data.taskStates as s (s.id)}
+    {#each data.taskStatuses as s (s.id)}
       <li style="margin-bottom: 8px; display: flex;">
         <form method="POST" action="?/update_task_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
           <input type="hidden" name="id" value={s.id} />

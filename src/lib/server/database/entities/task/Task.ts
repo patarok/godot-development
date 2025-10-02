@@ -5,12 +5,13 @@ import { Entity,
          CreateDateColumn,
          UpdateDateColumn,
          ManyToOne,
+         OneToMany,
          JoinColumn }
 from 'typeorm';
 
 import { User,
          Priority,
-         TaskState,
+         TaskStatus,
          Project }
 from '$lib/server/database/entities';
 
@@ -36,9 +37,9 @@ export class Task {
     @JoinColumn({ name: 'creator_id' })
     creator?: User | null;
 
-    @ManyToOne(() => TaskState, { onDelete: 'RESTRICT', nullable: false })
-    @JoinColumn({ name: 'task_state_id' })
-    taskState: TaskState;
+    @ManyToOne(() => TaskStatus, { onDelete: 'RESTRICT', nullable: false })
+    @JoinColumn({ name: 'task_status_id' })
+    taskStatus: TaskStatus;
 
     @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'priority_id' })
@@ -72,11 +73,23 @@ export class Task {
     @JoinColumn({ name: 'parent_task_id' })
     parent?: Task;
 
+    @OneToMany(() => Task, (t) => t.parent)
+    children?: Task[];
+
+    @Column({ type: 'boolean', default: false })
+    isMeta: boolean;
+
     @Column({ type: 'timestamptz' })
     dueDate: Date;
 
+    @Column({ type: 'timestamptz', nullable: true })
+    doneDate?: Date | null;
+
     @Column({ type: 'timestamptz', default: () => 'now()' })
     startDate: Date;
+
+    @Column({ type: 'timestamptz' })
+    plannedStartDate: Date;
 
     // OPTIONAL: iterationSegmentId: UUID? (relation commented until entity exists)
     @Column({ type: 'uuid', nullable: true })

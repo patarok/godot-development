@@ -1,6 +1,6 @@
 import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { AppDataSource, SystemSetting, Priority, TaskState, ProjectState, RiskLevel, initializeDatabase } from '$lib/server/database';
+import { AppDataSource, SystemSetting, Priority, TaskStatus, ProjectState, RiskLevel, initializeDatabase } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -11,11 +11,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     const settings = await AppDataSource.getRepository(SystemSetting).find({ order: { key: 'ASC' } });
     const priorities = await AppDataSource.getRepository(Priority).find({ order: { rank: 'ASC', name: 'ASC' } });
-    const taskStates = await AppDataSource.getRepository(TaskState).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const taskStatuses = await AppDataSource.getRepository(TaskStatus).find({ order: { rank: 'ASC', name: 'ASC' } });
     const projectStates = await AppDataSource.getRepository(ProjectState).find({ order: { rank: 'ASC', name: 'ASC' } });
     const riskLevels = await AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } });
 
-    return { plainSettings: toPlainArray(settings), priorities: toPlainArray(priorities), taskStates: toPlainArray(taskStates), projectStates: toPlainArray(projectStates), riskLevels: toPlainArray(riskLevels) };
+    return { plainSettings: toPlainArray(settings), priorities: toPlainArray(priorities), taskStatuses: toPlainArray(taskStatuses), projectStates: toPlainArray(projectStates), riskLevels: toPlainArray(riskLevels) };
 };
 
 export const actions: Actions = {
@@ -90,7 +90,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!name) return fail(400, { message: 'Task state name required' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatus);
         try {
             const s = repo.create({ name, rank, color: color || null, description: description || null });
             await repo.save(s);
@@ -109,7 +109,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!id || !name) return fail(400, { message: 'Missing id or name' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatuses);
         try {
             await repo.update(id, { name, rank, color: color || null, description: description || null });
         } catch (e) {
@@ -123,7 +123,7 @@ export const actions: Actions = {
         const fd = await request.formData();
         const id = String(fd.get('id') ?? '');
         if (!id) return fail(400, { message: 'Missing id' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatuses);
         try {
             await repo.delete(id);
         } catch (e) {

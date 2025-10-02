@@ -11,7 +11,7 @@ from 'typeorm';
 
 import { User,
          Priority,
-         ProjectState,
+         ProjectStatus,
          RiskLevel,
          Task }
 from '$lib/server/database/entities';
@@ -32,9 +32,9 @@ export class Project {
   @Column({ type: 'varchar', nullable: true })
   description?: string | null;
 
-  @ManyToOne(() => ProjectState, { onDelete: 'RESTRICT', nullable: false })
-  @JoinColumn({ name: 'project_state_id' })
-  projectState: ProjectState;
+  @ManyToOne(() => ProjectStatus, { onDelete: 'RESTRICT', nullable: false })
+  @JoinColumn({ name: 'project_status_id' })
+  projectStatus: ProjectStatus;
 
   @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'priority_id' })

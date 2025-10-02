@@ -1,78 +1,11 @@
-<script lang="ts" module>
-	export const columns: ColumnDef<Schema>[] = [
-		{
-			id: "drag",
-			header: () => null,
-			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id }),
-		},
-		{
-			id: "select",
-			header: ({ table }) =>
-				renderComponent(DataTableCheckbox, {
-					checked: table.getIsAllPageRowsSelected(),
-					indeterminate:
-						table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
-					onCheckedChange: (value) => table.toggleAllPageRowsSelected(!!value),
-					"aria-label": "Select all",
-				}),
-			cell: ({ row }) =>
-				renderComponent(DataTableCheckbox, {
-					checked: row.getIsSelected(),
-					onCheckedChange: (value) => row.toggleSelected(!!value),
-					"aria-label": "Select row",
-				}),
-			enableSorting: false,
-			enableHiding: false,
-		},
-		{
-			accessorKey: "header",
-			header: "Header",
-			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
-			enableHiding: false,
-		},
-		{
-			accessorKey: "type",
-			header: "Section Type",
-			cell: ({ row }) => renderSnippet(DataTableType, { row }),
-		},
-		{
-			accessorKey: "status",
-			header: "Status",
-			cell: ({ row }) => renderSnippet(DataTableStatus, { row }),
-		},
-		{
-			accessorKey: "target",
-			header: () =>
-				renderSnippet(
-					createRawSnippet(() => ({
-						render: () => '<div class="w-full text-right">Target</div>',
-					}))
-				),
-			cell: ({ row }) => renderSnippet(DataTableTarget, { row }),
-		},
-		{
-			accessorKey: "limit",
-			header: () =>
-				renderSnippet(
-					createRawSnippet(() => ({
-						render: () => '<div class="w-full text-right">Limit</div>',
-					}))
-				),
-			cell: ({ row }) => renderSnippet(DataTableLimit, { row }),
-		},
-		{
-			accessorKey: "reviewer",
-			header: "Reviewer",
-			cell: ({ row }) => renderComponent(DataTableReviewer, { row }),
-		},
-		{
-			id: "actions",
-			cell: () => renderSnippet(DataTableActions),
-		},
-	];
-</script>
-
 <script lang="ts">
+	import {
+		createColumns,
+		createColumnsFromData,
+		staticColumns,
+		type Columns,
+		type StaticColumns
+	} from "$lib/components/ui/data-table/data-table.svelte.js";
 	import {
 		getCoreRowModel,
 		getFacetedRowModel,
@@ -155,6 +88,45 @@
 	);
 
 	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
+
+	export const columns: Columns = [
+		{
+			...staticColumns.drag,
+			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id }),
+		},
+		{
+			...staticColumns.select,
+			cell: ({ row, table }) =>
+					renderComponent(DataTableCheckbox, {
+						checked: row.getIsSelected(),
+						onCheckedChange: (v) => row.toggleSelected(!!v),
+					}),
+		},
+		{
+			...staticColumns.header,
+			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
+		},
+		...createColumnsFromData(data[0]).map((col) => {
+			switch (col.accessorKey) {
+				case "type":
+					return { ...col, cell: ({ row }) => renderSnippet(DataTableType, { row }) };
+				case "status":
+					return { ...col, cell: ({ row }) => renderSnippet(DataTableStatus, { row }) };
+				case "target":
+					return { ...col, cell: ({ row }) => renderSnippet(DataTableTarget, { row }) };
+				case "limit":
+					return { ...col, cell: ({ row }) => renderSnippet(DataTableLimit, { row }) };
+				case "reviewer":
+					return { ...col, cell: ({ row }) => renderComponent(DataTableReviewer, { row }) };
+				case "actions":
+					return { ...col, cell: () => renderSnippet(DataTableActions) };
+				default:
+					return col;
+			}
+		}),
+	];
+
+
 
 	const table = createSvelteTable({
 		get data() {
@@ -268,7 +240,7 @@
 			</Select.Trigger>
 			<Select.Content>
 				{#each views as view (view.id)}
-					<Select.Item value={view.id}>{view.label}</Select.Item>
+					<Select.Item value={view.id}>badum ts... {view.label}</Select.Item>
 				{/each}
 			</Select.Content>
 		</Select.Root>
@@ -526,7 +498,7 @@
 {/snippet}
 
 {#snippet DraggableRow({ row }: { row: Row<Schema> })}
-	{@const { transform, transition, node, isDragging } = useSortable({
+	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({
 		id: () => row.original.id,
 	})}
 

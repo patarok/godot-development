@@ -26,15 +26,16 @@ from '$lib/server/database/entities';
 import { Task,
          TaskTag,
          UserTask,
-         Tag
+         Tag,
+         TimeEntry
 }
 from '$lib/server/database/entities';
 
-// State
+// Status
 import {
     Priority,
-    TaskState,
-    ProjectState,
+    TaskStatus,
+    ProjectStatus,
     RiskLevel
 }
 from '$lib/server/database/entities';
@@ -111,11 +112,12 @@ export const AppDataSource = new DataSource({
         TaskTag,
         UserTask,
         Tag,
+        TimeEntry,
 
-        // State
+        // Status
         Priority,
-        TaskState,
-        ProjectState,
+        TaskStatus,
+        ProjectStatus,
         RiskLevel,
 
         // Project domain
