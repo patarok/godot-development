@@ -36,15 +36,46 @@ export async function seedTimeEntries() {
           const startHour = 9 + ((tIdx + dayOffset) % 6); // 9..14 UTC
           const startedAt = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), startHour));
           const minutes = 30 + ((tIdx * 17 + dayOffset * 13) % 60); // 30..89 min
-          entries.push({ taskId: t.id, userId: u.id, startedAt, minutes, note: 'Seeded work' });
+          const endedAt = new Date(startedAt.getTime() + minutes * 60 * 1000);
+          entries.push({ taskId: t.id, userId: u.id, startedAt, endedAt, minutes, note: 'Seeded work' });
         }
       }
     }
   }
 
   if (entries.length) {
-    await timeRepo.save(entries.map((e) => timeRepo.create(e)));
-    console.log(`Seeded time entries: ${entries.length}`);
+    const toInsert: Partial<TimeEntry>[] = [];
+    const toUpdate: TimeEntry[] = [];
+    for (const e of entries) {
+      const exists = await timeRepo.findOne({ where: { taskId: e.taskId as any, userId: e.userId as any, startedAt: e.startedAt as any } as any });
+      if (!exists) {
+        toInsert.push(e);
+      } else {
+        let changed = false;
+        // ensure minutes present
+        if ((exists.minutes ?? null) == null && (e.minutes ?? null) != null) {
+          exists.minutes = e.minutes as number;
+          changed = true;
+        }
+        // ensure endedAt present and consistent if minutes are known
+        const minutesForCalc = (exists.minutes ?? e.minutes) as number | undefined;
+        if (minutesForCalc != null) {
+          const expectedEnd = new Date(exists.startedAt.getTime() + minutesForCalc * 60 * 1000);
+          if (!exists.endedAt || Math.abs(expectedEnd.getTime() - new Date(exists.endedAt).getTime()) > 1000) {
+            exists.endedAt = expectedEnd;
+            changed = true;
+          }
+        }
+        if (changed) toUpdate.push(exists);
+      }
+    }
+    if (toInsert.length) {
+      await timeRepo.save(toInsert.map((e) => timeRepo.create(e)));
+    }
+    if (toUpdate.length) {
+      await timeRepo.save(toUpdate);
+    }
+    console.log(`Time entries seed: inserted ${toInsert.length}, updated ${toUpdate.length}, skipped ${entries.length - toInsert.length - toUpdate.length}`);
   } else {
     console.log('No time entries generated.');
   }

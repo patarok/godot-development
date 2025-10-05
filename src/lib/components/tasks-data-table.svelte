@@ -67,11 +67,25 @@
 	import DotsVerticalIcon from "@tabler/icons-svelte/icons/dots-vertical";
 	import { toast } from "svelte-sonner";
 	import DataTableCheckbox from "./data-table-checkbox.svelte";
-	import DataTableCellViewer from "./data-table-cell-viewer.svelte";
+	import TaskDataTableCellViewer from "./task-data-table-cell-viewer.svelte";
 	import DataTableReviewer from "./data-table-reviewer.svelte";
 	import { CSS } from "@dnd-kit-svelte/utilities";
 
-	let { data }: { data: Schema[] } = $props();
+	// let { data }: { data: Schema[] } = $props();
+	let {
+		data,
+		states = [],
+		priorities = [],
+		users = [],
+		projects = []
+	}: {
+		data: Schema[];
+		states?: Array<{ id: string; name: string }>;
+		priorities?: Array<{ id: string; name: string }>;
+		users?: Array<{ id: string; email: string }>;
+		projects?: Array<{ id: string; name: string }>;
+	} = $props();
+
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let sorting = $state<SortingState>([]);
 	let columnFilters = $state<ColumnFiltersState>([]);
@@ -105,7 +119,13 @@
 		{
 			...staticColumns.header,
 			// keep the same cell viewer component; it already expects an object with at least `header`
-			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
+			cell: ({ row }) => renderComponent(TaskDataTableCellViewer, {
+				item: row.original,
+				timeSeriesDaily: (row.original as any).timeSeriesDaily }),
+				states,
+				priorities,
+				projects,
+				users,
 		},
 
 		// Type badge
@@ -113,6 +133,16 @@
 			accessorKey: "type",
 			header: "Type",
 			cell: ({ row }) => renderSnippet(DataTableType, { row }), // reuses your existing snippet
+		},
+
+		// Main assignee
+		{
+			accessorKey: "description",
+			header: "Description",
+			cell: ({ row }) => {
+				const value = (row.original as any).description ?? "";
+				return renderSnippet(RawHtml, { html: `<div class=\"truncate max-w-[10rem]\">${value}</div>` });
+			},
 		},
 
 		// Status badge (done vs not done)
@@ -617,6 +647,7 @@
 	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({
 		id: () => row.original.id,
 	})}
+	{console.log(row.original)}
 
 	<Table.Row
 		data-state={row.getIsSelected() && "selected"}

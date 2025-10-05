@@ -11,6 +11,26 @@ import {
   UserTask,
   Role
 } from '../../entities';
+import { generateIdenteapot } from '@teapotlabs/identeapots';
+// Setup minimal DOM/canvas for identeapots (Node environment)
+import { JSDOM } from 'jsdom';
+import { createCanvas, Image as CanvasImage } from 'canvas';
+
+function ensureDomForIdenteapots() {
+  if (typeof (globalThis as any).document !== 'undefined') return;
+  const dom = new JSDOM('<!doctype html><html><body></body></html>');
+  (globalThis as any).window = dom.window as any;
+  (globalThis as any).document = dom.window.document as any;
+  (globalThis as any).Image = CanvasImage as any;
+  const realCreateElement = dom.window.document.createElement.bind(dom.window.document);
+  (dom.window.document as any).createElement = function(tagName: any, options?: any) {
+    if (String(tagName).toLowerCase() === 'canvas') {
+      return createCanvas(256, 256) as any;
+    }
+    return realCreateElement(tagName, options);
+  };
+}
+ensureDomForIdenteapots();
 
 function slugify(input: string): string {
   return input
@@ -63,6 +83,12 @@ async function upsertProject(title: string) {
       currentIterationNumber: 0,
       iterationWarnAt: 0
     });
+    project = await projectRepo.save(project);
+  }
+  // Ensure project has an avatar
+  if (project && !project.avatarData) {
+    const avatarData = await generateIdenteapot(project.id ?? title, { size: 128 });
+    project.avatarData = avatarData;
     project = await projectRepo.save(project);
   }
   return project;

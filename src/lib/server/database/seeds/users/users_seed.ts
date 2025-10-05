@@ -2,6 +2,26 @@ import { AppDataSource } from '../../config/datasource';
 import { User } from '../../entities/user/User';
 import { Role } from '../../entities/user/Role';
 import { hash as argon2hash } from '@node-rs/argon2';
+import { generateIdenteapot } from '@teapotlabs/identeapots';
+// Setup minimal DOM/canvas for identeapots (Node environment)
+import { JSDOM } from 'jsdom';
+import { createCanvas, Image as CanvasImage } from 'canvas';
+
+function ensureDomForIdenteapots() {
+  if (typeof (globalThis as any).document !== 'undefined') return;
+  const dom = new JSDOM('<!doctype html><html><body></body></html>');
+  (globalThis as any).window = dom.window as any;
+  (globalThis as any).document = dom.window.document as any;
+  (globalThis as any).Image = CanvasImage as any;
+  const realCreateElement = dom.window.document.createElement.bind(dom.window.document);
+  (dom.window.document as any).createElement = function(tagName: any, options?: any) {
+    if (String(tagName).toLowerCase() === 'canvas') {
+      return createCanvas(256, 256) as any;
+    }
+    return realCreateElement(tagName, options);
+  };
+}
+ensureDomForIdenteapots();
 
 async function upsertRole(name: string, isMainRole = true) {
   const repo = AppDataSource.getRepository(Role);
@@ -55,13 +75,61 @@ async function upsertUser(u: SeedUser) {
     user.role = role;
   }
 
+  // Ensure avatar is set (stable by email)
+  if (!user.avatarData) {
+    const avatarData = await generateIdenteapot(email, { size: 128 });
+    user.avatarData = avatarData;
+  }
+
   return await userRepo.save(user);
+}
+
+async function upsertAdminUserFromEnv() {
+  const userRepo = AppDataSource.getRepository(User);
+  const roleRepo = AppDataSource.getRepository(Role);
+
+  const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@example.com').toLowerCase();
+  const adminUsername = process.env.ADMIN_USERNAME ?? 'admin';
+  const rawPassword = process.env.ADMIN_PASSWORD ?? 'admin123';
+  const passwordHashEnv = process.env.ADMIN_PASSWORD_HASH;
+
+  const adminRole = await roleRepo.findOne({ where: { name: 'admin' } });
+  if (!adminRole) throw new Error("Role 'admin' not found. Seed roles before users.");
+
+  let user = await userRepo.findOne({ where: [{ email: adminEmail }, { username: adminUsername }], relations: ['role'] });
+
+  if (!user) {
+    const password = passwordHashEnv ? passwordHashEnv : await argon2hash(rawPassword, { memoryCost: 19456, timeCost: 2, hashLength: 32, parallelism: 1 });
+    user = userRepo.create({
+      email: adminEmail,
+      username: adminUsername,
+      forename: 'Admin',
+      surname: 'User',
+      password,
+      isActive: true,
+      role: adminRole
+    });
+  } else {
+    // Ensure role remains admin but do not override existing password unless explicit hash provided
+    if (!user.role || user.role.id !== adminRole.id) user.role = adminRole;
+    if (passwordHashEnv) user.password = passwordHashEnv;
+  }
+
+  // Ensure avatar
+  if (!user.avatarData) {
+    const avatarData = await generateIdenteapot(adminEmail, { size: 128 });
+    user.avatarData = avatarData;
+  }
+
+  await userRepo.save(user);
 }
 
 export async function seedUsers() {
   // Ensure baseline roles exist
   await upsertRole('admin', true);
   await upsertRole('user', true);
+  // Ensure the primary admin user exists just like in initial_seed
+  await upsertAdminUserFromEnv();
 
   const users: SeedUser[] = [
     { forename: 'Grace',  surname: 'Lee',      email: 'grace.lee@example.com',  username: 'glee',     role: 'admin' },

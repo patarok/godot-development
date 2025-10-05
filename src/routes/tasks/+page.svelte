@@ -18,7 +18,8 @@
   });
 
   let { data }: { data: PageData } = $props();
-  const { dropContainerItems, fakeData, tasksProjected, priorities, states, tags, users, user, mTasks } = data;
+
+  const { dropContainerItems, tasksProjected, projects, priorities, states, tags, users, user, mTasks } = data;
   const metaTasks = (mTasks ?? []).filter((t: any) => t?.isMeta === true);
   //debugger;
   const enhanceCallback = async ({ result, update }) => {
@@ -26,8 +27,6 @@
       await invalidateAll();
     }
   };
-
-
 
 </script>
 
@@ -43,26 +42,13 @@
         tasks={metaTasks}
 />
 
-
 <div class="flex flex-1 flex-col">
   <div class="@container/main flex flex-1 flex-col gap-2">
-      <Section id="example-0" title="Existing Tasks" link="#">
-        <DataTable data={fakeData} />
-      </Section>
       <Section id="example-1" title="Actual Tasks" link="#">
-          <TasksDataTable data={tasksProjected} />
+          <TasksDataTable data={tasksProjected} {states} {priorities} {users} {projects} />
       </Section>
       <Section id="example-2" title="Draggable Containers" link="#">
         <DraggableContainers data={dropContainerItems}/>
       </Section>
   </div>
 </div>
-
-<!--<ul class="space-y-2 mt-4">-->
-<!--  {#each taskList as t}-->
-<!--    <li class="p-4 border rounded flex flex-col gap-2">-->
-<!--      <strong>{t.title}</strong>-->
-<!--      <span>Status: {t.taskStatus?.name ?? '—'} | Priority: {t.priority?.name ?? '—'}</span>-->
-<!--    </li>-->
-<!--  {/each}-->
-<!--</ul>-->

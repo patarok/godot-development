@@ -32,6 +32,9 @@ export class Project {
   @Column({ type: 'varchar', nullable: true })
   description?: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  avatarData?: string;
+
   @ManyToOne(() => ProjectStatus, { onDelete: 'RESTRICT', nullable: false })
   @JoinColumn({ name: 'project_status_id' })
   projectStatus: ProjectStatus;

@@ -5,14 +5,16 @@ import {
   initializeDatabase,
   Task,
   Priority,
+  Project,
   TaskStatus,
   Tag,
   TaskTag,
   User,
-  UserTask
+  UserTask,
+  TimeEntry
 } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
-import { In } from 'typeorm';
+import { In, Between } from 'typeorm';
 
 function slugifyTag(s: string) {
   return s
@@ -28,302 +30,13 @@ export const load: PageServerLoad = async ({ locals }) => {
   await initializeDatabase();
 
   const taskRepo = AppDataSource.getRepository(Task);
+  const projectRepo = AppDataSource.getRepository(Project);
   const priorityRepo = AppDataSource.getRepository(Priority);
   const stateRepo = AppDataSource.getRepository(TaskStatus);
   const tagRepo = AppDataSource.getRepository(Tag);
   const userRepo = AppDataSource.getRepository(User);
   const taskTagRepo = AppDataSource.getRepository(TaskTag);
 
-  const genericTaskData = [
-    {
-      id: 1,
-      header: "Design landing page",
-      type: "UI/UX",
-      status: "In Process",
-      priority: "High",
-      assignedProject: "Website Redesign",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-10T09:00:00Z"),
-        plannedDue: new Date("2025-01-20T18:00:00Z")
-      },
-      mainAssignee: "Alice Johnson",
-      assignedUsers: ["Bob Smith", "Charlie Evans", "Diana Lee"],
-      isActive: true,
-      created: new Date("2025-01-05T10:30:00Z"),
-      updated: new Date("2025-01-09T15:45:00Z"),
-      tags: ["frontend", "design", "Figma", "UI"]
-    },
-    {
-      id: 2,
-      header: "Set up CI/CD pipeline",
-      type: "DevOps",
-      status: "Not Started",
-      priority: "Medium",
-      assignedProject: "Internal Tools",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-15T08:00:00Z"),
-        plannedDue: new Date("2025-01-25T17:00:00Z")
-      },
-      mainAssignee: "David Clark",
-      assignedUsers: ["Eve Turner", "Frank Harris"],
-      isActive: true,
-      created: new Date("2025-01-06T09:15:00Z"),
-      updated: new Date("2025-01-06T09:15:00Z"),
-      tags: ["automation", "deployment", "github-actions"]
-    },
-    {
-      id: 3,
-      header: "Write unit tests for API",
-      type: "Backend",
-      status: "In Review",
-      priority: "High",
-      assignedProject: "Payment Service",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-12T10:00:00Z"),
-        plannedDue: new Date("2025-01-18T16:00:00Z")
-      },
-      mainAssignee: "Sophia Martinez",
-      assignedUsers: ["George King", "Helen Adams"],
-      isActive: true,
-      created: new Date("2025-01-07T11:00:00Z"),
-      updated: new Date("2025-01-14T14:20:00Z"),
-      tags: ["testing", "jest", "coverage"]
-    },
-    {
-      id: 4,
-      header: "Marketing campaign plan",
-      type: "Documentation",
-      status: "Completed",
-      priority: "Low",
-      assignedProject: "Q1 Launch",
-      plannedSchedule: {
-        plannedStart: new Date("2024-12-20T09:00:00Z"),
-        plannedDue: new Date("2025-01-05T18:00:00Z")
-      },
-      mainAssignee: "Michael Brown",
-      assignedUsers: ["Isabella Moore", "Jack Wilson"],
-      isActive: false,
-      created: new Date("2024-12-15T12:00:00Z"),
-      updated: new Date("2025-01-05T18:10:00Z"),
-      tags: ["marketing", "campaign", "planning"]
-    },
-    {
-      id: 5,
-      header: "Database schema refactor",
-      type: "Backend",
-      status: "In Process",
-      priority: "Critical",
-      assignedProject: "Analytics Platform",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-08T08:30:00Z"),
-        plannedDue: new Date("2025-01-22T17:30:00Z")
-      },
-      mainAssignee: "Emily Davis",
-      assignedUsers: ["Liam Scott", "Olivia White"],
-      isActive: true,
-      created: new Date("2025-01-02T14:00:00Z"),
-      updated: new Date("2025-01-11T09:45:00Z"),
-      tags: ["database", "postgres", "migration"]
-    },
-    {
-      id: 6,
-      header: "Prepare quarterly report",
-      type: "Reporting",
-      status: "In Process",
-      priority: "Medium",
-      assignedProject: "Finance Department",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-10T07:00:00Z"),
-        plannedDue: new Date("2025-01-30T19:00:00Z")
-      },
-      mainAssignee: "Chris Taylor",
-      assignedUsers: ["Natalie Green", "Oscar Wright"],
-      isActive: true,
-      created: new Date("2025-01-04T09:30:00Z"),
-      updated: new Date("2025-01-12T16:50:00Z"),
-      tags: ["finance", "reporting", "excel"]
-    },
-    {
-      id: 7,
-      header: "Customer survey analysis",
-      type: "Analytics",
-      status: "Not Started",
-      priority: "Low",
-      assignedProject: "Customer Success",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-20T08:00:00Z"),
-        plannedDue: new Date("2025-02-05T18:00:00Z")
-      },
-      mainAssignee: "Laura Johnson",
-      assignedUsers: ["Peter Hall", "Quinn Young"],
-      isActive: true,
-      created: new Date("2025-01-10T11:45:00Z"),
-      updated: new Date("2025-01-10T11:45:00Z"),
-      tags: ["survey", "data-analysis", "customers"]
-    },
-    {
-      id: 8,
-      header: "Fix mobile layout bugs",
-      type: "Frontend",
-      status: "In Review",
-      priority: "High",
-      assignedProject: "E-Commerce App",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-09T09:00:00Z"),
-        plannedDue: new Date("2025-01-14T15:00:00Z")
-      },
-      mainAssignee: "Brian Clark",
-      assignedUsers: ["Rachel Parker", "Sam Walker"],
-      isActive: true,
-      created: new Date("2025-01-05T08:20:00Z"),
-      updated: new Date("2025-01-13T12:10:00Z"),
-      tags: ["mobile", "bugfix", "UI"]
-    },
-    {
-      id: 9,
-      header: "Legal compliance check",
-      type: "Audit",
-      status: "Completed",
-      priority: "Critical",
-      assignedProject: "Regulation 2025",
-      plannedSchedule: {
-        plannedStart: new Date("2024-12-10T08:00:00Z"),
-        plannedDue: new Date("2024-12-30T17:00:00Z")
-      },
-      mainAssignee: "Victoria Lee",
-      assignedUsers: ["Thomas Allen"],
-      isActive: false,
-      created: new Date("2024-12-05T09:00:00Z"),
-      updated: new Date("2024-12-30T17:05:00Z"),
-      tags: ["compliance", "audit", "legal"]
-    },
-    {
-      id: 10,
-      header: "Onboarding new hires",
-      type: "HR",
-      status: "In Process",
-      priority: "Medium",
-      assignedProject: "Talent Management",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-03T09:00:00Z"),
-        plannedDue: new Date("2025-01-31T18:00:00Z")
-      },
-      mainAssignee: "Angela Morris",
-      assignedUsers: ["Uma Collins", "Victor Perez"],
-      isActive: true,
-      created: new Date("2025-01-02T09:15:00Z"),
-      updated: new Date("2025-01-15T10:30:00Z"),
-      tags: ["hr", "onboarding", "training"]
-    },
-    {
-      id: 11,
-      header: "Cloud infrastructure cost review",
-      type: "Finance/DevOps",
-      status: "In Process",
-      priority: "High",
-      assignedProject: "AWS Optimization",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-12T10:00:00Z"),
-        plannedDue: new Date("2025-01-28T16:00:00Z")
-      },
-      mainAssignee: "Daniel Roberts",
-      assignedUsers: ["Wendy Hughes", "Xavier Murphy"],
-      isActive: true,
-      created: new Date("2025-01-07T12:10:00Z"),
-      updated: new Date("2025-01-13T15:25:00Z"),
-      tags: ["aws", "cost", "cloud"]
-    },
-    {
-      id: 12,
-      header: "Refactor authentication module",
-      type: "Backend",
-      status: "Not Started",
-      priority: "Critical",
-      assignedProject: "Security Update",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-18T09:00:00Z"),
-        plannedDue: new Date("2025-01-27T18:00:00Z")
-      },
-      mainAssignee: "Yvonne Scott",
-      assignedUsers: ["Zachary Lee", "Alan Kim"],
-      isActive: true,
-      created: new Date("2025-01-09T08:00:00Z"),
-      updated: new Date("2025-01-09T08:00:00Z"),
-      tags: ["auth", "security", "backend"]
-    },
-    {
-      id: 13,
-      header: "Prepare investor presentation",
-      type: "Business",
-      status: "In Review",
-      priority: "High",
-      assignedProject: "Funding Round B",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-05T10:00:00Z"),
-        plannedDue: new Date("2025-01-15T17:00:00Z")
-      },
-      mainAssignee: "Olivia Martinez",
-      assignedUsers: ["Brian Clark", "David Clark"],
-      isActive: true,
-      created: new Date("2025-01-04T14:20:00Z"),
-      updated: new Date("2025-01-14T11:40:00Z"),
-      tags: ["investors", "presentation", "pitchdeck"]
-    },
-    {
-      id: 14,
-      header: "Conduct penetration test",
-      type: "Security",
-      status: "In Process",
-      priority: "Critical",
-      assignedProject: "Cybersecurity Audit",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-11T09:00:00Z"),
-        plannedDue: new Date("2025-01-21T18:00:00Z")
-      },
-      mainAssignee: "Samuel Green",
-      assignedUsers: ["Clara Moore", "Ethan Lewis"],
-      isActive: true,
-      created: new Date("2025-01-08T08:45:00Z"),
-      updated: new Date("2025-01-12T13:00:00Z"),
-      tags: ["security", "pentest", "vulnerability"]
-    },
-    {
-      id: 15,
-      header: "Customer support knowledge base",
-      type: "Documentation",
-      status: "Not Started",
-      priority: "Low",
-      assignedProject: "Help Center",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-22T08:00:00Z"),
-        plannedDue: new Date("2025-02-10T17:00:00Z")
-      },
-      mainAssignee: "Grace Lee",
-      assignedUsers: ["Henry Adams", "Ivy Brooks"],
-      isActive: true,
-      created: new Date("2025-01-12T09:30:00Z"),
-      updated: new Date("2025-01-12T09:30:00Z"),
-      tags: ["support", "docs", "knowledge-base"]
-    },
-    {
-      id: 16,
-      header: "Sprint retrospective",
-      type: "Agile",
-      status: "Completed",
-      priority: "Medium",
-      assignedProject: "Sprint 21",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-01T09:00:00Z"),
-        plannedDue: new Date("2025-01-07T16:00:00Z")
-      },
-      mainAssignee: "Jason Miller",
-      assignedUsers: ["Karen Scott", "Leo Carter"],
-      isActive: false,
-      created: new Date("2024-12-28T12:00:00Z"),
-      updated: new Date("2025-01-07T16:10:00Z"),
-      tags: ["agile", "scrum", "retrospective"]
-    }
-  ];
 
   const genericTaskDataShort = [
     {
@@ -364,620 +77,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     },
     ];
 
-  const genericListData = [
-    {
-      id: 1,
-      header: "Cover page",
-      type: "Cover page",
-      status: "In Process",
-      target: "18",
-      limit: "5",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 2,
-      header: "Table of contents",
-      type: "Table of contents",
-      status: "Done",
-      target: "29",
-      limit: "24",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 3,
-      header: "Executive summary",
-      type: "Narrative",
-      status: "Done",
-      target: "10",
-      limit: "13",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 4,
-      header: "Technical approach",
-      type: "Narrative",
-      status: "Done",
-      target: "27",
-      limit: "23",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 5,
-      header: "Design",
-      type: "Narrative",
-      status: "In Process",
-      target: "2",
-      limit: "16",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 6,
-      header: "Capabilities",
-      type: "Narrative",
-      status: "In Process",
-      target: "20",
-      limit: "8",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 7,
-      header: "Integration with existing systems",
-      type: "Narrative",
-      status: "In Process",
-      target: "19",
-      limit: "21",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 8,
-      header: "Innovation and Advantages",
-      type: "Narrative",
-      status: "Done",
-      target: "25",
-      limit: "26",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 9,
-      header: "Overview of EMR's Innovative Solutions",
-      type: "Technical content",
-      status: "Done",
-      target: "7",
-      limit: "23",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 10,
-      header: "Advanced Algorithms and Machine Learning",
-      type: "Narrative",
-      status: "Done",
-      target: "30",
-      limit: "28",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 11,
-      header: "Adaptive Communication Protocols",
-      type: "Narrative",
-      status: "Done",
-      target: "9",
-      limit: "31",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 12,
-      header: "Advantages Over Current Technologies",
-      type: "Narrative",
-      status: "Done",
-      target: "12",
-      limit: "0",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 13,
-      header: "Past Performance",
-      type: "Narrative",
-      status: "Done",
-      target: "22",
-      limit: "33",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 14,
-      header: "Customer Feedback and Satisfaction Levels",
-      type: "Narrative",
-      status: "Done",
-      target: "15",
-      limit: "34",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 15,
-      header: "Implementation Challenges and Solutions",
-      type: "Narrative",
-      status: "Done",
-      target: "3",
-      limit: "35",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 16,
-      header: "Security Measures and Data Protection Policies",
-      type: "Narrative",
-      status: "In Process",
-      target: "6",
-      limit: "36",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 17,
-      header: "Scalability and Future Proofing",
-      type: "Narrative",
-      status: "Done",
-      target: "4",
-      limit: "37",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 18,
-      header: "Cost-Benefit Analysis",
-      type: "Plain language",
-      status: "Done",
-      target: "14",
-      limit: "38",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 19,
-      header: "User Training and Onboarding Experience",
-      type: "Narrative",
-      status: "Done",
-      target: "17",
-      limit: "39",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 20,
-      header: "Future Development Roadmap",
-      type: "Narrative",
-      status: "Done",
-      target: "11",
-      limit: "40",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 21,
-      header: "System Architecture Overview",
-      type: "Technical content",
-      status: "In Process",
-      target: "24",
-      limit: "18",
-      reviewer: "Maya Johnson",
-    },
-    {
-      id: 22,
-      header: "Risk Management Plan",
-      type: "Narrative",
-      status: "Done",
-      target: "15",
-      limit: "22",
-      reviewer: "Carlos Rodriguez",
-    },
-    {
-      id: 23,
-      header: "Compliance Documentation",
-      type: "Legal",
-      status: "In Process",
-      target: "31",
-      limit: "27",
-      reviewer: "Sarah Chen",
-    },
-    {
-      id: 24,
-      header: "API Documentation",
-      type: "Technical content",
-      status: "Done",
-      target: "8",
-      limit: "12",
-      reviewer: "Raj Patel",
-    },
-    {
-      id: 25,
-      header: "User Interface Mockups",
-      type: "Visual",
-      status: "In Process",
-      target: "19",
-      limit: "25",
-      reviewer: "Leila Ahmadi",
-    },
-    {
-      id: 26,
-      header: "Database Schema",
-      type: "Technical content",
-      status: "Done",
-      target: "22",
-      limit: "20",
-      reviewer: "Thomas Wilson",
-    },
-    {
-      id: 27,
-      header: "Testing Methodology",
-      type: "Technical content",
-      status: "In Process",
-      target: "17",
-      limit: "14",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 28,
-      header: "Deployment Strategy",
-      type: "Narrative",
-      status: "Done",
-      target: "26",
-      limit: "30",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 29,
-      header: "Budget Breakdown",
-      type: "Financial",
-      status: "In Process",
-      target: "13",
-      limit: "16",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 30,
-      header: "Market Analysis",
-      type: "Research",
-      status: "Done",
-      target: "29",
-      limit: "32",
-      reviewer: "Sophia Martinez",
-    },
-    {
-      id: 31,
-      header: "Competitor Comparison",
-      type: "Research",
-      status: "In Process",
-      target: "21",
-      limit: "19",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 32,
-      header: "Maintenance Plan",
-      type: "Technical content",
-      status: "Done",
-      target: "16",
-      limit: "23",
-      reviewer: "Alex Thompson",
-    },
-    {
-      id: 33,
-      header: "User Personas",
-      type: "Research",
-      status: "In Process",
-      target: "27",
-      limit: "24",
-      reviewer: "Nina Patel",
-    },
-    {
-      id: 34,
-      header: "Accessibility Compliance",
-      type: "Legal",
-      status: "Done",
-      target: "18",
-      limit: "21",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 35,
-      header: "Performance Metrics",
-      type: "Technical content",
-      status: "In Process",
-      target: "23",
-      limit: "26",
-      reviewer: "David Kim",
-    },
-    {
-      id: 36,
-      header: "Disaster Recovery Plan",
-      type: "Technical content",
-      status: "Done",
-      target: "14",
-      limit: "17",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 37,
-      header: "Third-party Integrations",
-      type: "Technical content",
-      status: "In Process",
-      target: "25",
-      limit: "28",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 38,
-      header: "User Feedback Summary",
-      type: "Research",
-      status: "Done",
-      target: "20",
-      limit: "15",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 39,
-      header: "Localization Strategy",
-      type: "Narrative",
-      status: "In Process",
-      target: "12",
-      limit: "19",
-      reviewer: "Maria Garcia",
-    },
-    {
-      id: 40,
-      header: "Mobile Compatibility",
-      type: "Technical content",
-      status: "Done",
-      target: "28",
-      limit: "31",
-      reviewer: "James Wilson",
-    },
-    {
-      id: 41,
-      header: "Data Migration Plan",
-      type: "Technical content",
-      status: "In Process",
-      target: "19",
-      limit: "22",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 42,
-      header: "Quality Assurance Protocols",
-      type: "Technical content",
-      status: "Done",
-      target: "30",
-      limit: "33",
-      reviewer: "Priya Singh",
-    },
-    {
-      id: 43,
-      header: "Stakeholder Analysis",
-      type: "Research",
-      status: "In Process",
-      target: "11",
-      limit: "14",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 44,
-      header: "Environmental Impact Assessment",
-      type: "Research",
-      status: "Done",
-      target: "24",
-      limit: "27",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 45,
-      header: "Intellectual Property Rights",
-      type: "Legal",
-      status: "In Process",
-      target: "17",
-      limit: "20",
-      reviewer: "Sarah Johnson",
-    },
-    {
-      id: 46,
-      header: "Customer Support Framework",
-      type: "Narrative",
-      status: "Done",
-      target: "22",
-      limit: "25",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 47,
-      header: "Version Control Strategy",
-      type: "Technical content",
-      status: "In Process",
-      target: "15",
-      limit: "18",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 48,
-      header: "Continuous Integration Pipeline",
-      type: "Technical content",
-      status: "Done",
-      target: "26",
-      limit: "29",
-      reviewer: "Michael Chen",
-    },
-    {
-      id: 49,
-      header: "Regulatory Compliance",
-      type: "Legal",
-      status: "In Process",
-      target: "13",
-      limit: "16",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 50,
-      header: "User Authentication System",
-      type: "Technical content",
-      status: "Done",
-      target: "28",
-      limit: "31",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 51,
-      header: "Data Analytics Framework",
-      type: "Technical content",
-      status: "In Process",
-      target: "21",
-      limit: "24",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 52,
-      header: "Cloud Infrastructure",
-      type: "Technical content",
-      status: "Done",
-      target: "16",
-      limit: "19",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 53,
-      header: "Network Security Measures",
-      type: "Technical content",
-      status: "In Process",
-      target: "29",
-      limit: "32",
-      reviewer: "Lisa Wong",
-    },
-    {
-      id: 54,
-      header: "Project Timeline",
-      type: "Planning",
-      status: "Done",
-      target: "14",
-      limit: "17",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 55,
-      header: "Resource Allocation",
-      type: "Planning",
-      status: "In Process",
-      target: "27",
-      limit: "30",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 56,
-      header: "Team Structure and Roles",
-      type: "Planning",
-      status: "Done",
-      target: "20",
-      limit: "23",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 57,
-      header: "Communication Protocols",
-      type: "Planning",
-      status: "In Process",
-      target: "15",
-      limit: "18",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 58,
-      header: "Success Metrics",
-      type: "Planning",
-      status: "Done",
-      target: "30",
-      limit: "33",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 59,
-      header: "Internationalization Support",
-      type: "Technical content",
-      status: "In Process",
-      target: "23",
-      limit: "26",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 60,
-      header: "Backup and Recovery Procedures",
-      type: "Technical content",
-      status: "Done",
-      target: "18",
-      limit: "21",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 61,
-      header: "Monitoring and Alerting System",
-      type: "Technical content",
-      status: "In Process",
-      target: "25",
-      limit: "28",
-      reviewer: "Daniel Park",
-    },
-    {
-      id: 62,
-      header: "Code Review Guidelines",
-      type: "Technical content",
-      status: "Done",
-      target: "12",
-      limit: "15",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 63,
-      header: "Documentation Standards",
-      type: "Technical content",
-      status: "In Process",
-      target: "27",
-      limit: "30",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 64,
-      header: "Release Management Process",
-      type: "Planning",
-      status: "Done",
-      target: "22",
-      limit: "25",
-      reviewer: "Assign reviewer",
-    },
-    {
-      id: 65,
-      header: "Feature Prioritization Matrix",
-      type: "Planning",
-      status: "In Process",
-      target: "19",
-      limit: "22",
-      reviewer: "Emma Davis",
-    },
-    {
-      id: 66,
-      header: "Technical Debt Assessment",
-      type: "Technical content",
-      status: "Done",
-      target: "24",
-      limit: "27",
-      reviewer: "Eddie Lake",
-    },
-    {
-      id: 67,
-      header: "Capacity Planning",
-      type: "Planning",
-      status: "In Process",
-      target: "21",
-      limit: "24",
-      reviewer: "Jamik Tashpulatov",
-    },
-    {
-      id: 68,
-      header: "Service Level Agreements",
-      type: "Legal",
-      status: "Done",
-      target: "26",
-      limit: "29",
-      reviewer: "Assign reviewer",
-    },
-  ];
 
   const dropExamples = [
     {
@@ -1013,7 +112,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     }
   }
 
-  const [priorities, states, tags, users] = await Promise.all([
+  const [projects, priorities, states, tags, users] = await Promise.all([
+    projectRepo.find({ order: { title: 'ASC' } }),
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     stateRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     tagRepo.find({ order: { name: 'ASC' } }),
@@ -1033,6 +133,42 @@ export const load: PageServerLoad = async ({ locals }) => {
     }
   }
 
+  // Aggregate time entries per task by day (last 14 days)
+  const timeSeriesByTask: Record<string, { date: Date; minutes: number }[]> = {};
+  if (taskIds.length) {
+    const timeRepo = AppDataSource.getRepository(TimeEntry);
+    const now = new Date();
+    // Create a UTC window: from start of day -59 days to start of next day (exclusive)
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    const start = new Date(end);
+    start.setUTCDate(end.getUTCDate() - 59); // 60 days window
+
+    const entries = await timeRepo.find({
+      where: {
+        taskId: In(taskIds),
+        startedAt: Between(start, end)
+      }
+    });
+
+    const bucket: Record<string, Record<string, number>> = {};
+    const dayKey = (d: Date) => new Date(d).toISOString().slice(0, 10); // YYYY-MM-DD
+
+    for (const e of entries) {
+      const key = dayKey(e.startedAt);
+      const minutes = (e.minutes ?? (e.endedAt ? Math.max(0, Math.round((new Date(e.endedAt).getTime() - new Date(e.startedAt).getTime()) / 60000)) : 0)) || 0;
+      if (!bucket[e.taskId]) bucket[e.taskId] = {};
+      bucket[e.taskId][key] = (bucket[e.taskId][key] ?? 0) + minutes;
+    }
+
+    for (const tid of Object.keys(bucket)) {
+      const perDay = bucket[tid];
+      const series = Object.keys(perDay)
+        .sort()
+        .map((dk) => ({ date: new Date(dk + 'T00:00:00Z'), minutes: perDay[dk] }));
+      timeSeriesByTask[tid] = series;
+    }
+  }
+
   // Helpers local to this page for mapping domain -> table row shape
   function fullNameOrEmail(u?: any): string {
     if (!u) return '';
@@ -1049,8 +185,10 @@ export const load: PageServerLoad = async ({ locals }) => {
   const tasksProjected = tasks.map((t, idx) => ({
     // Use a numeric, table-friendly id while we still have UUIDs in the entity
     id: idx + 1,
+    taskUuid: t.id,
     header: t.title,
     type: extractTypeFromDescription(t.description) || (t.project?.title ?? ''),
+    description: t.description ?? '',
     status: t.taskStatus?.name ?? '',
     priority: t.priority?.name ?? '',
     assignedProject: t.project?.title ?? '',
@@ -1064,14 +202,14 @@ export const load: PageServerLoad = async ({ locals }) => {
     created: t.createdAt,
     updated: t.updatedAt,
     tags: (tagsByTask[t.id] ?? []).map((x) => x.name),
+    timeSeriesDaily: timeSeriesByTask[t.id] ?? [],
   }));
 
   //debugger;
   return {
     dropContainerItems: dropExamples,
-    fakeData: genericListData,
-    tasks: genericTaskData,
     tasksProjected,
+    projects: toPlainArray(projects),
     priorities: toPlainArray(priorities),
     states: toPlainArray(states),
     tags: toPlainArray(tags),
@@ -1144,6 +282,137 @@ export const actions: Actions = {
     }
 
     return { success: true, message: 'Task created' };
+  },
+
+  // Update action for inline task editing from task-data-table-cell-viewer.svelte
+  update: async ({ request }) => {
+    await initializeDatabase();
+    const form = await request.formData();
+
+    // const idRaw = String(form.get('taskUuid') ?? form.get('id') ?? '').trim();
+    // if (!idRaw) return fail(400, { message: 'Task id required' });
+
+    const idRaw = String(form.get('taskUuid') ?? form.get('id') ?? '').trim();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idRaw);
+    if (!isUuid) return fail(400, { message: 'Invalid task id (expected UUID)' });
+
+    const header = String(form.get('header') ?? '').trim();
+    const description = String(form.get('description') ?? '').trim();
+    const statusName = String(form.get('status') ?? '').trim();
+    const priorityName = String(form.get('priority') ?? '').trim();
+    const assignedProjectId = String(form.get('assignedProject') ?? '').trim();
+    const plannedStartStr = String(form.get('plannedStart') ?? '').trim();
+    const plannedDueStr = String(form.get('plannedDue') ?? '').trim();
+    const mainAssigneeEmail = String(form.get('mainAssignee') ?? '').trim();
+    const assignedUsersCSV = String(form.get('assignedUsers') ?? '').trim();
+    const isActiveRaw = form.get('isActive');
+    const tagsCSV = String(form.get('tags') ?? '').trim();
+
+    const taskRepo = AppDataSource.getRepository(Task);
+    const statusRepo = AppDataSource.getRepository(TaskStatus);
+    const priorityRepo = AppDataSource.getRepository(Priority);
+    const userRepo = AppDataSource.getRepository(User);
+    const taskTagRepo = AppDataSource.getRepository(TaskTag);
+    const tagRepo = AppDataSource.getRepository(Tag);
+    const userTaskRepo = AppDataSource.getRepository(UserTask);
+
+    const task = await taskRepo.findOne({ where: { id: idRaw } });
+    if (!task) return fail(404, { message: 'Task not found' });
+
+    if (header) task.title = header;
+    task.description = description || null as any;
+
+    if (isActiveRaw !== null) {
+      const v = String(isActiveRaw);
+      task.isActive = v === 'on' || v === 'true' || v === '1';
+    }
+
+    if (statusName) {
+      const st = await statusRepo.findOne({ where: { name: statusName } });
+      if (st) task.taskStatus = st;
+    }
+
+    if (priorityName) {
+      const pr = await priorityRepo.findOne({ where: { name: priorityName } });
+      task.priority = pr ?? null as any;
+    }
+
+    // Project can be blank
+    if (assignedProjectId === '') {
+      task.projectId = null as any;
+    } else if (assignedProjectId) {
+      task.projectId = assignedProjectId;
+    }
+
+    if (plannedStartStr) {
+      const d = new Date(plannedStartStr);
+      if (!isNaN(d.getTime())) task.plannedStartDate = d;
+    }
+    if (plannedDueStr) {
+      const d = new Date(plannedDueStr);
+      if (!isNaN(d.getTime())) task.dueDate = d;
+    }
+
+    // Main assignee by email
+    if (mainAssigneeEmail) {
+      const u = await userRepo.findOne({ where: { email: mainAssigneeEmail } });
+      task.user = u ?? null as any;
+    }
+
+    await taskRepo.save(task);
+
+    // Sync tags if provided
+    if (tagsCSV.length) {
+      const desiredTags = tagsCSV.split(',').map(s => s.trim()).filter(Boolean);
+      const desiredSlugs = new Set(desiredTags.map(slugifyTag));
+
+      const existingLinks = await taskTagRepo.find({ where: { taskId: task.id }, relations: { tag: true } });
+      const existingBySlug = new Map(existingLinks.map(l => [l.tag.slug, l] as const));
+
+      // Add missing
+      for (const name of desiredTags) {
+        const slug = slugifyTag(name);
+        if (!existingBySlug.has(slug)) {
+          let tag = await tagRepo.findOne({ where: { slug } });
+          if (!tag) {
+            tag = tagRepo.create({ slug, name });
+            await tagRepo.save(tag);
+          }
+          await taskTagRepo.save(taskTagRepo.create({ taskId: task.id, tagId: tag.id }));
+        }
+      }
+      // Remove extras
+      for (const [slug, link] of existingBySlug) {
+        if (!desiredSlugs.has(slug)) {
+          await taskTagRepo.remove(link);
+        }
+      }
+    }
+
+    // Sync assigned users if provided (comma-separated list of emails)
+    if (assignedUsersCSV.length) {
+      const desiredEmails = assignedUsersCSV.split(',').map(s => s.trim()).filter(Boolean);
+      const users = await userRepo.find({ where: { email: In(desiredEmails) } });
+      const desiredIds = new Set(users.map(u => u.id));
+
+      const existingLinks = await userTaskRepo.find({ where: { taskId: task.id } });
+      const existingIds = new Set(existingLinks.map(l => l.userId));
+
+      // Add missing links
+      for (const uid of desiredIds) {
+        if (!existingIds.has(uid)) {
+          await userTaskRepo.save(userTaskRepo.create({ userId: uid, taskId: task.id }));
+        }
+      }
+      // Remove extra links
+      for (const link of existingLinks) {
+        if (!desiredIds.has(link.userId)) {
+          await userTaskRepo.remove(link);
+        }
+      }
+    }
+
+    return { success: true, message: 'Task updated' };
   },
 
   toggle: async ({ request }) => {

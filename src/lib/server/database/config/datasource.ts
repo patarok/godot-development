@@ -86,7 +86,7 @@ export const AppDataSource = new DataSource({
     type: 'postgres',
     url: DATABASE_URL,
     synchronize: NODE_ENV === 'development',
-    dropSchema: DROP_SCHEMA && NODE_ENV === 'development',
+    dropSchema: DROP_SCHEMA,
     logging: NODE_ENV === 'development',
     entities: [
 
@@ -148,9 +148,3 @@ export const AppDataSource = new DataSource({
     migrations: ['src/lib/server/database/migrations/*.ts'],
     subscribers: ['src/lib/server/database/subscribers/*.ts']
 });
-
-try {
-    await AppDataSource.initialize()
-} catch (error) {
-    console.log(error)
-}
