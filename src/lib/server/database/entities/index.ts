@@ -27,6 +27,7 @@ export * from './status/Priority';
 export * from './status/TaskStatus';
 export * from './status/ProjectStatus';
 export * from './status/RiskLevel';
+export * from './status/TaskType';
 
 // Project domain
 export * from './project/Project';

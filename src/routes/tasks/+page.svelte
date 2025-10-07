@@ -19,7 +19,7 @@
 
   let { data }: { data: PageData } = $props();
 
-  const { dropContainerItems, tasksProjected, projects, priorities, states, tags, users, user, mTasks } = data;
+  const { dropContainerItems, tasksProjected, projects, priorities, states, tags, users, types, user, mTasks } = data;
   const metaTasks = (mTasks ?? []).filter((t: any) => t?.isMeta === true);
   //debugger;
   const enhanceCallback = async ({ result, update }) => {
@@ -28,10 +28,10 @@
     }
   };
 
+  console.log("TASKS PROJECTED FROM PAGE.SVELTE!!:", tasksProjected);
 </script>
 
-<h1 class="text-2xl font-bold mb-4">Create Task</h1>
-
+<div class="m-4">
 <TaskCreateForm
         action="?/create"
         enhanceForm={true}
@@ -41,11 +41,12 @@
         {users}
         tasks={metaTasks}
 />
+</div>
 
 <div class="flex flex-1 flex-col">
   <div class="@container/main flex flex-1 flex-col gap-2">
-      <Section id="example-1" title="Actual Tasks" link="#">
-          <TasksDataTable data={tasksProjected} {states} {priorities} {users} {projects} />
+      <Section id="example-1" title="Task List" link="#">
+          <TasksDataTable data={tasksProjected} {states} {priorities} {types} {users} {projects} />
       </Section>
       <Section id="example-2" title="Draggable Containers" link="#">
         <DraggableContainers data={dropContainerItems}/>

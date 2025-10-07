@@ -146,6 +146,7 @@ async function upsertSystemSetting(key: string, value: string, opts?: { descript
 async function upsertAdminUser(email: string, passwordHash: string, username = 'admin') {
     const userRepo = AppDataSource.getRepository(User);
 
+
     const emailNorm = email.trim().toLowerCase();
     let user = await userRepo.findOne({ where: [{ email: emailNorm }, { username }] });
     const adminRole = await AppDataSource.getRepository(Role).findOne({ where: { name: 'admin' } });
@@ -153,7 +154,7 @@ async function upsertAdminUser(email: string, passwordHash: string, username = '
     if (!user) {
         user = await userRepo.save(userRepo.create({ email: emailNorm, username, password: passwordHash, isActive: true, role: adminRole }));
     }
-    return user;
+  return user;
 }
 
 export async function seedInitialData() {
@@ -241,19 +242,7 @@ export async function seedInitialData() {
         { name: 'Capabilities', rank: 50 },
         { name: 'Focus Documents', rank: 60 },
         { name: 'Narrative', rank: 70 },
-        { name: 'Cover Page', rank: 80 },
-
-        // Additional canonical task types used by task seeders
-        { name: 'Cover page', rank: 85 }, // matches tasks_seed.ts (case-sensitive)
-        { name: 'HR', rank: 90 },
-        { name: 'Backend', rank: 100 },
-        { name: 'Business', rank: 110 },
-        { name: 'Agile', rank: 120 },
-        { name: 'Feature', rank: 130 },
-        { name: 'Chore', rank: 140 },
-        { name: 'Bug', rank: 150 },
-        { name: 'Frontend', rank: 160 },
-        { name: 'Finance/DevOps', rank: 170 }
+        { name: 'Cover Page', rank: 80 }
     ];
     for (const tt of taskTypeSeeds) await upsertTaskType(tt.name, tt.rank);
 

@@ -36,7 +36,8 @@ import {
     Priority,
     TaskStatus,
     ProjectStatus,
-    RiskLevel
+    RiskLevel,
+    TaskType
 }
 from '$lib/server/database/entities';
 
@@ -119,6 +120,7 @@ export const AppDataSource = new DataSource({
         TaskStatus,
         ProjectStatus,
         RiskLevel,
+        TaskType,
 
         // Project domain
         Project,

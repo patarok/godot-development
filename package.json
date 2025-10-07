@@ -21,6 +21,7 @@
     "db:seed:tasks": "tsx src/lib/server/database/seeds/tasks/tasks_seed.ts",
     "db:seed:tasks:x": "tsx src/lib/server/database/seeds/tasks/tasks_seed_extended.ts",
     "db:seed:time": "tsx src/lib/server/database/seeds/time/time_entries_seed.ts",
+    "db:seed:all": "tsx src/lib/server/database/seeds/initial_seed.ts && tsx src/lib/server/database/seeds/users/users_seed.ts && tsx src/lib/server/database/seeds/tasks/tasks_seed.ts && tsx src/lib/server/database/seeds/tasks/tasks_seed_extended.ts && tsx src/lib/server/database/seeds/time/time_entries_seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

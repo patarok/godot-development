@@ -17,6 +17,8 @@ export const taskRowSchema = z.object({
 	type: z.string(),
 	description: z.string(),
 	status: z.string(),
+	target: z.string(),
+	limit: z.string(),
 	priority: z.string(),
 	assignedProject: z.string(),
 	plannedSchedule: z.object({
@@ -33,6 +35,7 @@ export const taskRowSchema = z.object({
 		date: z.coerce.date(),
 		minutes: z.number(),
 	})).optional(),
+	reviewer: z.string(),
 });
 
 export type Schema = z.infer<typeof schema>;

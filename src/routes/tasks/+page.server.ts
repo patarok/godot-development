@@ -11,7 +11,9 @@ import {
   TaskTag,
   User,
   UserTask,
-  TimeEntry
+  TimeEntry,
+  ProjectUser,
+  TaskType
 } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 import { In, Between } from 'typeorm';
@@ -25,6 +27,28 @@ function slugifyTag(s: string) {
       .slice(0, 64);
 }
 
+// Type helpers: embed selected type into description as `Type: <value> | rest`
+function extractTypeFromDescription(desc?: string | null): string {
+  if (!desc) return '';
+  const m = desc.match(/\bType:\s*([^|\n\r]+)/i);
+  return (m?.[1]?.trim() ?? '');
+}
+function stripTypeInDescription(desc?: string | null): string {
+  if (!desc) return '';
+  return desc
+    .replace(/^\s*Type:\s*[^|\n\r]+\s*\|\s*/i, '')
+    .replace(/^\s*Type:\s*[^|\n\r]+\s*/i, '')
+    .trim();
+}
+function withTypeInDescription(type: string, rest: string): string {
+  const cleanRest = (rest ?? '').trim();
+  const t = (type ?? '').trim();
+  if (!t && !cleanRest) return '';
+  if (!t) return cleanRest;
+  if (!cleanRest) return `Type: ${t}`;
+  return `Type: ${t} | ${cleanRest}`;
+}
+
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) return redirect(302, '/login');
   await initializeDatabase();
@@ -36,6 +60,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const tagRepo = AppDataSource.getRepository(Tag);
   const userRepo = AppDataSource.getRepository(User);
   const taskTagRepo = AppDataSource.getRepository(TaskTag);
+  const typeRepo = AppDataSource.getRepository(TaskType);
 
 
   const genericTaskDataShort = [
@@ -98,7 +123,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   // Load tasks with relations
   const tasks = await taskRepo.find({
     order: { createdAt: 'DESC' },
-    relations: { taskStatus: true, priority: true, creator: true, user: true, parent: true }
+    relations: { taskStatus: true, priority: true, creator: true, user: true, parent: true, taskType: true }
   });
 
   // Load tags per task
@@ -112,16 +137,18 @@ export const load: PageServerLoad = async ({ locals }) => {
     }
   }
 
-  const [projects, priorities, states, tags, users] = await Promise.all([
-    projectRepo.find({ order: { title: 'ASC' } }),
+  const [projects, priorities, states, tags, users, types] = await Promise.all([
+    projectRepo.find({ where: { isActive: true }, order: { title: 'ASC' } }),
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     stateRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     tagRepo.find({ order: { name: 'ASC' } }),
-    userRepo.find({ order: { email: 'ASC' } })
+    userRepo.find({ order: { email: 'ASC' }, relations: { role: true, subRoles: { subRoleCfg: true } } }),
+    typeRepo.find({ order: { rank: 'ASC', name: 'ASC' } })
   ]);
 
   // Build assigned users by task via UserTask links
   const usersByTask: Record<string, string[]> = {};
+  const userIdsByTask: Record<string, string[]> = {};
   if (taskIds.length) {
     const userTaskRepo = AppDataSource.getRepository(UserTask);
     const links = await userTaskRepo.find({ where: { taskId: In(taskIds) }, relations: { user: true } });
@@ -129,7 +156,9 @@ export const load: PageServerLoad = async ({ locals }) => {
       const u = link.user as any;
       const name = `${(u?.forename ?? '').trim()} ${(u?.surname ?? '').trim()}`.trim() || u?.email || '';
       if (!usersByTask[link.taskId]) usersByTask[link.taskId] = [];
+      if (!userIdsByTask[link.taskId]) userIdsByTask[link.taskId] = [];
       if (name) usersByTask[link.taskId].push(name);
+      if (u?.id) userIdsByTask[link.taskId].push(u.id);
     }
   }
 
@@ -181,29 +210,63 @@ export const load: PageServerLoad = async ({ locals }) => {
     return (m?.[1]?.trim() ?? '');
   }
 
+  // Build project -> userIds map for available users
+  const projectIds = Array.from(new Set(tasks.map(t => t.projectId).filter(Boolean))) as string[];
+  const projectUsersMap: Record<string, Set<string>> = {};
+  if (projectIds.length) {
+    const puRepo = AppDataSource.getRepository(ProjectUser);
+    const pus = await puRepo.find({ where: { projectId: In(projectIds) } });
+    for (const pu of pus) {
+      (projectUsersMap[pu.projectId] ||= new Set<string>()).add(pu.userId);
+    }
+  }
+
+  function projectUserInfo(u: any) {
+    return {
+      id: u.id,
+      email: u.email,
+      forename: u.forename ?? null,
+      surname: u.surname ?? null,
+      username: u.username ?? null,
+      roleName: u.role?.name ?? null,
+      subroles: Array.isArray(u.subRoles) ? u.subRoles.map((sr: any) => sr?.subRoleCfg?.title).filter(Boolean) : [],
+      avatarData: u.avatarData ?? null,
+      fullName: `${(u.forename ?? '').trim()} ${(u.surname ?? '').trim()}`.trim() || u.username || u.email
+    };
+  }
+
+  console.log("Tasks on SERVER FILE before MAP:", tasks);
   // Projected rows for the task table (kept here per page-owner request)
-  const tasksProjected = tasks.map((t, idx) => ({
-    // Use a numeric, table-friendly id while we still have UUIDs in the entity
-    id: idx + 1,
-    taskUuid: t.id,
-    header: t.title,
-    type: extractTypeFromDescription(t.description) || (t.project?.title ?? ''),
-    description: t.description ?? '',
-    status: t.taskStatus?.name ?? '',
-    priority: t.priority?.name ?? '',
-    assignedProject: t.project?.title ?? '',
-    plannedSchedule: {
-      plannedStart: t.plannedStartDate ?? undefined,
-      plannedDue: t.dueDate ?? undefined,
-    },
-    mainAssignee: fullNameOrEmail(t.user),
-    assignedUsers: usersByTask[t.id] ?? [],
-    isActive: !!t.isActive,
-    created: t.createdAt,
-    updated: t.updatedAt,
-    tags: (tagsByTask[t.id] ?? []).map((x) => x.name),
-    timeSeriesDaily: timeSeriesByTask[t.id] ?? [],
-  }));
+  const tasksProjected = tasks.map((t, idx) => {
+    const avSet = t.projectId ? (projectUsersMap[t.projectId] ?? null) : null;
+    const availableUsers = (avSet ? users.filter((u: any) => avSet.has(u.id)) : users).map(projectUserInfo);
+    return {
+      // Use a numeric, table-friendly id while we still have UUIDs in the entity
+      id: idx + 1,
+      taskUuid: t.id,
+      header: t.title,
+      type: t.taskType?.name ?? 'foo',
+      description: t.description ?? '',
+      status: t.taskStatus?.name ?? '',
+      priority: t.priority?.name ?? '',
+      assignedProject: t.project?.title ?? '',
+      projectId: t.projectId ?? null,
+      plannedSchedule: {
+        plannedStart: t.plannedStartDate ?? undefined,
+        plannedDue: t.dueDate ?? undefined,
+      },
+      mainAssignee: fullNameOrEmail(t.user),
+      mainAssigneeId: t.user?.id ?? null,
+      assignedUsers: usersByTask[t.id] ?? [],
+      assignedUserIds: userIdsByTask[t.id] ?? [],
+      availableUsers,
+      isActive: !!t.isActive,
+      created: t.createdAt,
+      updated: t.updatedAt,
+      tags: (tagsByTask[t.id] ?? []).map((x) => x.name),
+      timeSeriesDaily: timeSeriesByTask[t.id] ?? [],
+    };
+  });
 
   //debugger;
   return {
@@ -214,6 +277,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     states: toPlainArray(states),
     tags: toPlainArray(tags),
     users: toPlainArray(users),
+    types: toPlainArray(types),
     user: locals.user,
     mTasks: toPlainArray(tasks)
   };
@@ -298,6 +362,8 @@ export const actions: Actions = {
 
     const header = String(form.get('header') ?? '').trim();
     const description = String(form.get('description') ?? '').trim();
+    const typeSelected = String(form.get('type') ?? '').trim();
+    const typeId = String(form.get('typeId') ?? '').trim();
     const statusName = String(form.get('status') ?? '').trim();
     const priorityName = String(form.get('priority') ?? '').trim();
     const assignedProjectId = String(form.get('assignedProject') ?? '').trim();
@@ -308,9 +374,24 @@ export const actions: Actions = {
     const isActiveRaw = form.get('isActive');
     const tagsCSV = String(form.get('tags') ?? '').trim();
 
+    // New ID-based fields
+    const projectIdNew = String(form.get('projectId') ?? form.get('assignedProject') ?? '').trim();
+    const mainAssigneeId = String(form.get('mainAssigneeId') ?? '').trim();
+    let assignedUserIds: string[] = [];
+    const repeatedIds = form.getAll('assignedUserIds[]');
+    if (repeatedIds && repeatedIds.length) {
+      assignedUserIds = repeatedIds.map(v => String(v)).filter(Boolean);
+    } else {
+      const assignedUserIdsJson = String(form.get('assignedUserIdsJson') ?? '').trim();
+      if (assignedUserIdsJson) {
+        try { assignedUserIds = JSON.parse(assignedUserIdsJson); } catch {}
+      }
+    }
+
     const taskRepo = AppDataSource.getRepository(Task);
     const statusRepo = AppDataSource.getRepository(TaskStatus);
     const priorityRepo = AppDataSource.getRepository(Priority);
+    const typeRepo = AppDataSource.getRepository(TaskType);
     const userRepo = AppDataSource.getRepository(User);
     const taskTagRepo = AppDataSource.getRepository(TaskTag);
     const tagRepo = AppDataSource.getRepository(Tag);
@@ -320,7 +401,11 @@ export const actions: Actions = {
     if (!task) return fail(404, { message: 'Task not found' });
 
     if (header) task.title = header;
-    task.description = description || null as any;
+    // Store description without any legacy "Type:" prefix
+    {
+      const restOnly = stripTypeInDescription(description);
+      task.description = (restOnly || null) as any;
+    }
 
     if (isActiveRaw !== null) {
       const v = String(isActiveRaw);
@@ -337,11 +422,21 @@ export const actions: Actions = {
       task.priority = pr ?? null as any;
     }
 
-    // Project can be blank
-    if (assignedProjectId === '') {
+    // Task type by ID (preferred) or by name (fallback)
+    if (typeId && uuidRe.test(typeId)) {
+      const tt = await typeRepo.findOne({ where: { id: typeId } });
+      task.taskType = tt ?? null as any;
+    } else if (typeSelected) {
+      const tt = await typeRepo.findOne({ where: { name: typeSelected } });
+      if (tt) task.taskType = tt;
+    }
+
+    // Project can be blank; prefer explicit projectIdNew when provided
+    const projectField = projectIdNew || assignedProjectId;
+    if (projectField === '') {
       task.projectId = null as any;
-    } else if (assignedProjectId) {
-      task.projectId = assignedProjectId;
+    } else if (projectField) {
+      task.projectId = projectField;
     }
 
     if (plannedStartStr) {
@@ -353,8 +448,12 @@ export const actions: Actions = {
       if (!isNaN(d.getTime())) task.dueDate = d;
     }
 
-    // Main assignee by email
-    if (mainAssigneeEmail) {
+    // Main assignee by ID (preferred) or email (fallback)
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (mainAssigneeId && uuidRe.test(mainAssigneeId)) {
+      const u = await userRepo.findOne({ where: { id: mainAssigneeId } });
+      task.user = u ?? null as any;
+    } else if (mainAssigneeEmail) {
       const u = await userRepo.findOne({ where: { email: mainAssigneeEmail } });
       task.user = u ?? null as any;
     }
@@ -389,8 +488,23 @@ export const actions: Actions = {
       }
     }
 
-    // Sync assigned users if provided (comma-separated list of emails)
-    if (assignedUsersCSV.length) {
+    // Sync assigned users by IDs (preferred) or fallback to CSV emails
+    if (assignedUserIds.length) {
+      const desiredIds = new Set(assignedUserIds);
+      const existingLinks = await userTaskRepo.find({ where: { taskId: task.id } });
+      const existingIds = new Set(existingLinks.map(l => l.userId));
+
+      for (const uid of desiredIds) {
+        if (!existingIds.has(uid)) {
+          await userTaskRepo.save(userTaskRepo.create({ userId: uid, taskId: task.id }));
+        }
+      }
+      for (const link of existingLinks) {
+        if (!desiredIds.has(link.userId)) {
+          await userTaskRepo.remove(link);
+        }
+      }
+    } else if (assignedUsersCSV.length) {
       const desiredEmails = assignedUsersCSV.split(',').map(s => s.trim()).filter(Boolean);
       const users = await userRepo.find({ where: { email: In(desiredEmails) } });
       const desiredIds = new Set(users.map(u => u.id));

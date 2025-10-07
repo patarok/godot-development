@@ -12,7 +12,8 @@ from 'typeorm';
 import { User,
          Priority,
          TaskStatus,
-         Project }
+         Project,
+         TaskType }
 from '$lib/server/database/entities';
 
 @Entity()
@@ -44,6 +45,11 @@ export class Task {
     @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'priority_id' })
     priority?: Priority;
+
+    // Task type relation (optional)
+    @ManyToOne(() => TaskType, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'task_type_id' })
+    taskType?: TaskType | null;
 
     @ManyToOne(() => User, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'active_user_id' })

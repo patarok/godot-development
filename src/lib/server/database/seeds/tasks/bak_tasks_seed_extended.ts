@@ -9,8 +9,7 @@ import {
   ProjectStatus,
   User,
   UserTask,
-  Role,
-  TaskType
+  Role
 } from '../../entities';
 import { generateIdenteapot } from '@teapotlabs/identeapots';
 // Setup minimal DOM/canvas for identeapots (Node environment)
@@ -35,10 +34,10 @@ ensureDomForIdenteapots();
 
 function slugify(input: string): string {
   return input
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 async function upsertTaskStatus(name: string, rank?: number, color?: string) {
@@ -101,16 +100,6 @@ async function upsertTag(name: string) {
   let row = await repo.findOne({ where: { slug } });
   if (!row) {
     row = repo.create({ slug, name });
-    row = await repo.save(row);
-  }
-  return row;
-}
-
-async function upsertTaskType(name: string, rank?: number, color?: string) {
-  const repo = AppDataSource.getRepository(TaskType);
-  let row = await repo.findOne({ where: { name } });
-  if (!row) {
-    row = repo.create({ name, rank: rank ?? 0, color });
     row = await repo.save(row);
   }
   return row;
@@ -229,7 +218,6 @@ export async function seedTasksExtended() {
     const isDone = /completed|done|closed/i.test(spec.status);
 
     const mainAssignee = await findUserByFullName(spec.mainAssigneeName);
-    const tt = await upsertTaskType('MetaTask');
 
     const task = taskRepo.create({
       title: spec.title,
@@ -239,7 +227,6 @@ export async function seedTasksExtended() {
       priority,
       project,
       user: mainAssignee ?? undefined,
-      taskType: tt,
       isDone,
       hasSegmentGroupCircle: false,
       isActive: true,
@@ -286,23 +273,18 @@ export async function seedTasksExtended() {
 
     const isDone = /completed|done|closed/i.test(status);
 
-    // Ensure a TaskType exists for each regular task
-    const typeName = i % 2 === 0 ? 'Feature' : 'Chore';
-    const ttReg = await upsertTaskType(typeName);
-
     // First 16 get a parent (2 children per meta)
     const parent: Task | undefined = i < 16 ? savedMetaTasks[i % savedMetaTasks.length] : undefined;
 
     const task = taskRepo.create({
       title: `Task ${i + 1}: ${projectTitle}`,
-      description: `Type: ${typeName} | Auto-generated`,
+      description: `Type: ${i % 2 === 0 ? 'Feature' : 'Chore'} | Auto-generated`,
       creator: creatorFallback ?? undefined,
       taskStatus: statusRow,
       priority: priorityRow,
       project: projectRow,
       user: mainAssignee ?? undefined,
       parent: parent,
-      taskType: ttReg,
       isDone,
       hasSegmentGroupCircle: false,
       isActive: i % 7 !== 0, // some inactive

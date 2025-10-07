@@ -31,6 +31,7 @@ export * from './entities/task/TimeEntry';
 // Status
 export * from './entities/status/Priority';
 export * from './entities/status/TaskStatus';
+export * from './entities/status/TaskType';
 export * from './entities/status/ProjectStatus';
 export * from './entities/status/RiskLevel';
 

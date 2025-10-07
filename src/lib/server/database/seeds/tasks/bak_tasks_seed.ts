@@ -1,5 +1,5 @@
 import { AppDataSource } from '../../config/datasource';
-import {
+import { 
   Task,
   TaskStatus,
   Priority,
@@ -9,8 +9,7 @@ import {
   ProjectStatus,
   User,
   UserTask,
-  Role,
-  TaskType
+  Role
 } from '../../entities';
 import { generateIdenteapot } from '@teapotlabs/identeapots';
 // Setup minimal DOM/canvas for identeapots (Node environment)
@@ -35,10 +34,10 @@ ensureDomForIdenteapots();
 
 function slugify(input: string): string {
   return input
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 async function upsertTaskStatus(name: string, rank?: number, color?: string) {
@@ -101,16 +100,6 @@ async function upsertTag(name: string) {
   let row = await repo.findOne({ where: { slug } });
   if (!row) {
     row = repo.create({ slug, name });
-    row = await repo.save(row);
-  }
-  return row;
-}
-
-async function upsertTaskType(name: string, rank?: number, color?: string) {
-  const repo = AppDataSource.getRepository(TaskType);
-  let row = await repo.findOne({ where: { name } });
-  if (!row) {
-    row = repo.create({ name, rank: rank ?? 0, color });
     row = await repo.save(row);
   }
   return row;
@@ -311,9 +300,6 @@ export async function seedTasks() {
     const priority = await upsertPriority(spec.priority, priorityRank(spec.priority));
     const project = spec.assignedProject ? await upsertProject(spec.assignedProject) : null;
 
-    // Ensure a TaskType exists and attach it to the task
-    const tt = spec.type ? await upsertTaskType(spec.type) : undefined;
-
     const isDone = /completed|done|closed/i.test(spec.status);
     const startDate = spec.created ?? spec.plannedSchedule.plannedStart ?? new Date();
     const dueDate = spec.plannedSchedule?.plannedDue ?? new Date();
@@ -329,7 +315,6 @@ export async function seedTasks() {
       priority,
       project: project ?? undefined,
       user: mainAssignee ?? undefined,
-      taskType: tt, // attach TaskType relation
       isDone,
       hasSegmentGroupCircle: false,
       isActive: coerceBool(spec.isActive),

@@ -18,15 +18,14 @@
 	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
 	import * as Select from "$lib/components/ui/select/index.js";
 	import { Separator } from "$lib/components/ui/separator/index.js";
+	import * as Avatar from "$lib/components/ui/avatar/index.js";
+	import * as HoverCard from "$lib/components/ui/hover-card/index.js";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import type { TaskRowSchema } from "./schemas.js";
 
 	type TimePoint = { date: Date | string; minutes: number };
 
 	const isMobile = new IsMobile();
-
-	// let { item, timeSeriesDaily, ...restProps }: { item: TaskRowSchema; timeSeriesDaily?: TimePoint[] } = $props();
-	//
-	// const { states, priorities, projects, users } = $derived(restProps);
 
 	let {
 		item,
@@ -35,7 +34,8 @@
 		priorities = [],
 		states = [],
 		users = [],
-		projects = []
+		projects = [],
+		types = []
 	}: {
 		item: TaskRowSchema;
 		timeSeriesDaily?: TimePoint[];
@@ -43,7 +43,8 @@
 		priorities?: Array<{ id: string; name: string }>;
 		states?: Array<{ id: string; name: string }>;
 		users?: Array<{ id: string; email: string }>;
-		projects?: Array<{ id: string; name: string }>;
+		projects?: Array<{ id: string; title: string; avatarData?: string }>;
+		types?: Array<{ id: string; name: string }>;
 	} = $props();
 
 	const seriesData = $derived(
@@ -68,14 +69,38 @@
 		},
 	} satisfies Chart.ChartConfig;
 
+	// Helpers
+	function initials(of: { forename?: string | null; surname?: string | null; username?: string | null; email?: string }): string {
+		const f = (of.forename ?? '').trim();
+		const s = (of.surname ?? '').trim();
+		if (f || s) return `${f[0] ?? ''}${s[0] ?? ''}`.toUpperCase();
+		const un = (of.username ?? of.email ?? '').trim();
+		const parts = un.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+		if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+		return (un[0] ?? '?').toUpperCase();
+	}
+
+	function projectInitials(title?: string | null): string {
+		const t = (title ?? '').trim();
+		if (!t) return '?';
+		const parts = t.split(/\s+/).filter(Boolean);
+		if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+		return (parts[0][0] ?? '?').toUpperCase();
+	}
+
 	// Form state
 	let header = $state(item.header);
 	let type = $state(item.type);
+	let typeId = $state<string | null>(types?.find(t => t.name === item.type)?.id ?? null);
+	const selectedTypeName = $derived(types?.find(t => t.id === typeId)?.name ?? null);
 	let description = $state(item.description);
 	let status = $state(item.status);
 	let priority = $state(item.priority);
+	let projectId = $state(item.projectId ?? null);
 	let assignedProject = $state(item.assignedProject);
 	let mainAssignee = $state(item.mainAssignee);
+	let mainAssigneeId = $state(item.mainAssigneeId ?? null);
+	let assignedUserIds = $state<string[]>(Array.isArray((item as any).assignedUserIds) ? (item as any).assignedUserIds : []);
 	let isActive = $state(item.isActive);
 	let reviewer = $state(item.reviewer);
 	const totalMinutes = $derived(seriesData.reduce((sum, d) => sum + d.minutes, 0));
@@ -88,10 +113,8 @@
 		return `${hours}h ${mins}m`;
 	});
 
-	// Handle assignedUsers array
-	let assignedUsersStr = $state(
-			Array.isArray(item.assignedUsers) ? item.assignedUsers.join(', ') : item.assignedUsers
-	);
+	// Available users for this task (from server projection)
+	const availableUsers = $derived((item as any).availableUsers ?? []);
 
 	// Handle tags array
 	let tagsStr = $state(
@@ -121,7 +144,7 @@
 		return d.toDate(getLocalTimeZone()).toISOString();
 	});
 
-	const typeOptions = [
+	const defaultTypeOptions = [
 		"Table of Contents",
 		"Executive Summary",
 		"Technical Approach",
@@ -131,7 +154,8 @@
 		"Narrative",
 		"Cover Page"
 	];
-	
+	const typeOptions = $derived(types?.length ? types.map(t => t.name) : defaultTypeOptions);
+	console.log('PROJECTS INSIDE CELL VIEWER! :', projects);
 </script>
 
 <Drawer.Root direction={isMobile.current ? "bottom" : "right"}>
@@ -213,17 +237,17 @@
 
 				<div class="grid grid-cols-2 gap-4">
 					<div class="flex flex-col gap-3">
-						<Label for="type">Type</Label>
-						<Select.Root type="single" bind:value={type} name="type">
-							<Select.Trigger id="type" class="w-full">
-								{type ?? "Select a type"}
-							</Select.Trigger>
-							<Select.Content>
-								{#each typeOptions as typeOpt}
-									<Select.Item value={typeOpt}>{typeOpt}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
+ 					<Label for="type">Type</Label>
+ 					<Select.Root type="single" bind:value={typeId} name="typeId">
+ 						<Select.Trigger id="type" class="w-full">
+ 							{selectedTypeName ?? "Select a type"}
+ 						</Select.Trigger>
+ 						<Select.Content>
+ 							{#each types as t}
+ 								<Select.Item value={t.id}>{t.name}</Select.Item>
+ 							{/each}
+ 						</Select.Content>
+ 					</Select.Root>
 					</div>
 					<div class="flex flex-col gap-3">
 						<Label for="status">Status</Label>
@@ -268,21 +292,73 @@
 
 				<div class="flex flex-col gap-3">
 					<Label for="assignedProject">Assigned Project</Label>
-					{#if projects.length}
-						<Select.Root type="single" bind:value={assignedProject} name="assignedProject">
-							<Select.Trigger id="assignedProject" class="w-full">
-								{assignedProject || "Select a project"}
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Item value="">(no project)</Select.Item>
-								{#each projects as proj}
-									<Select.Item value={proj.id}>{proj.name}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					{:else}
-						<Input id="assignedProject" name="assignedProject" bind:value={assignedProject} />
-					{/if}
+					<div class="flex items-center gap-2">
+						{#if projectId}
+							{#each projects.filter((p)=>p.id===projectId) as proj}
+								<HoverCard.Root>
+									<HoverCard.Trigger asChild>
+										<button type="button" class="inline-flex items-center gap-2" title={proj.title}>
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={proj.avatarData} alt={proj.title} />
+												<Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+											</Avatar.Root>
+											<span>{proj.title}</span>
+										</button>
+									</HoverCard.Trigger>
+									<HoverCard.Content class="w-80">
+										<div class="flex items-center gap-3">
+											<Avatar.Root class="size-10">
+												<Avatar.Image src={proj.avatarData} alt={proj.title} />
+												<Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+											</Avatar.Root>
+											<div class="flex flex-col">
+												<span class="font-medium">{proj.title}</span>
+											</div>
+										</div>
+									</HoverCard.Content>
+								</HoverCard.Root>
+							{/each}
+						{:else}
+							<span class="text-muted-foreground">No project</span>
+						{/if}
+						<Dialog.Root>
+							<Dialog.Trigger asChild>
+								<Button variant="outline" size="sm">Change</Button>
+							</Dialog.Trigger>
+							<Dialog.Content class="max-w-xl">
+								<Dialog.Header>
+									<Dialog.Title>Select Project</Dialog.Title>
+								</Dialog.Header>
+								<div class="grid gap-2 max-h-[50vh] overflow-y-auto">
+									<button type="button" class="flex items-center gap-3 p-2 rounded hover:bg-muted"
+										on:click={() => { projectId = null; assignedProject = ''; }}>
+										<div class="size-8 rounded-full grid place-items-center bg-muted text-xs font-medium">–</div>
+										<div class="flex flex-col text-left">
+											<span class="font-medium">(no project)</span>
+										</div>
+									</button>
+									{#each projects as proj}
+										<button type="button" class="flex items-center gap-3 p-2 rounded hover:bg-muted"
+											on:click={() => { projectId = proj.id; assignedProject = proj.title; }}>
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={proj.avatarData} alt={proj.title} />
+												<Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+											</Avatar.Root>
+											<div class="flex flex-col text-left">
+												<span class="font-medium">{proj.title}</span>
+											</div>
+										</button>
+									{/each}
+								</div>
+								<Dialog.Footer>
+									<Dialog.Close asChild>
+										<Button type="button" variant="default">Done</Button>
+									</Dialog.Close>
+								</Dialog.Footer>
+							</Dialog.Content>
+						</Dialog.Root>
+					</div>
+					<input type="hidden" name="projectId" value={projectId ?? ''} />
 				</div>
 
 				<div class="flex flex-col gap-3">
@@ -294,26 +370,129 @@
 
 				<div class="flex flex-col gap-3">
 					<Label for="mainAssignee">Main Assignee</Label>
-					{#if users.length}
-						<Select.Root type="single" bind:value={mainAssignee} name="mainAssignee">
-							<Select.Trigger id="mainAssignee" class="w-full">
-								{mainAssignee || "Select assignee"}
-							</Select.Trigger>
-							<Select.Content>
-								{#each users as u}
-									<Select.Item value={u.email}>{u.email}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					{:else}
-						<Input id="mainAssignee" name="mainAssignee" bind:value={mainAssignee} />
-					{/if}
+					<div class="flex items-center gap-2">
+						{#if mainAssigneeId}
+							{#each availableUsers.filter((u)=>u.id===mainAssigneeId) as u}
+								<Avatar.Root class="size-8">
+									<Avatar.Image src={u.avatarData} alt={u.fullName} />
+									<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+								</Avatar.Root>
+								<span>{u.fullName}</span>
+							{/each}
+						{:else}
+							<span class="text-muted-foreground">No assignee</span>
+						{/if}
+						<Dialog.Root>
+							<Dialog.Trigger asChild>
+								<Button variant="outline" size="sm">Change</Button>
+							</Dialog.Trigger>
+							<Dialog.Content class="max-w-xl">
+								<Dialog.Header>
+									<Dialog.Title>Select Main Assignee</Dialog.Title>
+								</Dialog.Header>
+								<div class="grid gap-2 max-h-[50vh] overflow-y-auto">
+									{#each availableUsers as u}
+										<button type="button" class="flex items-center gap-3 p-2 rounded hover:bg-muted"
+											on:click={() => { mainAssigneeId = u.id; mainAssignee = u.fullName; }}>
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={u.avatarData} alt={u.fullName} />
+												<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+											</Avatar.Root>
+											<div class="flex flex-col text-left">
+												<span class="font-medium">{u.fullName}</span>
+												<span class="text-xs text-muted-foreground">{u.email} • {u.roleName} {u.subroles?.length ? `• ${u.subroles.join(', ')}` : ''}</span>
+											</div>
+										</button>
+									{/each}
+								</div>
+								<Dialog.Footer>
+									<Dialog.Close asChild>
+										<Button type="button" variant="default">Done</Button>
+									</Dialog.Close>
+								</Dialog.Footer>
+							</Dialog.Content>
+						</Dialog.Root>
+					</div>
+					<!-- hidden field for ID -->
+					<input type="hidden" name="mainAssigneeId" value={mainAssigneeId ?? ''} />
 				</div>
 
 				<div class="flex flex-col gap-3">
-					<Label for="assignedUsers">Assigned Users (comma-separated)</Label>
-					<Input id="assignedUsers" name="assignedUsers" bind:value={assignedUsersStr}
-						   placeholder="user1@example.com, user2@example.com" />
+					<Label>Assigned Users</Label>
+					<div class="flex flex-wrap items-center gap-2">
+						{#each assignedUserIds as uid}
+							{#each availableUsers.filter(u => u.id === uid) as u}
+								<HoverCard.Root>
+									<HoverCard.Trigger asChild>
+										<button type="button" class="relative" title={u.fullName} on:click={() => { assignedUserIds = assignedUserIds.filter(id => id !== uid); }}>
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={u.avatarData} alt={u.fullName} />
+												<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+											</Avatar.Root>
+											<span class="sr-only">Remove {u.fullName}</span>
+										</button>
+									</HoverCard.Trigger>
+									<HoverCard.Content class="w-80">
+										<div class="flex items-center gap-3">
+											<Avatar.Root class="size-10">
+												<Avatar.Image src={u.avatarData} alt={u.fullName} />
+												<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+											</Avatar.Root>
+											<div class="flex flex-col">
+												<span class="font-medium">{u.fullName}</span>
+												<span class="text-xs text-muted-foreground">{u.email}</span>
+												<span class="text-xs text-muted-foreground">{u.roleName} {u.subroles?.length ? `• ${u.subroles.join(', ')}` : ''}</span>
+											</div>
+										</div>
+									</HoverCard.Content>
+								</HoverCard.Root>
+							{/each}
+						{/each}
+						<Dialog.Root>
+							<Dialog.Trigger asChild>
+								<Button variant="outline" size="sm">Manage</Button>
+							</Dialog.Trigger>
+							<Dialog.Content class="max-w-2xl">
+								<Dialog.Header>
+									<Dialog.Title>Assign Users</Dialog.Title>
+								</Dialog.Header>
+								<div class="flex flex-wrap items-center gap-2 border-b pb-3 mb-3">
+									{#each assignedUserIds as uid}
+										{#each availableUsers.filter(u => u.id === uid) as u}
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={u.avatarData} alt={u.fullName} />
+												<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+											</Avatar.Root>
+										{/each}
+									{/each}
+								</div>
+								<div class="grid gap-2 max-h-[50vh] overflow-y-auto">
+									{#each availableUsers.filter(u => !assignedUserIds.includes(u.id)) as u}
+										<button type="button" class="flex items-center gap-3 p-2 rounded hover:bg-muted"
+											on:click={() => { if (!assignedUserIds.includes(u.id)) assignedUserIds = [...assignedUserIds, u.id]; }}>
+											<Avatar.Root class="size-8">
+												<Avatar.Image src={u.avatarData} alt={u.fullName} />
+												<Avatar.Fallback>{initials(u)}</Avatar.Fallback>
+											</Avatar.Root>
+											<div class="flex flex-col text-left">
+												<span class="font-medium">{u.fullName}</span>
+												<span class="text-xs text-muted-foreground">{u.email} • {u.roleName} {u.subroles?.length ? `• ${u.subroles.join(', ')}` : ''}</span>
+											</div>
+										</button>
+									{/each}
+								</div>
+								<Dialog.Footer>
+									<Dialog.Close asChild>
+										<Button type="button" variant="default">Done</Button>
+									</Dialog.Close>
+								</Dialog.Footer>
+							</Dialog.Content>
+						</Dialog.Root>
+					</div>
+					<!-- Hidden fields for assigned user IDs -->
+					{#each assignedUserIds as uid}
+						<input type="hidden" name="assignedUserIds[]" value={uid} />
+					{/each}
 				</div>
 
 				<div class="flex gap-4 items-center">

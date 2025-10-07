@@ -21,7 +21,7 @@
 		type SortingState,
 		type VisibilityState,
 	} from "@tanstack/table-core";
-	import type { Schema } from "./schemas.js";
+	import type { Schema, TaskRowSchema } from "./schemas.js";
 	import {
 		useSensors,
 		MouseSensor,
@@ -49,6 +49,8 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
+	import * as Avatar from "$lib/components/ui/avatar/index.js";
+	import * as HoverCard from "$lib/components/ui/hover-card/index.js";
 	import {
 		FlexRender,
 		renderComponent,
@@ -77,13 +79,15 @@
 		states = [],
 		priorities = [],
 		users = [],
-		projects = []
+		projects = [],
+		types = []
 	}: {
-		data: Schema[];
+		data: TaskRowSchema[];
 		states?: Array<{ id: string; name: string }>;
 		priorities?: Array<{ id: string; name: string }>;
 		users?: Array<{ id: string; email: string }>;
 		projects?: Array<{ id: string; name: string }>;
+		types?: Array<{ id: string; name: string }>;
 	} = $props();
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
@@ -102,6 +106,14 @@
 
 	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
 
+	function projectInitials(title?: string | null): string {
+		const t = (title ?? '').trim();
+		if (!t) return '?';
+		const parts = t.split(/\s+/).filter(Boolean);
+		if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+		return (parts[0][0] ?? '?').toUpperCase();
+	}
+
 	// Task-focused columns for rows shaped like genericTaskData
 	export const columns: Columns = [
 		{
@@ -118,21 +130,37 @@
 		},
 		{
 			...staticColumns.header,
+
+			// tell TanStack which field to sort on
+			accessorKey: 'header',
+
+			// clickable header to toggle sorting
+			header: ({ column }) =>
+					renderSnippet(SortableHeader, {
+						column,
+						label: 'Header'
+					}),
 			// keep the same cell viewer component; it already expects an object with at least `header`
-			cell: ({ row }) => renderComponent(TaskDataTableCellViewer, {
-				item: row.original,
-				timeSeriesDaily: (row.original as any).timeSeriesDaily }),
-				states,
-				priorities,
-				projects,
-				users,
+   			cell: ({ row }) =>
+				renderComponent(TaskDataTableCellViewer, {
+					item: row.original,
+					timeSeriesDaily: (row.original as any).timeSeriesDaily,
+					states,
+					priorities,
+					projects,
+					users,
+					types
+				}),
 		},
 
 		// Type badge
 		{
 			accessorKey: "type",
 			header: "Type",
-			cell: ({ row }) => renderSnippet(DataTableType, { row }), // reuses your existing snippet
+			cell: ({ row }) => {
+				const value = (row.original.type);
+				return renderSnippet(RawHtml, { html: `<div class=\"w-20\"><span class=\"inline-block rounded border px-2 text-xs\">${value}</span></div>` });
+			}, // reuses your existing snippet
 		},
 
 		// Main assignee
@@ -162,14 +190,11 @@
 			},
 		},
 
-		// Project name (assignedProject)
+		// Project avatar + hover card
 		{
 			accessorKey: "assignedProject",
 			header: "Project",
-			cell: ({ row }) => {
-				const value = (row.original as any).assignedProject ?? "";
-				return renderSnippet(RawHtml, { html: `<div class=\"truncate max-w-[14rem]\">${value}</div>` });
-			},
+			cell: ({ row }) => renderSnippet(ProjectCell, { row }),
 		},
 
 		// Planned schedule (plannedStart – plannedDue)
@@ -371,10 +396,42 @@
 
 	let view = $state("outline");
 	let viewLabel = $derived(views.find((v) => view === v.id)?.label ?? "Select a view");
+	console.log('PROJECTS INSIDE TASK DATA TABLE! :', projects);
+	console.log('DATA INSIDE TASK DATA TABLE! :', data);
 </script>
 
 {#snippet RawHtml({ html }: { html: string })}
 	{@html html}
+{/snippet}
+
+{#snippet ProjectCell({ row })}
+ {@const projId = (row.original).projectId}
+ {@const proj = projects.find((p) => p.id === projId)}
+	{#if proj}
+		<HoverCard.Root>
+			<HoverCard.Trigger asChild>
+				<button type="button" class="inline-flex items-center gap-2" title={proj.title}>
+					<Avatar.Root class="size-7">
+						<Avatar.Image src={proj.avatarData} alt={proj.title} />
+						<Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+					</Avatar.Root>
+				</button>
+			</HoverCard.Trigger>
+			<HoverCard.Content class="w-80">
+				<div class="flex items-center gap-3">
+					<Avatar.Root class="size-10">
+						<Avatar.Image src={proj.avatarData} alt={proj.title} />
+						<Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+					</Avatar.Root>
+					<div class="flex flex-col">
+						<span class="font-medium">{proj.title}</span>
+					</div>
+				</div>
+			</HoverCard.Content>
+		</HoverCard.Root>
+	{:else}
+		<span class="text-muted-foreground">—</span>
+	{/if}
 {/snippet}
 
 <Tabs.Root value="outline" class="w-full flex-col justify-start gap-6">
@@ -564,7 +621,7 @@
 	</Tabs.Content>
 </Tabs.Root>
 
-{#snippet DataTableLimit({ row }: { row: Row<Schema> })}
+{#snippet DataTableLimit({ row }: { row: Row<TaskRowSchema> })}
 	<form
 		onsubmit={(e) => {
 			e.preventDefault();
@@ -584,7 +641,7 @@
 	</form>
 {/snippet}
 
-{#snippet DataTableTarget({ row }: { row: Row<Schema> })}
+{#snippet DataTableTarget({ row }: { row: Row<TaskRowSchema> })}
 	<form
 		onsubmit={(e) => {
 			e.preventDefault();
@@ -604,7 +661,7 @@
 	</form>
 {/snippet}
 
-{#snippet DataTableType({ row }: { row: Row<Schema> })}
+{#snippet DataTableType({ row }: { row: Row<TaskRowSchema> })}
 	<div class="w-32">
 		<Badge variant="outline" class="text-muted-foreground px-1.5">
 			{row.original.type}
@@ -612,7 +669,7 @@
 	</div>
 {/snippet}
 
-{#snippet DataTableStatus({ row }: { row: Row<Schema> })}
+{#snippet DataTableStatus({ row }: { row: Row<TaskRowSchema> })}
 	<Badge variant="outline" class="text-muted-foreground px-1.5">
 		{#if row.original.status === "Done"}
 			<CircleCheckFilledIcon class="fill-green-500 dark:fill-green-400" />
@@ -643,11 +700,11 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet DraggableRow({ row }: { row: Row<Schema> })}
+{#snippet DraggableRow({ row }: { row: Row<TaskRowSchema> })}
 	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({
 		id: () => row.original.id,
 	})}
-	{console.log(row.original)}
+	<!--{console.log(row.original)}-->
 
 	<Table.Row
 		data-state={row.getIsSelected() && "selected"}
@@ -679,4 +736,22 @@
 		<GripVerticalIcon class="text-muted-foreground size-3" />
 		<span class="sr-only">Drag to reorder</span>
 	</Button>
+{/snippet}
+
+{#snippet SortableHeader({ column, label }: { column: any; label: string })}
+	<button
+			type="button"
+			class="inline-flex items-center gap-1 select-none"
+			onclick={column.getToggleSortingHandler()}
+			title="Sort by header"
+	>
+		{label}
+		{#if column.getIsSorted() === 'asc'}
+			<span aria-hidden>▲</span>
+		{:else if column.getIsSorted() === 'desc'}
+			<span aria-hidden>▼</span>
+		{:else}
+			<span class="opacity-30" aria-hidden>↕</span>
+		{/if}
+	</button>
 {/snippet}
