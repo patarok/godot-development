@@ -12,8 +12,9 @@ from 'typeorm';
 import { User,
          Priority,
          ProjectStatus,
-         RiskLevel,
-         Task }
+         ProjectTask,
+         RiskLevel
+         }
 from '$lib/server/database/entities';
 
 import { ProjectAssignedUser } from './ProjectAssignedUser';
@@ -100,10 +101,15 @@ export class Project {
   // @JoinColumn({ name: 'activeUserId' })
   // activeUser?: User | null;
 
-  @OneToMany(() => Task, (t) => t.project)
-  tasks?: Task[];
+  // @OneToMany(() => Task, (t) => t.project)
+  // tasks?: Task[];
 
   // Junctions
+  // UPDATE to the new Many-to-Many relation via the junction table
+  @OneToMany(() => ProjectTask, (pt) => pt.project)
+  taskLinks?: ProjectTask[]; // Name this whatever makes sense (e.g., taskAssignments)
+
+  // Junctions (keeping existing junctions for other Many-to-Many relations)
   @OneToMany(() => ProjectAssignedUser, (pu) => pu.project)
   assignedUserLinks?: ProjectAssignedUser[];
 

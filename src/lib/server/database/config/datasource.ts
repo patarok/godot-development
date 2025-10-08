@@ -48,6 +48,7 @@ import {
     ProjectTag,
     ProjectCreator,
     ProjectCircle,
+    ProjectTask,
     ProjectAssignedUser,
     ProjectResponsibleUser
 } from '$lib/server/database/entities';
@@ -126,6 +127,7 @@ export const AppDataSource = new DataSource({
         Project,
         ProjectUser,
         ProjectTag,
+        ProjectTask,
         ProjectCreator,
         ProjectCircle,
         ProjectAssignedUser,

@@ -62,47 +62,6 @@ export const load: PageServerLoad = async ({ locals }) => {
   const taskTagRepo = AppDataSource.getRepository(TaskTag);
   const typeRepo = AppDataSource.getRepository(TaskType);
 
-
-  const genericTaskDataShort = [
-    {
-      id: 1,
-      header: "Cover page",
-      type: "Cover page",
-      status: "In Process",
-      priority: "low prio",
-      assignedProject: "I am at least 18 :) ",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-15T08:00:00Z"),
-        plannedDue: new Date("2025-01-25T17:00:00Z")
-      },
-      mainAssignee: "Eddie Lake",
-      assignedUsers: [ "Frodo", "Bilbo", "Gandalf", "Gollum Gollum" ],
-      isActive: 'false',
-      created: new Date("2025-01-06T09:15:00Z"),
-      updated: new Date("2025-01-06T09:15:00Z"),
-      tags: [ "schmurgul", "furgul", "gurgul", "liebesgruesseausmordor" ]
-    },
-    {
-      id: 2,
-      header: "Set up CI/CD pipeline",
-      type: "DevOps",
-      status: "Not Started",
-      priority: "Medium",
-      assignedProject: "Internal Tools",
-      plannedSchedule: {
-        plannedStart: new Date("2025-01-15T08:00:00Z"),
-        plannedDue: new Date("2025-01-25T17:00:00Z")
-      },
-      mainAssignee: "David Clark",
-      assignedUsers: ["Eve Turner", "Frank Harris"],
-      isActive: true,
-      created: new Date("2025-01-06T09:15:00Z"),
-      updated: new Date("2025-01-06T09:15:00Z"),
-      tags: ["automation", "deployment", "github-actions"]
-    },
-    ];
-
-
   const dropExamples = [
     {
       data: {id: 'development-tasks', title: 'Development Tasks', description: 'Technical implementation tasks'},

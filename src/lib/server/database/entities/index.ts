@@ -37,6 +37,7 @@ export * from './project/ProjectCreator';
 export * from './project/ProjectCircle';
 export * from './project/ProjectAssignedUser';
 export * from './project/ProjectResponsibleUser';
+export * from './project/ProjectTask';
 
 // Deadlines
 export * from './deadline/Deadline';

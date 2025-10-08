@@ -196,7 +196,7 @@
                             </Breadcrumb.Root>
                         </div>
                     </header>
-                    <div class="p-8">{@render children?.()}</div>
+                    <div class="m-8">{@render children?.()}</div>
                 </Sidebar.Inset>
             </Sidebar.Provider>
 

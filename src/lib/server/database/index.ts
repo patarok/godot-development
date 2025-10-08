@@ -39,6 +39,7 @@ export * from './entities/status/RiskLevel';
 export * from './entities/project/Project';
 export * from './entities/project/ProjectUser';
 export * from './entities/project/ProjectTag';
+export * from './entities/project/ProjectTask';
 export * from './entities/project/ProjectCreator';
 export * from './entities/project/ProjectCircle';
 export * from './entities/project/ProjectAssignedUser';

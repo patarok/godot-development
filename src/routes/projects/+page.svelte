@@ -6,6 +6,7 @@
   import { tick } from 'svelte';
   import ProjectMetaCard from '$lib/components/molecules/projects/ProjectMetaCard.svelte';
   import ProjectCreateForm from '$lib/components/molecules/projects/ProjectCreateForm.svelte';
+  import SectionCards from "$lib/components/section-cards.svelte";
 
   let { data }: { data: PageData } = $props();
   const { priorities, states, riskLevels, users } = data as any;
@@ -27,49 +28,46 @@
       }
     };
   };
+debugger;
 </script>
 
 <svelte:head>
   <title>Projects</title>
 </svelte:head>
 
-<hr />
-<h1>Create Project</h1>
-<hr class="mb-4" />
 
-<ProjectCreateForm
-        class="mb-8"
-        action="?/create"
-        enhanceForm={true}
-        enhanceCallback={enhanceWithForm}
-        {states}
-        {priorities}
-        {riskLevels}
-        {users}
-/>
-
-<hr class="mt-8" />
-<h2>Existing Projects</h2>
-<hr />
-
-<ul>
-  {#each projects as p}
-    <li class="mb-4">
-      <ProjectMetaCard
-              class="mt-4"
-              action={`?/updateMeta/${p.id}`}
-              enhanceForm={true}
-              enhanceCallback={enhanceWithForm}
-              project={{
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          startDate: p.startDate,
-          endDate: p.endDate,
-          actualStartDate: p.actualStartDate,
-          actualEndDate: p.actualEndDate
-        }}
-      />
-    </li>
-  {/each}
-</ul>
+<div class="flex flex-1 flex-col">
+  <div class="@container/main flex flex-1 flex-col gap-2">
+    <div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <SectionCards/>
+    </div>
+  </div>
+  <div class="@container/main flex flex-1 flex-col gap-2">
+    <div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <div class="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t lg:px-6">
+      {#each projects as p}
+          <ProjectMetaCard
+                    class="mt-4"
+                    action={`?/updateMeta/${p.id}`}
+                    enhanceForm={true}
+                    enhanceCallback={enhanceWithForm}
+                    project={{
+                id: p.id,
+                title: p.title,
+                estimatedBudget: p.estimatedBudget,
+                estimatedHours: p.estimatedHours,
+                actualHours: p.actualHours,
+                description: p.description,
+                avatarData: p.avatarData,
+                startDate: p.startDate,
+                actualCost: p.actualCost,
+                endDate: p.endDate,
+                actualStartDate: p.actualStartDate,
+                actualEndDate: p.actualEndDate
+              }}
+            />
+        {/each}
+    </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
-import { AppDataSource, initializeDatabase, Project, Priority, ProjectState, RiskLevel, User, Task, ProjectAssignedUser, ProjectResponsibleUser } from '$lib/server/database';
+import { AppDataSource, initializeDatabase, Project, Priority, ProjectStatus, RiskLevel, User, Task, ProjectAssignedUser, ProjectResponsibleUser } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 import { In } from 'typeorm';
 
@@ -11,14 +11,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const projectRepo = AppDataSource.getRepository(Project);
   const priorityRepo = AppDataSource.getRepository(Priority);
-  const stateRepo = AppDataSource.getRepository(ProjectState);
+  const statusRepo = AppDataSource.getRepository(ProjectStatus);
   const userRepo = AppDataSource.getRepository(User);
   const taskRepo = AppDataSource.getRepository(Task);
 
   // Load projects with relations
   const projects = await projectRepo.find({
     order: { createdAt: 'DESC' },
-    relations: { projectState: true, priority: true, riskLevel: true, creator: true, mainResponsible: true }
+    relations: { projectStatus: true, priority: true, riskLevel: true, creator: true, mainResponsible: true, assignedUserLinks: true, responsibleUserLinks: true }
   });
 
   // Load tasks belonging to these projects
@@ -54,11 +54,12 @@ export const load: PageServerLoad = async ({ locals }) => {
   // Also load selectable lists
   const [priorities, states, riskLevels, users, allTasks] = await Promise.all([
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
-    stateRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
+    statusRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } }),
     userRepo.find({ order: { email: 'ASC' } }),
     taskRepo.find({ order: { createdAt: 'DESC' }, select: { id: true, title: true, projectId: true } as any })
   ]);
+
 
   const plainProjects = toPlainArray(projects).map((p: any) => ({
     ...p,
@@ -86,7 +87,7 @@ export const actions: Actions = {
     const form = await request.formData();
     const title = String(form.get('title') ?? '').trim();
     const description = String(form.get('description') ?? '').trim() || null;
-    const projectStateId = (form.get('projectStateId') as string) || null;
+    const projectStatusId = (form.get('projectStatusId') as string) || null;
     const priorityId = (form.get('priorityId') as string) || null;
     const isActive = form.get('isActive') ? form.get('isActive') === 'on' : true;
 
@@ -109,7 +110,7 @@ export const actions: Actions = {
     const responsibleUserIds = (form.getAll('responsibleUserIds') as string[]).filter(Boolean);
 
     if (!title) return fail(400, { message: 'Title is required' });
-    if (!projectStateId) return fail(400, { message: 'Project state is required' });
+    if (!projectStatusId) return fail(400, { message: 'Project state is required' });
 
     const userRepo = AppDataSource.getRepository(User);
     const creator = await userRepo.findOne({ where: { email: locals.user.email } });
@@ -118,7 +119,7 @@ export const actions: Actions = {
     const project = projectRepo.create({
       title,
       description: description ?? undefined,
-      projectState: { id: projectStateId } as any,
+      projectStatus: { id: projectStatusId } as any,
       priority: priorityId ? ({ id: priorityId } as any) : undefined,
       isActive,
       isDone,

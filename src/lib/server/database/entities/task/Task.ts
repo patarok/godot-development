@@ -12,7 +12,7 @@ from 'typeorm';
 import { User,
          Priority,
          TaskStatus,
-         Project,
+         ProjectTask,
          TaskType }
 from '$lib/server/database/entities';
 
@@ -69,11 +69,14 @@ export class Task {
     // segmentGroupCircle?: SegmentGroupCircle | null;
 
     // Project relation (optional)
-    @Column({ type: 'uuid', nullable: true, name: 'project_id' })
-    projectId?: string | null;
-    @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'project_id' })
-    project?: Project | null;
+    // @Column({ type: 'uuid', nullable: true, name: 'project_id' })
+    // projectId?: string | null;
+    // @ManyToOne(() => Project, { onDelete: 'SET NULL', nullable: true })
+    // @JoinColumn({ name: 'project_id' })
+    // project?: Project | null;
+    // ADD the new Many-to-Many relation via the junction table
+    @OneToMany(() => ProjectTask, (pt) => pt.task)
+    projectLinks?: ProjectTask[];
 
     @ManyToOne(() => Task, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'parent_task_id' })
