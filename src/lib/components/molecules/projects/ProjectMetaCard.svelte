@@ -45,6 +45,21 @@
             endDate?: string;
             actualStartDate?: string;
             actualEndDate?: string;
+            involvedUsers?: Array<{
+                id: string;
+                email: string;
+                username?: string | null;
+                displayName?: string;
+                avatarData?: string | null;
+                flags: {
+                    projectAssigned?: boolean;
+                    projectResponsible?: boolean;
+                    modifiedProject?: boolean;
+                    modifiedTasksInProject?: boolean;
+                    currentlyWorksOnTasksInProject?: boolean;
+                    assignedToOpenTasksInProject?: boolean;
+                };
+            }>;
         };
     } = $props();
 
@@ -97,11 +112,33 @@
         </CardHeader>
 
         <CardContent class="space-y-4 flex-col items-start gap-1.5 text-sm">
+            {#if project.involvedUsers && project.involvedUsers.length}
             <CardDescription>
                 <u>INVOLVED USERS</u>
-
-
             </CardDescription>
+            <div class="mt-3 flex -space-x-2">
+                {#each project.involvedUsers as u (u.id)}
+                <div class="relative group inline-block">
+                    <img
+                    src={u.avatarData ? `data:image/svg+xml;utf8,${encodeURIComponent(u.avatarData)}` : '/fallback-avatar.svg'}
+                    alt={u.displayName ?? u.email}
+                    class="h-8 w-8 rounded-full ring-2 ring-background object-cover"
+                    />
+                    <div class="pointer-events-none absolute left-1/2 z-10 hidden -translate-x-1/2 transform whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-white group-hover:block">
+                    <div class="font-semibold">{u.displayName ?? u.email}</div>
+                    <ul class="mt-1">
+                        {#if u.flags.projectAssigned}<li>Assigned to project</li>{/if}
+                        {#if u.flags.projectResponsible}<li>Responsible for project</li>{/if}
+                        {#if u.flags.modifiedProject}<li>Has modified project</li>{/if}
+                        {#if u.flags.modifiedTasksInProject}<li>Has worked on tasks</li>{/if}
+                        {#if u.flags.currentlyWorksOnTasksInProject}<li>Currently works on tasks</li>{/if}
+                        {#if u.flags.assignedToOpenTasksInProject}<li>Assigned to open tasks</li>{/if}
+                    </ul>
+                    </div>
+                </div>
+                {/each}
+            </div>
+            {/if}
             <CardAction>
             <Badge variant="outline">
                 <IconHourglass />

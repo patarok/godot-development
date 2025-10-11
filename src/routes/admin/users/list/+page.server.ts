@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { AppDataSource, User, UserRole, initializeDatabase } from '$lib/server/database';
+import { AppDataSource, User, Role, initializeDatabase } from '$lib/server/database';
 import { In } from 'typeorm';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -11,24 +11,12 @@ export const load: PageServerLoad = async ({ locals }) => {
   await initializeDatabase();
 
   const userRepo = AppDataSource.getRepository(User);
-  const users = await userRepo.find({ order: { createdAt: 'DESC' } });
 
-  // Fetch roles for these users and compute a simple role label (admin/user)
-  const ids = users.map((u) => u.id);
-  const urRepo = AppDataSource.getRepository(UserRole);
-  const userRoles = ids.length
-    ? await urRepo.find({ where: { userId: In(ids) }, relations: ['role'] })
-    : [];
-  const roleByUser = new Map<string, string>();
-  for (const ur of userRoles as any[]) {
-    const name = ur.role?.name as string | undefined;
-    if (!name) continue;
-    if (name === 'admin') {
-      roleByUser.set(ur.userId, 'admin');
-    } else if (!roleByUser.has(ur.userId)) {
-      roleByUser.set(ur.userId, 'user');
-    }
-  }
+  // Load the role relation directly
+  const users = await userRepo.find({
+    relations: { role: true },
+    order: { createdAt: 'DESC' }
+  });
 
   const plain = users.map((u) => ({
     id: u.id,
@@ -37,7 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     forename: u.forename ?? null,
     surname: u.surname ?? null,
     isActive: u.isActive,
-    role: roleByUser.get(u.id) ?? 'user'
+    role: u.role?.name ?? 'user' // use the role name directly
   }));
 
   return { notAdmin: false, users: plain };

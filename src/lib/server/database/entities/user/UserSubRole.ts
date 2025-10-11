@@ -33,6 +33,9 @@ export class UserSubRole {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
+    @Column({ type: 'int', default: 0 })
+    rank: number;
+
     @ManyToOne(() => SubRoleCfg, subRoleCfg => subRoleCfg.userSubRoles, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'subrole_id' })
     subRoleCfg: SubRoleCfg;

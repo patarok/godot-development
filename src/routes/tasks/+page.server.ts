@@ -13,10 +13,13 @@ import {
   UserTask,
   TimeEntry,
   ProjectUser,
-  TaskType
+  TaskType,
+  ProjectTask
 } from '$lib/server/database';
+import { TaskResponsibleUser } from '$lib/server/database/entities/task/TaskResponsibleUser';
 import { toPlainArray } from '$lib/utils/index';
 import { In, Between } from 'typeorm';
+import { logTaskActivity } from '$lib/server/services/taskLogService';
 
 function slugifyTag(s: string) {
   return s
@@ -97,7 +100,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   const [projects, priorities, states, tags, users, types] = await Promise.all([
-    projectRepo.find({ where: { isActive: true }, order: { title: 'ASC' } }),
+    projectRepo.find({ where: { isActive: true }, order: { title: 'ASC' }, relations: { projectStatus: true } }),
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     stateRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     tagRepo.find({ order: { name: 'ASC' } }),
@@ -201,7 +204,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     const availableUsers = (avSet ? users.filter((u: any) => avSet.has(u.id)) : users).map(projectUserInfo);
     return {
       // Use a numeric, table-friendly id while we still have UUIDs in the entity
-      id: idx + 1,
+      id: t.id,
       taskUuid: t.id,
       header: t.title,
       type: t.taskType?.name ?? 'foo',
@@ -241,6 +244,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     mTasks: toPlainArray(tasks)
   };
 };
+
 
 export const actions: Actions = {
   create: async ({ request, locals }) => {
@@ -286,6 +290,9 @@ export const actions: Actions = {
 
     await taskRepo.save(task);
 
+    // Log creation
+    try { await logTaskActivity(locals.user.id, task.id, 'task.create', `title="${title}" statusId=${taskStatusId}`); } catch {}
+
     // handle tags
     const tagRepo = AppDataSource.getRepository(Tag);
     const taskTagRepo = AppDataSource.getRepository(TaskTag);
@@ -308,7 +315,7 @@ export const actions: Actions = {
   },
 
   // Update action for inline task editing from task-data-table-cell-viewer.svelte
-  update: async ({ request }) => {
+  update: async ({ request, locals }) => {
     await initializeDatabase();
     const form = await request.formData();
 
@@ -381,6 +388,9 @@ export const actions: Actions = {
       task.priority = pr ?? null as any;
     }
 
+    // UUID regex
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
     // Task type by ID (preferred) or by name (fallback)
     if (typeId && uuidRe.test(typeId)) {
       const tt = await typeRepo.findOne({ where: { id: typeId } });
@@ -393,9 +403,9 @@ export const actions: Actions = {
     // Project can be blank; prefer explicit projectIdNew when provided
     const projectField = projectIdNew || assignedProjectId;
     if (projectField === '') {
-      task.projectId = null as any;
+      (task as any).projectId = null;
     } else if (projectField) {
-      task.projectId = projectField;
+      (task as any).projectId = projectField;
     }
 
     if (plannedStartStr) {
@@ -408,7 +418,6 @@ export const actions: Actions = {
     }
 
     // Main assignee by ID (preferred) or email (fallback)
-    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (mainAssigneeId && uuidRe.test(mainAssigneeId)) {
       const u = await userRepo.findOne({ where: { id: mainAssigneeId } });
       task.user = u ?? null as any;
@@ -418,6 +427,17 @@ export const actions: Actions = {
     }
 
     await taskRepo.save(task);
+
+    // Log update
+    try {
+      const msgBits: string[] = [];
+      if (statusName) msgBits.push(`status="${statusName}"`);
+      if (header) msgBits.push(`title="${header}"`);
+      if (priorityName) msgBits.push(`priority="${priorityName}"`);
+      if (plannedStartStr) msgBits.push(`plannedStart=${plannedStartStr}`);
+      if (plannedDueStr) msgBits.push(`due=${plannedDueStr}`);
+      await logTaskActivity(locals.user?.id ?? '', task.id, 'task.update', msgBits.join(' | ') || undefined);
+    } catch {}
 
     // Sync tags if provided
     if (tagsCSV.length) {
@@ -437,12 +457,14 @@ export const actions: Actions = {
             await tagRepo.save(tag);
           }
           await taskTagRepo.save(taskTagRepo.create({ taskId: task.id, tagId: tag.id }));
+          try { await logTaskActivity(locals.user?.id ?? '', task.id, 'tag.add', `tag="${name}"`); } catch {}
         }
       }
       // Remove extras
       for (const [slug, link] of existingBySlug) {
         if (!desiredSlugs.has(slug)) {
           await taskTagRepo.remove(link);
+          try { await logTaskActivity(locals.user?.id ?? '', task.id, 'tag.remove', `tag="${link.tag.name}"`); } catch {}
         }
       }
     }
@@ -488,7 +510,7 @@ export const actions: Actions = {
     return { success: true, message: 'Task updated' };
   },
 
-  toggle: async ({ request }) => {
+  toggle: async ({ request, locals }) => {
     await initializeDatabase();
     const form = await request.formData();
     const id = String(form.get('id') ?? '');
@@ -498,11 +520,12 @@ export const actions: Actions = {
 
     const repo = AppDataSource.getRepository(Task);
     await repo.update(id, { isDone });
+    try { await logTaskActivity(locals.user?.id ?? '', id, 'task.toggle', `isDone=${isDone}`); } catch {}
 
     return { success: true, message: 'Task updated' };
   },
 
-  tag: async ({ request }) => {
+  tag: async ({ request, locals }) => {
     await initializeDatabase();
     const form = await request.formData();
     const taskId = String(form.get('taskId') ?? '');
@@ -523,8 +546,135 @@ export const actions: Actions = {
     const existing = await taskTagRepo.findOne({ where: { taskId, tagId: tag.id } });
     if (!existing) {
       await taskTagRepo.save(taskTagRepo.create({ taskId, tagId: tag.id }));
+      try { await logTaskActivity(locals.user?.id ?? '', taskId, 'tag.add', `tag="${tagName}"`); } catch {}
     }
 
     return { success: true, message: 'Tag added' };
+  },
+
+  batch: async ({ request, locals }) => {
+    if (!locals.user) return fail(401, { message: 'Not authenticated' });
+    await initializeDatabase();
+    const form = await request.formData();
+
+    const taskIds = form.getAll('taskIds[]').map((v) => String(v)).filter(Boolean);
+    const op = String(form.get('op') ?? '').trim();
+    if (!taskIds.length || !op) return fail(400, { message: 'taskIds[] and op are required' });
+
+    const taskRepo = AppDataSource.getRepository(Task);
+    const statusRepo = AppDataSource.getRepository(TaskStatus);
+    const userRepo = AppDataSource.getRepository(User);
+    const userTaskRepo = AppDataSource.getRepository(UserTask);
+    const respRepo = AppDataSource.getRepository(TaskResponsibleUser);
+    const tagRepo = AppDataSource.getRepository(Tag);
+    const taskTagRepo = AppDataSource.getRepository(TaskTag);
+    const projTaskRepo = AppDataSource.getRepository(ProjectTask);
+
+    const parseDate = (s: string) => { const d = new Date(s); return isNaN(d.getTime()) ? null : d; };
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    const userId = String(form.get('userId') ?? '').trim();
+    const target = String(form.get('target') ?? '').trim();
+    const dueStr = String(form.get('dueDate') ?? '').trim();
+    const statusId = String(form.get('statusId') ?? '').trim();
+    const tagsCSV = String(form.get('tags') ?? '').trim();
+    const projectId = String(form.get('projectId') ?? '').trim();
+    const exclusive = String(form.get('exclusive') ?? '').trim();
+
+    switch (op) {
+      case 'assign-user': {
+        if (!userId || !uuidRe.test(userId)) return fail(400, { message: 'Valid userId required' });
+        const user = await userRepo.findOne({ where: { id: userId } });
+        if (!user) return fail(404, { message: 'User not found' });
+
+        if (target === 'assigned') {
+          for (const taskId of taskIds) {
+            const existing = await userTaskRepo.findOne({ where: { userId, taskId } });
+            if (!existing) await userTaskRepo.save(userTaskRepo.create({ userId, taskId }));
+            try { await logTaskActivity(locals.user.id, taskId, 'task.batch.assigned.add', `userId=${userId}`); } catch {}
+          }
+        } else if (target === 'responsible') {
+          for (const taskId of taskIds) {
+            const existing = await respRepo.findOne({ where: { userId, taskId } as any });
+            if (!existing) await respRepo.save(respRepo.create({ userId, taskId } as any));
+            try { await logTaskActivity(locals.user.id, taskId, 'task.batch.responsible.add', `userId=${userId}`); } catch {}
+          }
+        } else if (target === 'current') {
+          for (const taskId of taskIds) {
+            await taskRepo.update(taskId, { user: { id: userId } as any });
+            try { await logTaskActivity(locals.user.id, taskId, 'task.batch.current.set', `userId=${userId}`); } catch {}
+          }
+        } else {
+          return fail(400, { message: 'target must be assigned|responsible|current' });
+        }
+        return { success: true };
+      }
+
+      case 'set-due': {
+        const d = parseDate(dueStr);
+        if (!d) return fail(400, { message: 'Valid dueDate required' });
+        await taskRepo.createQueryBuilder().update().set({ dueDate: d }).whereInIds(taskIds).execute();
+        for (const id of taskIds) { try { await logTaskActivity(locals.user.id, id, 'task.batch.due.set', `due=${dueStr}`); } catch {} }
+        return { success: true };
+      }
+
+      case 'set-status': {
+        if (!statusId || !uuidRe.test(statusId)) return fail(400, { message: 'Valid statusId required' });
+        const st = await statusRepo.findOne({ where: { id: statusId } });
+        if (!st) return fail(404, { message: 'Status not found' });
+        for (const id of taskIds) {
+          await taskRepo.update(id, { taskStatus: st });
+          try { await logTaskActivity(locals.user.id, id, 'task.batch.status.set', `statusId=${statusId}`); } catch {}
+        }
+        return { success: true };
+      }
+
+      case 'add-tags': {
+        if (!tagsCSV) return fail(400, { message: 'tags required' });
+        const names = tagsCSV.split(',').map((s) => s.trim()).filter(Boolean);
+        for (const id of taskIds) {
+          for (const name of names) {
+            const slug = slugifyTag(name);
+            let tag = await tagRepo.findOne({ where: { slug } });
+            if (!tag) { tag = tagRepo.create({ slug, name }); await tagRepo.save(tag); }
+            const existing = await taskTagRepo.findOne({ where: { taskId: id, tagId: tag.id } });
+            if (!existing) {
+              await taskTagRepo.save(taskTagRepo.create({ taskId: id, tagId: tag.id }));
+              try { await logTaskActivity(locals.user.id, id, 'task.batch.tag.add', `tag="${name}"`); } catch {}
+            }
+          }
+        }
+        return { success: true };
+      }
+
+      case 'move-project': {
+        if (!projectId || !uuidRe.test(projectId)) return fail(400, { message: 'Valid projectId required' });
+        const makeExclusive = exclusive === 'true';
+        for (const id of taskIds) {
+          if (makeExclusive) {
+            await projTaskRepo.delete({ taskId: id } as any);
+          }
+          const exists = await projTaskRepo.findOne({ where: { projectId, taskId: id } });
+          if (!exists) await projTaskRepo.save(projTaskRepo.create({ projectId, taskId: id }));
+          try { await logTaskActivity(locals.user.id, id, 'task.batch.project.set', `projectId=${projectId} exclusive=${makeExclusive}`); } catch {}
+        }
+        return { success: true };
+      }
+
+      case 'set-inactive': {
+        await taskRepo.createQueryBuilder().update().set({ isActive: false }).whereInIds(taskIds).execute();
+        for (const id of taskIds) { try { await logTaskActivity(locals.user.id, id, 'task.batch.isActive.set', 'isActive=false'); } catch {} }
+        return { success: true };
+      }
+
+      case 'set-active': {
+        await taskRepo.createQueryBuilder().update().set({ isActive: true }).whereInIds(taskIds).execute();
+        for (const id of taskIds) { try { await logTaskActivity(locals.user.id, id, 'task.batch.isActive.set', 'isActive=true'); } catch {} }
+        return { success: true };
+      }
+
+      default:
+        return fail(400, { message: `Unknown op: ${op}` });
+    }
   }
 };

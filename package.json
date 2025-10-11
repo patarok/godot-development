@@ -16,6 +16,7 @@
     "db:migrate": "typeorm-ts-node-commonjs migration:run",
     "db:revert": "typeorm-ts-node-commonjs migration:revert",
     "db:schema:drop": "tsx node_modules/typeorm/cli.js schema:drop -d src/lib/server/database/config/datasource.ts",
+    "db:seed:alt": "tsx src/lib/server/database/seeds/alt_initial_seed.ts",
     "db:seed": "tsx src/lib/server/database/seeds/initial_seed.ts",
     "db:seed:users": "tsx src/lib/server/database/seeds/users/users_seed.ts",
     "db:seed:tasks": "tsx src/lib/server/database/seeds/tasks/tasks_seed.ts",

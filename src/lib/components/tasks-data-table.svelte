@@ -51,6 +51,8 @@
 	import { Input } from "$lib/components/ui/input/index.js";
 	import * as Avatar from "$lib/components/ui/avatar/index.js";
 	import * as HoverCard from "$lib/components/ui/hover-card/index.js";
+	import * as Accordion from "$lib/components/ui/accordion/index.js";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import {
 		FlexRender,
 		renderComponent,
@@ -68,6 +70,7 @@
 	import LoaderIcon from "@tabler/icons-svelte/icons/loader";
 	import DotsVerticalIcon from "@tabler/icons-svelte/icons/dots-vertical";
 	import { toast } from "svelte-sonner";
+	import { enhance } from '$app/forms';
 	import DataTableCheckbox from "./data-table-checkbox.svelte";
 	import TaskDataTableCellViewer from "./task-data-table-cell-viewer.svelte";
 	import DataTableReviewer from "./data-table-reviewer.svelte";
@@ -86,7 +89,13 @@
 		states?: Array<{ id: string; name: string }>;
 		priorities?: Array<{ id: string; name: string }>;
 		users?: Array<{ id: string; email: string }>;
-		projects?: Array<{ id: string; name: string }>;
+		projects?: Array<{ 
+			id: string; 
+			title: string; 
+			name?: string;
+			avatarData?: string; 
+			projectStatus?: { id: string; name: string } | null 
+		}>;
 		types?: Array<{ id: string; name: string }>;
 	} = $props();
 
@@ -99,9 +108,9 @@
 	const sortableId = $props.id();
 
 	const sensors = useSensors(
-		useSensor(MouseSensor, {}),
-		useSensor(TouchSensor, {}),
-		useSensor(KeyboardSensor, {})
+			useSensor(MouseSensor, {}),
+			useSensor(TouchSensor, {}),
+			useSensor(KeyboardSensor, {})
 	);
 
 	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
@@ -122,6 +131,11 @@
 		},
 		{
 			...staticColumns.select,
+			header: ({ table }) =>
+					renderSnippet(CheckboxHeader, {
+						table,
+						label: 'Select'
+					}),
 			cell: ({ row }) =>
 					renderComponent(DataTableCheckbox, {
 						checked: row.getIsSelected(),
@@ -141,16 +155,16 @@
 						label: 'Header'
 					}),
 			// keep the same cell viewer component; it already expects an object with at least `header`
-   			cell: ({ row }) =>
-				renderComponent(TaskDataTableCellViewer, {
-					item: row.original,
-					timeSeriesDaily: (row.original as any).timeSeriesDaily,
-					states,
-					priorities,
-					projects,
-					users,
-					types
-				}),
+			cell: ({ row }) =>
+					renderComponent(TaskDataTableCellViewer, {
+						item: row.original,
+						timeSeriesDaily: (row.original as any).timeSeriesDaily,
+						states,
+						priorities,
+						projects,
+						users,
+						types
+					}),
 		},
 
 		// Type badge
@@ -362,6 +376,15 @@
 		},
 	});
 
+	// Derive selected rows and their IDs for batch actions (Svelte 5 runes)
+	let selectedRows = $derived(table.getSelectedRowModel().rows);
+	let selectedIds = $derived(selectedRows.map((r) => r.original.id));
+
+	// State for Move to Project dialog
+	let moveDialogOpen = $state(false);
+	let selectedProjectIdBatch = $state<string | null>(null);
+	let exclusiveMove = $state(false);
+
 	function handleDragEnd(event: DragEndEvent) {
 		const { active, over } = event;
 		if (active && over && active.id !== over.id) {
@@ -398,6 +421,7 @@
 	let viewLabel = $derived(views.find((v) => view === v.id)?.label ?? "Select a view");
 	console.log('PROJECTS INSIDE TASK DATA TABLE! :', projects);
 	console.log('DATA INSIDE TASK DATA TABLE! :', data);
+
 </script>
 
 {#snippet RawHtml({ html }: { html: string })}
@@ -405,8 +429,8 @@
 {/snippet}
 
 {#snippet ProjectCell({ row })}
- {@const projId = (row.original).projectId}
- {@const proj = projects.find((p) => p.id === projId)}
+	{@const projId = (row.original).projectId}
+	{@const proj = projects.find((p) => p.id === projId)}
 	{#if proj}
 		<HoverCard.Root>
 			<HoverCard.Trigger asChild>
@@ -448,7 +472,7 @@
 			</Select.Content>
 		</Select.Root>
 		<Tabs.List
-			class="**:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex hidden"
+				class="**:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex hidden"
 		>
 			{#each views as view (view.id)}
 				<Tabs.Trigger value={view.id}>
@@ -473,12 +497,12 @@
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="end" class="w-56">
 					{#each table
-						.getAllColumns()
-						.filter((col) => typeof col.accessorFn !== "undefined" && col.getCanHide()) as column (column.id)}
+							.getAllColumns()
+							.filter((col) => typeof col.accessorFn !== "undefined" && col.getCanHide()) as column (column.id)}
 						<DropdownMenu.CheckboxItem
-							class="capitalize"
-							checked={column.getIsVisible()}
-							onCheckedChange={(value) => column.toggleVisibility(!!value)}
+								class="capitalize"
+								checked={column.getIsVisible()}
+								onCheckedChange={(value) => column.toggleVisibility(!!value)}
 						>
 							{column.id}
 						</DropdownMenu.CheckboxItem>
@@ -494,11 +518,11 @@
 	<Tabs.Content value="outline" class="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
 		<div class="overflow-hidden rounded-lg border">
 			<DndContext
-				collisionDetection={closestCenter}
-				modifiers={[restrictToVerticalAxis]}
-				onDragEnd={handleDragEnd}
-				{sensors}
-				id={sortableId}
+					collisionDetection={closestCenter}
+					modifiers={[restrictToVerticalAxis]}
+					onDragEnd={handleDragEnd}
+					{sensors}
+					id={sortableId}
 			>
 				<Table.Root>
 					<Table.Header class="bg-muted sticky top-0 z-10">
@@ -508,8 +532,8 @@
 									<Table.Head colspan={header.colSpan}>
 										{#if !header.isPlaceholder}
 											<FlexRender
-												content={header.column.columnDef.header}
-												context={header.getContext()}
+													content={header.column.columnDef.header}
+													context={header.getContext()}
 											/>
 										{/if}
 									</Table.Head>
@@ -544,8 +568,8 @@
 				<div class="hidden items-center gap-2 lg:flex">
 					<Label for="rows-per-page" class="text-sm font-medium">Rows per page</Label>
 					<Select.Root
-						type="single"
-						bind:value={
+							type="single"
+							bind:value={
 							() => `${table.getState().pagination.pageSize}`,
 							(v) => table.setPageSize(Number(v))
 						}
@@ -568,40 +592,40 @@
 				</div>
 				<div class="ml-auto flex items-center gap-2 lg:ml-0">
 					<Button
-						variant="outline"
-						class="hidden h-8 w-8 p-0 lg:flex"
-						onclick={() => table.setPageIndex(0)}
-						disabled={!table.getCanPreviousPage()}
+							variant="outline"
+							class="hidden h-8 w-8 p-0 lg:flex"
+							onclick={() => table.setPageIndex(0)}
+							disabled={!table.getCanPreviousPage()}
 					>
 						<span class="sr-only">Go to first page</span>
 						<ChevronsLeftIcon />
 					</Button>
 					<Button
-						variant="outline"
-						class="size-8"
-						size="icon"
-						onclick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
+							variant="outline"
+							class="size-8"
+							size="icon"
+							onclick={() => table.previousPage()}
+							disabled={!table.getCanPreviousPage()}
 					>
 						<span class="sr-only">Go to previous page</span>
 						<ChevronLeftIcon />
 					</Button>
 					<Button
-						variant="outline"
-						class="size-8"
-						size="icon"
-						onclick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
+							variant="outline"
+							class="size-8"
+							size="icon"
+							onclick={() => table.nextPage()}
+							disabled={!table.getCanNextPage()}
 					>
 						<span class="sr-only">Go to next page</span>
 						<ChevronRightIcon />
 					</Button>
 					<Button
-						variant="outline"
-						class="hidden size-8 lg:flex"
-						size="icon"
-						onclick={() => table.setPageIndex(table.getPageCount() - 1)}
-						disabled={!table.getCanNextPage()}
+							variant="outline"
+							class="hidden size-8 lg:flex"
+							size="icon"
+							onclick={() => table.setPageIndex(table.getPageCount() - 1)}
+							disabled={!table.getCanNextPage()}
 					>
 						<span class="sr-only">Go to last page</span>
 						<ChevronsRightIcon />
@@ -609,6 +633,181 @@
 				</div>
 			</div>
 		</div>
+
+		{#if selectedIds && selectedIds.length >= 2}
+			<div class="mt-3 border-t pt-3 flex flex-wrap gap-3 items-start">
+				<span class="text-sm text-muted-foreground">{selectedIds.length} selected</span>
+
+				<Accordion.Root class="w-full">
+					<Accordion.Item value="user-assignments">
+						<Accordion.Trigger>User Assignments</Accordion.Trigger>
+						<Accordion.Content>
+							<div class="flex flex-wrap gap-3">
+								<!-- Assign to Assigned Users (assignedUserLinks) -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="assign-user" />
+									<input type="hidden" name="target" value="assigned" />
+									<select name="userId" required class="border rounded px-2 py-1 text-sm">
+										{#each users as u}
+											<option value={u.id}>{u.email}</option>
+										{/each}
+									</select>
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Assign to Assigned Users</button>
+								</form>
+
+								<!-- Assign to Responsible Users (responsibleUserLinks) -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="assign-user" />
+									<input type="hidden" name="target" value="responsible" />
+									<select name="userId" required class="border rounded px-2 py-1 text-sm">
+										{#each users as u}
+											<option value={u.id}>{u.email}</option>
+										{/each}
+									</select>
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Assign to Responsible Users</button>
+								</form>
+
+								<!-- Set Active User (active_user_id) -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="assign-user" />
+									<input type="hidden" name="target" value="current" />
+									<select name="userId" required class="border rounded px-2 py-1 text-sm">
+										{#each users as u}
+											<option value={u.id}>{u.email}</option>
+										{/each}
+									</select>
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Set Active User</button>
+								</form>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+
+					<Accordion.Item value="task-properties">
+						<Accordion.Trigger>Task Properties</Accordion.Trigger>
+						<Accordion.Content>
+							<div class="flex flex-wrap gap-3">
+								<!-- Set Due Date -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="set-due" />
+									<input type="date" name="dueDate" required class="border rounded px-2 py-1 text-sm" />
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Set Due Date</button>
+								</form>
+
+								<!-- Set Status -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="set-status" />
+									<select name="statusId" required class="border rounded px-2 py-1 text-sm">
+										{#each states as s}
+											<option value={s.id}>{s.name}</option>
+										{/each}
+									</select>
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Set Status</button>
+								</form>
+
+								<!-- Add Tags -->
+								<form method="POST" action="?/batch" class="flex items-center gap-2">
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="add-tags" />
+									<input type="text" name="tags" placeholder="tag1, tag2" class="border rounded px-2 py-1 text-sm" />
+									<button type="submit" class="border rounded px-2 py-1 text-sm">Add Tags</button>
+								</form>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+
+					<Accordion.Item value="project-activity">
+						<Accordion.Trigger>Project & Activity</Accordion.Trigger>
+						<Accordion.Content>
+							<div class="flex flex-wrap gap-3">
+								<!-- Move to Project Button -->
+								<Button 
+									variant="outline" 
+									size="sm" 
+									onclick={() => (moveDialogOpen = true)}
+									disabled={selectedIds.length === 0}
+								>
+									Move to Project
+								</Button>
+
+								<!-- Set Non-Active -->
+								<form 
+									method="POST" 
+									action="?/batch" 
+									class="flex items-center gap-2"
+									use:enhance={() => {
+										return async ({ result }) => {
+											if (result.type === 'success') {
+												rowSelection = {};
+											}
+										};
+									}}
+								>
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="set-inactive" />
+									<Button 
+										type="submit" 
+										variant="outline" 
+										size="sm" 
+										class="text-red-600"
+										disabled={selectedIds.length === 0}
+									>
+										Set Non-Active
+									</Button>
+								</form>
+
+								<!-- Set Active -->
+								<form 
+									method="POST" 
+									action="?/batch" 
+									class="flex items-center gap-2"
+									use:enhance={() => {
+										return async ({ result }) => {
+											if (result.type === 'success') {
+												rowSelection = {};
+											}
+										};
+									}}
+								>
+									{#each selectedIds as id}
+										<input type="hidden" name="taskIds[]" value={id} />
+									{/each}
+									<input type="hidden" name="op" value="set-active" />
+									<Button 
+										type="submit" 
+										variant="outline" 
+										size="sm" 
+										class="text-green-600"
+										disabled={selectedIds.length === 0}
+									>
+										Set Active
+									</Button>
+								</form>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+				</Accordion.Root>
+			</div>
+		{/if}
+
 	</Tabs.Content>
 	<Tabs.Content value="past-performance" class="flex flex-col px-4 lg:px-6">
 		<div class="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
@@ -621,9 +820,113 @@
 	</Tabs.Content>
 </Tabs.Root>
 
+<!-- Move to Project Dialog -->
+<Dialog.Root bind:open={moveDialogOpen}>
+	<Dialog.Content class="max-w-3xl">
+		<Dialog.Header>
+			<Dialog.Title>Move {selectedIds.length} task(s) to a project</Dialog.Title>
+			<Dialog.Description>
+				Select a project by clicking its avatar, then confirm.
+			</Dialog.Description>
+		</Dialog.Header>
+
+		<!-- Selected tasks count -->
+		<div class="text-sm text-muted-foreground mb-2">
+			{selectedIds.length} task(s) selected from the table.
+		</div>
+
+		<!-- Project avatar grid -->
+		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto" role="radiogroup" aria-label="Select project">
+			{#each projects as p}
+				<HoverCard.Root>
+					<HoverCard.Trigger asChild>
+						<button
+								type="button"
+								class="flex flex-col items-center gap-2 rounded border p-3 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+								class:ring-2={selectedProjectIdBatch === p.id}
+								class:ring-primary={selectedProjectIdBatch === p.id}
+								onclick={() => (selectedProjectIdBatch = p.id)}
+								aria-pressed={selectedProjectIdBatch === p.id}
+								aria-label="Select project {p.title}"
+								role="radio"
+								aria-checked={selectedProjectIdBatch === p.id}
+						>
+							<Avatar.Root class="size-12">
+								<Avatar.Image src={p.avatarData} alt={p.title} />
+								<Avatar.Fallback>{projectInitials(p.title)}</Avatar.Fallback>
+							</Avatar.Root>
+							<span class="text-xs line-clamp-2 text-center">{p.title}</span>
+						</button>
+					</HoverCard.Trigger>
+					<HoverCard.Content class="w-64">
+						<div class="flex items-center gap-3">
+							<Avatar.Root class="size-10">
+								<Avatar.Image src={p.avatarData} alt={p.title} />
+								<Avatar.Fallback>{projectInitials(p.title)}</Avatar.Fallback>
+							</Avatar.Root>
+							<div class="flex flex-col">
+								<span class="font-medium">{p.title}</span>
+								<span class="text-xs text-muted-foreground">
+									{p.projectStatus?.name ?? '—'}
+								</span>
+							</div>
+						</div>
+					</HoverCard.Content>
+				</HoverCard.Root>
+			{/each}
+		</div>
+
+		<!-- Confirm form -->
+		<form 
+			method="POST" 
+			action="?/batch"
+			use:enhance={() => {
+				return async ({ result }) => {
+					if (result.type === 'success') {
+						moveDialogOpen = false;
+						selectedProjectIdBatch = null;
+						exclusiveMove = false;
+						rowSelection = {};
+					}
+				};
+			}}
+		>
+			{#each selectedIds as id}
+				<input type="hidden" name="taskIds[]" value={id} />
+			{/each}
+			<input type="hidden" name="op" value="move-project" />
+			<input type="hidden" name="projectId" value={selectedProjectIdBatch ?? ''} />
+			<input type="hidden" name="exclusive" value={exclusiveMove ? 'true' : ''} />
+
+			<div class="mt-4 flex items-center justify-between gap-3">
+				<label class="inline-flex items-center gap-2 text-sm">
+					<input type="checkbox" bind:checked={exclusiveMove} />
+					exclusive (remove from other projects)
+				</label>
+				<div class="ml-auto flex gap-2">
+					<Dialog.Close asChild>
+						<Button
+								type="button"
+								variant="outline"
+						>
+							Cancel
+						</Button>
+					</Dialog.Close>
+					<Button
+							type="submit"
+							disabled={!selectedProjectIdBatch}
+					>
+						Confirm Move
+					</Button>
+				</div>
+			</div>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
 {#snippet DataTableLimit({ row }: { row: Row<TaskRowSchema> })}
 	<form
-		onsubmit={(e) => {
+			onsubmit={(e) => {
 			e.preventDefault();
 			toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
 				loading: `Saving ${row.original.header}`,
@@ -634,16 +937,16 @@
 	>
 		<Label for="{row.original.id}-limit" class="sr-only">Limit</Label>
 		<Input
-			class="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-			value={row.original.limit}
-			id="{row.original.id}-limit"
+				class="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
+				value={row.original.limit}
+				id="{row.original.id}-limit"
 		/>
 	</form>
 {/snippet}
 
 {#snippet DataTableTarget({ row }: { row: Row<TaskRowSchema> })}
 	<form
-		onsubmit={(e) => {
+			onsubmit={(e) => {
 			e.preventDefault();
 			toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
 				loading: `Saving ${row.original.header}`,
@@ -654,9 +957,9 @@
 	>
 		<Label for="{row.original.id}-target" class="sr-only">Target</Label>
 		<Input
-			class="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-			value={row.original.target}
-			id="{row.original.id}-target"
+				class="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
+				value={row.original.target}
+				id="{row.original.id}-target"
 		/>
 	</form>
 {/snippet}
@@ -707,11 +1010,11 @@
 	<!--{console.log(row.original)}-->
 
 	<Table.Row
-		data-state={row.getIsSelected() && "selected"}
-		data-dragging={isDragging.current}
-		bind:ref={node.current}
-		class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-		style="transition: {transition.current}; transform: {CSS.Transform.toString(
+			data-state={row.getIsSelected() && "selected"}
+			data-dragging={isDragging.current}
+			bind:ref={node.current}
+			class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+			style="transition: {transition.current}; transform: {CSS.Transform.toString(
 			transform.current
 		)}"
 	>
@@ -727,15 +1030,28 @@
 	{@const { attributes, listeners } = useSortable({ id: () => id })}
 
 	<Button
-		{...attributes.current}
-		{...listeners.current}
-		variant="ghost"
-		size="icon"
-		class="text-muted-foreground size-7 hover:bg-transparent"
+			{...attributes.current}
+			{...listeners.current}
+			variant="ghost"
+			size="icon"
+			class="text-muted-foreground size-7 hover:bg-transparent"
 	>
 		<GripVerticalIcon class="text-muted-foreground size-3" />
 		<span class="sr-only">Drag to reorder</span>
 	</Button>
+{/snippet}
+
+{#snippet CheckboxHeader({ table, label }: { table: any; label: string })}
+	<!-- Select all on current page -->
+	{#key table.getState().pagination.pageIndex}
+		{#await Promise.resolve()}
+			<!-- placeholder to force reactive update -->
+		{/await}
+	{/key}
+	<DataTableCheckbox
+			checked={table.getIsAllPageRowsSelected()}
+			onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+	/>
 {/snippet}
 
 {#snippet SortableHeader({ column, label }: { column: any; label: string })}

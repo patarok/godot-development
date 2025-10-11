@@ -9,17 +9,26 @@ import { Entity,
          JoinColumn }
 from 'typeorm';
 
-import { User,
-         Priority,
-         TaskStatus,
-         ProjectTask,
-         TaskType }
-from '$lib/server/database/entities';
+import {
+    User,
+    Priority,
+    TaskStatus,
+    ProjectTask,
+    TaskType, ProjectAssignedUser, ProjectResponsibleUser
+}
+    from '$lib/server/database/entities';
+
+import { TaskAssignedUser } from './TaskAssignedUser';
+import { TaskResponsibleUser } from './TaskResponsibleUser';
+import { TaskCurrentUser } from './TaskCurrentUser';
+import { TaskDependency } from './TaskDependency';
 
 @Entity()
 @Index(['title'])
 @Index(['description'])
-@Index(['isActive'])
+@Index(['parent'])
+@Index(['taskStatus'])
+@Index(['isActive', 'isDone'])
 export class Task {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -60,6 +69,14 @@ export class Task {
 
     @Column({ type: 'boolean', default: true })
     hasSegmentGroupCircle: boolean;
+
+    // Tasks THIS task depends on (predecessors)
+    @OneToMany(() => TaskDependency, (d) => d.successor)
+    dependencyLinks?: TaskDependency[];
+
+    // Tasks that depend on THIS task (successors)
+    @OneToMany(() => TaskDependency, (d) => d.predecessor)
+    dependentLinks?: TaskDependency[];
 
     // OPTIONAL: segmentGroupCircleId: UUID? (relation commented until entity exists)
     @Column({ type: 'uuid', nullable: true })
@@ -107,12 +124,24 @@ export class Task {
     // @JoinColumn({ name: 'iterationSegmentId' })
     // iterationSegment?: IterationSegment | null;
 
+    // Junctions (keeping existing junctions for other Many-to-Many relations)
+    @OneToMany(() => TaskAssignedUser, (tu) => tu.task)
+    assignedUserLinks?: TaskAssignedUser[];
+
+    @OneToMany(() => TaskResponsibleUser, (ru) => ru.task)
+    responsibleUserLinks?: TaskResponsibleUser[];
+
+    @OneToMany(() => TaskCurrentUser, (cu) => cu.task)
+    currentUserLinks?: TaskCurrentUser[];
 
     @Column({ type: 'timestamptz', nullable: true })
     lastUsedAt?: Date | null;
 
     @Column({ type: 'boolean', default: true })
     isActive: boolean;
+
+    @Column({ type: 'boolean', default: false })
+    finishedApproved: boolean;
 
     @CreateDateColumn()
     createdAt: Date;

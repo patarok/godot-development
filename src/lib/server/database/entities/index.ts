@@ -17,10 +17,15 @@ export * from './user/SubRolePermissionPermission';
 
 // Task // TODO: Tag may not belong here. We will change that and reorder later.
 export * from './task/Task';
+export * from './task/TaskLog';
 export * from './task/TaskTag';
+export * from './task/TaskDependency';
 export * from './task/UserTask';
 export * from './task/Tag';
 export * from './task/TimeEntry';
+export * from './task/TaskAssignedUser';
+export * from './task/TaskResponsibleUser';
+export * from './task/TaskCurrentUser';
 
 // Status
 export * from './status/Priority';
@@ -31,6 +36,7 @@ export * from './status/TaskType';
 
 // Project domain
 export * from './project/Project';
+export * from './project/ProjectLog';
 export * from './project/ProjectUser';
 export * from './project/ProjectTag';
 export * from './project/ProjectCreator';

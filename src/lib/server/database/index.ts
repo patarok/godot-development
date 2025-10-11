@@ -23,10 +23,15 @@ export * from './entities/user/SubRolePermissionPermission';
 
 // Task // TODO: Tag may not belong here. We will change that and reorder later.
 export * from './entities/task/Task';
+export * from './entities/task/TaskLog';
 export * from './entities/task/TaskTag';
+export * from './entities/task/TaskDependency';
 export * from './entities/task/UserTask';
 export * from './entities/task/Tag';
 export * from './entities/task/TimeEntry';
+export * from './entities/task/TaskAssignedUser';
+export * from './entities/task/TaskResponsibleUser';
+export * from './entities/task/TaskCurrentUser';
 
 // Status
 export * from './entities/status/Priority';
@@ -44,6 +49,7 @@ export * from './entities/project/ProjectCreator';
 export * from './entities/project/ProjectCircle';
 export * from './entities/project/ProjectAssignedUser';
 export * from './entities/project/ProjectResponsibleUser';
+export * from './entities/project/ProjectLog';
 
 // Deadlines
 export * from './entities/deadline/Deadline';

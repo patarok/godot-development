@@ -63,7 +63,8 @@ debugger;
                 actualCost: p.actualCost,
                 endDate: p.endDate,
                 actualStartDate: p.actualStartDate,
-                actualEndDate: p.actualEndDate
+                actualEndDate: p.actualEndDate,
+                involvedUsers: p.involvedUsers
               }}
             />
         {/each}

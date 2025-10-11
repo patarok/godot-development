@@ -24,10 +24,15 @@ from '$lib/server/database/entities';
 
 // Task
 import { Task,
+         TaskLog,
          TaskTag,
+         TaskDependency,
          UserTask,
          Tag,
-         TimeEntry
+         TimeEntry,
+         TaskAssignedUser,
+         TaskResponsibleUser,
+         TaskCurrentUser
 }
 from '$lib/server/database/entities';
 
@@ -44,6 +49,7 @@ from '$lib/server/database/entities';
 // Project domain
 import {
     Project,
+    ProjectLog,
     ProjectUser,
     ProjectTag,
     ProjectCreator,
@@ -111,10 +117,15 @@ export const AppDataSource = new DataSource({
 
         // Task
         Task,
+        TaskLog,
         TaskTag,
+        TaskDependency,
         UserTask,
         Tag,
         TimeEntry,
+        TaskAssignedUser,
+        TaskResponsibleUser,
+        TaskCurrentUser,
 
         // Status
         Priority,
@@ -125,6 +136,7 @@ export const AppDataSource = new DataSource({
 
         // Project domain
         Project,
+        ProjectLog,
         ProjectUser,
         ProjectTag,
         ProjectTask,
