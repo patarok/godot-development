@@ -6,6 +6,9 @@
 		type Columns,
 		type StaticColumns
 	} from "$lib/components/ui/data-table/data-table.svelte.js";
+
+	import { CSS, styleObjectToString } from "$lib/index";
+
 	import {
 		getCoreRowModel,
 		getFacetedRowModel,
@@ -22,24 +25,13 @@
 		type VisibilityState,
 	} from "@tanstack/table-core";
 	import type { Schema, TaskRowSchema } from "./schemas.js";
-	import {
-		useSensors,
-		MouseSensor,
-		TouchSensor,
-		KeyboardSensor,
-		useSensor,
-		type DragEndEvent,
-		type UniqueIdentifier,
-		DndContext,
-		closestCenter,
-	} from "@dnd-kit-svelte/core";
-	import {
-		arrayMove,
-		SortableContext,
-		useSortable,
-		verticalListSortingStrategy,
-	} from "@dnd-kit-svelte/sortable";
-	import { restrictToVerticalAxis } from "@dnd-kit-svelte/modifiers";
+
+	import { DragDropProvider } from "@dnd-kit-svelte/svelte";
+	import { move } from "@dnd-kit/helpers";
+	import { useSortable } from "@dnd-kit-svelte/svelte/sortable";
+	import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+	import type { Attachment } from "svelte/attachments";
+
 	import { createSvelteTable } from "$lib/components/ui/data-table/data-table.svelte.js";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import * as Table from "$lib/components/ui/table/index.js";
@@ -74,7 +66,7 @@
 	import DataTableCheckbox from "./data-table-checkbox.svelte";
 	import TaskDataTableCellViewer from "./task-data-table-cell-viewer.svelte";
 	import DataTableReviewer from "./data-table-reviewer.svelte";
-	import { CSS } from "@dnd-kit-svelte/utilities";
+
 
 	// let { data }: { data: Schema[] } = $props();
 	let {
@@ -105,15 +97,9 @@
 	let rowSelection = $state<RowSelectionState>({});
 	let columnVisibility = $state<VisibilityState>({});
 
-	const sortableId = $props.id();
 
-	const sensors = useSensors(
-			useSensor(MouseSensor, {}),
-			useSensor(TouchSensor, {}),
-			useSensor(KeyboardSensor, {})
-	);
 
-	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
+	//const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
 
 	function projectInitials(title?: string | null): string {
 		const t = (title ?? '').trim();
@@ -419,9 +405,6 @@
 
 	let view = $state("outline");
 	let viewLabel = $derived(views.find((v) => view === v.id)?.label ?? "Select a view");
-	console.log('PROJECTS INSIDE TASK DATA TABLE! :', projects);
-	console.log('DATA INSIDE TASK DATA TABLE! :', data);
-
 </script>
 
 {#snippet RawHtml({ html }: { html: string })}
@@ -517,37 +500,61 @@
 	</div>
 	<Tabs.Content value="outline" class="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
 		<div class="overflow-hidden rounded-lg border">
-			<DndContext
-					collisionDetection={closestCenter}
-					modifiers={[restrictToVerticalAxis]}
-					onDragEnd={handleDragEnd}
-					{sensors}
-					id={sortableId}
+<!--			<DndContext-->
+<!--					collisionDetection={closestCenter}-->
+<!--					modifiers={[restrictToVerticalAxis]}-->
+<!--					onDragEnd={handleDragEnd}-->
+<!--					{sensors}-->
+<!--					id={sortableId}-->
+<!--			>-->
+<!--				<Table.Root>-->
+<!--					<Table.Header class="bg-muted sticky top-0 z-10">-->
+<!--						{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}-->
+<!--							<Table.Row>-->
+<!--								{#each headerGroup.headers as header (header.id)}-->
+<!--									<Table.Head colspan={header.colSpan}>-->
+<!--										{#if !header.isPlaceholder}-->
+<!--											<FlexRender-->
+<!--													content={header.column.columnDef.header}-->
+<!--													context={header.getContext()}-->
+<!--											/>-->
+<!--										{/if}-->
+<!--									</Table.Head>-->
+<!--								{/each}-->
+<!--							</Table.Row>-->
+<!--						{/each}-->
+<!--					</Table.Header>-->
+<!--					<Table.Body class="**:data-[slot=table-cell]:first:w-8">-->
+<!--						{#if table.getRowModel().rows?.length}-->
+<!--							<SortableContext items={dataIds} strategy={verticalListSortingStrategy}>-->
+<!--								{#each table.getRowModel().rows as row (row.id)}-->
+<!--									{@render DraggableRow({ row })}-->
+<!--								{/each}-->
+<!--							</SortableContext>-->
+<!--						{:else}-->
+<!--							<Table.Row>-->
+<!--								<Table.Cell colspan={columns.length} class="h-24 text-center">-->
+<!--									No results.-->
+<!--								</Table.Cell>-->
+<!--							</Table.Row>-->
+<!--						{/if}-->
+<!--					</Table.Body>-->
+<!--				</Table.Root>-->
+<!--			</DndContext>-->
+			<DragDropProvider
+					modifiers={[
+        // @ts-expect-error @dnd-kit/abstract types are botched atm
+        RestrictToVerticalAxis,
+    ]}
+					onDragEnd={(e) => (data = move(data, e))}
 			>
 				<Table.Root>
-					<Table.Header class="bg-muted sticky top-0 z-10">
-						{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
-							<Table.Row>
-								{#each headerGroup.headers as header (header.id)}
-									<Table.Head colspan={header.colSpan}>
-										{#if !header.isPlaceholder}
-											<FlexRender
-													content={header.column.columnDef.header}
-													context={header.getContext()}
-											/>
-										{/if}
-									</Table.Head>
-								{/each}
-							</Table.Row>
-						{/each}
-					</Table.Header>
+					<!-- header code stays the same -->
 					<Table.Body class="**:data-[slot=table-cell]:first:w-8">
 						{#if table.getRowModel().rows?.length}
-							<SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-								{#each table.getRowModel().rows as row (row.id)}
-									{@render DraggableRow({ row })}
-								{/each}
-							</SortableContext>
+							{#each table.getRowModel().rows as row, index (row.id)}
+								{@render DraggableRow({ row, index })}
+							{/each}
 						{:else}
 							<Table.Row>
 								<Table.Cell colspan={columns.length} class="h-24 text-center">
@@ -557,7 +564,7 @@
 						{/if}
 					</Table.Body>
 				</Table.Root>
-			</DndContext>
+			</DragDropProvider>
 		</div>
 		<div class="flex items-center justify-between px-4">
 			<div class="text-muted-foreground hidden flex-1 text-sm lg:flex">
@@ -1003,35 +1010,69 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet DraggableRow({ row }: { row: Row<TaskRowSchema> })}
-	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({
-		id: () => row.original.id,
+<!--{#snippet DraggableRow({ row }: { row: Row<TaskRowSchema> })}-->
+<!--	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({-->
+<!--		id: () => row.original.id,-->
+<!--	})}-->
+<!--	&lt;!&ndash;{console.log(row.original)}&ndash;&gt;-->
+
+<!--	<Table.Row-->
+<!--			data-state={row.getIsSelected() && "selected"}-->
+<!--			data-dragging={isDragging.current}-->
+<!--			bind:ref={node.current}-->
+<!--			class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"-->
+<!--			style="transition: {transition.current}; transform: {CSS.Transform.toString(-->
+<!--			transform.current-->
+<!--		)}"-->
+<!--	>-->
+<!--		{#each row.getVisibleCells() as cell (cell.id)}-->
+<!--			<Table.Cell>-->
+<!--				<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />-->
+<!--			</Table.Cell>-->
+<!--		{/each}-->
+<!--	</Table.Row>-->
+<!--{/snippet}-->
+{#snippet DraggableRow({ row, index }: { row: Row<TaskRowSchema>; index: number })}
+	{@const { ref, isDragging, handleRef } = useSortable({
+		id: row.original.id,
+		index: () => index,
 	})}
-	<!--{console.log(row.original)}-->
 
 	<Table.Row
 			data-state={row.getIsSelected() && "selected"}
 			data-dragging={isDragging.current}
-			bind:ref={node.current}
 			class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-			style="transition: {transition.current}; transform: {CSS.Transform.toString(
-			transform.current
-		)}"
+			{@attach ref}
 	>
 		{#each row.getVisibleCells() as cell (cell.id)}
 			<Table.Cell>
-				<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
+				<FlexRender
+						attach={handleRef}
+						content={cell.column.columnDef.cell}
+						context={cell.getContext()}
+				/>
 			</Table.Cell>
 		{/each}
 	</Table.Row>
 {/snippet}
 
-{#snippet DragHandle({ id }: { id: number })}
-	{@const { attributes, listeners } = useSortable({ id: () => id })}
+<!--{#snippet DragHandle({ id }: { id: number })}-->
+<!--	{@const { attributes, listeners } = useSortable({ id: () => id })}-->
 
+<!--	<Button-->
+<!--			{...attributes.current}-->
+<!--			{...listeners.current}-->
+<!--			variant="ghost"-->
+<!--			size="icon"-->
+<!--			class="text-muted-foreground size-7 hover:bg-transparent"-->
+<!--	>-->
+<!--		<GripVerticalIcon class="text-muted-foreground size-3" />-->
+<!--		<span class="sr-only">Drag to reorder</span>-->
+<!--	</Button>-->
+<!--{/snippet}-->
+{#snippet DragHandle({ attach }: { attach: Attachment })}
 	<Button
-			{...attributes.current}
-			{...listeners.current}
+			{@attach attach}
 			variant="ghost"
 			size="icon"
 			class="text-muted-foreground size-7 hover:bg-transparent"

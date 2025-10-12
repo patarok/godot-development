@@ -218,7 +218,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     };
   }
 
-  console.log("Tasks on SERVER FILE before MAP:", tasks);
   // Projected rows for the task table (kept here per page-owner request)
   const tasksProjected = tasks.map((t, idx) => {
     const taskProjects = projectsByTask[t.id] ?? [];
@@ -264,7 +263,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     };
   });
 
-  //debugger;
   return {
     dropContainerItems: dropExamples,
     tasksProjected,
@@ -288,13 +286,13 @@ export const actions: Actions = {
     const title = String(form.get('title') ?? '').trim();
     const description = String(form.get('description') ?? '').trim() || null;
     const isDone = form.get('isDone') === 'on';
-    const priorityId = String(form.get('priorityId') ?? null);
+    const priorityId = form.get('priorityId') ? String(form.get('priorityId')) : null;
+    const parentTaskId = form.get('parentTaskId') ? String(form.get('parentTaskId')) : null;
     const taskStatusId = String(form.get('taskStatusId') ?? '');
     const dueDateStr = String(form.get('dueDate') ?? '').trim();
     const plannedStartDateStr = String(form.get('plannedStartDate') ?? '').trim();
     const isActive = form.get('isActive') ? form.get('isActive') === 'on' : true;
     const isMeta = form.get('isMeta') === 'on';
-    const parentTaskId = String(form.get('parentTaskId') ?? null);
     const tagsCSV = String(form.get('tags') ?? '').trim();
 
     if (!title) return fail(400, { message: 'Title is required' });

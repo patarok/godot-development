@@ -1,13 +1,12 @@
 import {
-	type RowData,
-	type TableOptions,
-	type TableOptionsResolved,
-	type TableState,
-	createTable,
-} from "@tanstack/table-core";
-import type { ColumnDef } from "@tanstack/table-core";
+		type RowData,
+		type TableOptions,
+		type TableOptionsResolved,
+		type TableState,
+		type ColumnDef,
+		createTable,
+	} from "@tanstack/table-core";
 import type { Schema } from "$lib/components/schemas";
-
 
 /**
  * Creates a reactive TanStack table object for Svelte.
@@ -117,6 +116,7 @@ export function mergeObjects<Sources extends readonly MaybeThunk<any>[]>(
 		},
 
 		ownKeys(): (string | symbol)[] {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const all = new Set<string | symbol>();
 			for (const s of sources) {
 				const obj = resolve(s);

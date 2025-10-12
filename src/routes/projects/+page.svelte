@@ -34,7 +34,7 @@
       await invalidateAll();
     }
   };
-//debugger;
+
 </script>
 
 <svelte:head>
@@ -48,7 +48,7 @@
       <SectionCards/>
     </div>
   </div>
-  <div class="m-4">
+  <div class="m-4 p-4">
     <ProjectCreateForm
       action="?/create"
       enhanceForm={true}
@@ -57,7 +57,7 @@
       states={states}
       riskLevels={riskLevels}
       users={users}
-    />
+    /> <span class="ml-4 text-2xl">Create a new Project</span>
   </div>
   <div class="@container/main flex flex-1 flex-col gap-2">
     <div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

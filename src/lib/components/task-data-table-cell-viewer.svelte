@@ -155,7 +155,6 @@
 		"Cover Page"
 	];
 	const typeOptions = $derived(types?.length ? types.map(t => t.name) : defaultTypeOptions);
-	console.log('PROJECTS INSIDE CELL VIEWER! :', projects);
 </script>
 
 <Drawer.Root direction={isMobile.current ? "bottom" : "right"}>

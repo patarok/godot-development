@@ -17,6 +17,7 @@
     import { IconHourglass } from "@tabler/icons-svelte";
     import { IconHourglassFilled } from "@tabler/icons-svelte";
     import { IconCalendarPlus } from "@tabler/icons-svelte";
+    import { IconEyeBolt } from "@tabler/icons-svelte";
     import { IconCalendarOff } from "@tabler/icons-svelte";
     import { IconPlus } from "@tabler/icons-svelte";
     import ProjectDataViewer from './ProjectDataViewer.svelte';
@@ -89,9 +90,6 @@
         taskTypes?: Array<{ id: string; name: string }>;
         metaTasks?: Array<{ id: string; title: string }>;
     } = $props();
-
-   // debugger;
-    console.log("PROJECT DATA: ", project);
 
     const projectWorth = $derived(formatCurrencyInt((project.estimatedBudget * 1.2), 'en-US', 'USD'));
     const projectActualCost = $derived(formatCurrencyInt(project.actualCost, 'en-US', 'USD'));
@@ -168,6 +166,9 @@
                 {/each}
             </div>
             {/if}
+            <CardDescription>
+                TODO: <br> - show No of open tasks <br> - show No of in progress tasks <br> - show No of closed tasks <br> - show No of blocked tasks
+            </CardDescription>
             <CardAction>
             <Badge variant="outline">
                 <IconHourglass />
@@ -190,27 +191,16 @@
             </CardAction>
         </CardContent>
 
-<!--    <div class="flex flex-col gap-2">-->
-<!--        <Label for="title">Title</Label>-->
-<!--        <Input id="title" name="title" value={project.title} required />-->
-<!--    </div>-->
+        <CardFooter class="relative flex justify-between mt-4">
+            <Button
+                    type="button"
+                    size="icon"
+                    class="h-10 w-10 rounded-full shadow-lg"
 
-<!--    <div class="flex flex-col gap-2">-->
-<!--        <Label for="description">Description</Label>-->
-<!--        <Input id="description" name="description" value={project.description} />-->
-<!--    </div>-->
-
-<!--    <div class="flex flex-col gap-2">-->
-<!--        <Label for="startDate">Start Date</Label>-->
-<!--        <Label for="startDate">{project.startDate}</Label>-->
-<!--    </div>-->
-
-<!--    <div class="flex flex-col gap-2">-->
-<!--        <Label for="endDate">End Date</Label>-->
-<!--        <Input id="endDate" name="endDate" type="date" value={project.endDate} />-->
-<!--    </div>-->
-
-        <CardFooter class="relative flex justify-center">
+            >
+                <IconEyeBolt class="h-5 w-5" />
+            </Button>
+            <div class="">
             <ProjectDataViewer
                 {project}
                 action="?/update"
@@ -219,8 +209,8 @@
                 {riskLevels}
                 {users}
             />
-            
-            <div class="absolute bottom-4 right-4">
+            </div>
+            <div class="">
                 <TaskCreateForm
                     action="?/create"
                     enhanceForm={true}

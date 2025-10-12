@@ -21,8 +21,8 @@
 
 <script lang="ts">
     import type {Snippet} from 'svelte';
-    import {CSS, styleObjectToString} from '@dnd-kit-svelte/utilities';
-    import {useSortable} from '@dnd-kit-svelte/sortable';
+    import {useSortable} from '@dnd-kit-svelte/svelte/sortable';
+    import { CSS, styleObjectToString } from "$lib/index";
 
     let {data, children, type, accepts = [], class: className}: ItemProps = $props();
 

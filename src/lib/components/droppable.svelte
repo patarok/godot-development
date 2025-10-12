@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {useDroppable, type UseDroppableArguments} from '@dnd-kit-svelte/core';
+	import {useDroppable, type UseDroppableArguments} from '@dnd-kit-svelte/svelte';
 	import type {ClassValue} from 'clsx';
 	import type {Snippet} from 'svelte';
 

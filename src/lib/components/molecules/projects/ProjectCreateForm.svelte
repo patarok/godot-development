@@ -18,6 +18,7 @@
     import * as HoverCard from '$lib/components/ui/hover-card/index.js';
     import * as Dialog from '$lib/components/ui/dialog/index.js';
     import { Alert } from '$lib/components/ui/alert/index.js';
+    import {IconPlus} from "@tabler/icons-svelte";
 
     let {
         action,
@@ -127,7 +128,15 @@
 <Drawer.Root direction={isMobile.current ? 'bottom' : 'right'}>
     <Drawer.Trigger>
         {#snippet child({ props })}
-            <Button type="button" variant="default" {...props}>New Project</Button>
+            <Button
+                    type="button"
+                    size="icon"
+                    class="h-10 w-10 rounded-full shadow-lg"
+                    {...props}
+            >
+                <IconPlus class="h-5 w-5" />
+            </Button>
+<!--            <Button type="button" variant="default" {...props}>New Project</Button>-->
         {/snippet}
     </Drawer.Trigger>
 

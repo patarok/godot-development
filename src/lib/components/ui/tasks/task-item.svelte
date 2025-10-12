@@ -12,8 +12,8 @@
 </script>
 
 <script lang="ts">
-    import {CSS, styleObjectToString} from '@dnd-kit-svelte/utilities';
-    import {useSortable} from '@dnd-kit-svelte/sortable';
+    import {useSortable} from '@dnd-kit-svelte/svelte';
+    import { CSS, styleObjectToString } from "$lib/index";
 
     let {data, type}: ItemProps = $props();
 

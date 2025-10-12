@@ -1,11 +1,78 @@
+<script lang="ts" module>
+	export const columns: ColumnDef<Schema>[] = [
+		{
+			id: "drag",
+			header: () => null,
+			cell: () => renderSnippet(DragHandle),
+		},
+		{
+			id: "select",
+			header: ({ table }) =>
+				renderComponent(DataTableCheckbox, {
+					checked: table.getIsAllPageRowsSelected(),
+					indeterminate:
+						table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
+					onCheckedChange: (value) => table.toggleAllPageRowsSelected(!!value),
+					"aria-label": "Select all",
+				}),
+			cell: ({ row }) =>
+				renderComponent(DataTableCheckbox, {
+					checked: row.getIsSelected(),
+					onCheckedChange: (value) => row.toggleSelected(!!value),
+					"aria-label": "Select row",
+				}),
+			enableSorting: false,
+			enableHiding: false,
+		},
+		{
+			accessorKey: "header",
+			header: "Header",
+			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
+			enableHiding: false,
+		},
+		{
+			accessorKey: "type",
+			header: "Section Type",
+			cell: ({ row }) => renderSnippet(DataTableType, { row }),
+		},
+		{
+			accessorKey: "status",
+			header: "Status",
+			cell: ({ row }) => renderSnippet(DataTableStatus, { row }),
+		},
+		{
+			accessorKey: "target",
+			header: () =>
+				renderSnippet(
+					createRawSnippet(() => ({
+						render: () => '<div class="w-full text-right">Target</div>',
+					}))
+				),
+			cell: ({ row }) => renderSnippet(DataTableTarget, { row }),
+		},
+		{
+			accessorKey: "limit",
+			header: () =>
+				renderSnippet(
+					createRawSnippet(() => ({
+						render: () => '<div class="w-full text-right">Limit</div>',
+					}))
+				),
+			cell: ({ row }) => renderSnippet(DataTableLimit, { row }),
+		},
+		{
+			accessorKey: "reviewer",
+			header: "Reviewer",
+			cell: ({ row }) => renderComponent(DataTableReviewer, { row }),
+		},
+		{
+			id: "actions",
+			cell: () => renderSnippet(DataTableActions),
+		},
+	];
+</script>
+
 <script lang="ts">
-	import {
-		createColumns,
-		createColumnsFromData,
-		staticColumns,
-		type Columns,
-		type StaticColumns
-	} from "$lib/components/ui/data-table/data-table.svelte.js";
 	import {
 		getCoreRowModel,
 		getFacetedRowModel,
@@ -22,24 +89,8 @@
 		type VisibilityState,
 	} from "@tanstack/table-core";
 	import type { Schema } from "./schemas.js";
-	import {
-		useSensors,
-		MouseSensor,
-		TouchSensor,
-		KeyboardSensor,
-		useSensor,
-		type DragEndEvent,
-		type UniqueIdentifier,
-		DndContext,
-		closestCenter,
-	} from "@dnd-kit-svelte/core";
-	import {
-		arrayMove,
-		SortableContext,
-		useSortable,
-		verticalListSortingStrategy,
-	} from "@dnd-kit-svelte/sortable";
-	import { restrictToVerticalAxis } from "@dnd-kit-svelte/modifiers";
+	import type { Attachment } from "svelte/attachments";
+	import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 	import { createSvelteTable } from "$lib/components/ui/data-table/data-table.svelte.js";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import * as Table from "$lib/components/ui/table/index.js";
@@ -70,7 +121,9 @@
 	import DataTableCellViewer from "./data-table-cell-viewer.svelte";
 	import { createRawSnippet } from "svelte";
 	import DataTableReviewer from "./data-table-reviewer.svelte";
-	import { CSS } from "@dnd-kit-svelte/utilities";
+	import { DragDropProvider } from "@dnd-kit-svelte/svelte";
+	import { move } from "@dnd-kit/helpers";
+	import { useSortable } from "@dnd-kit-svelte/svelte/sortable";
 
 	let { data }: { data: Schema[] } = $props();
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
@@ -78,55 +131,6 @@
 	let columnFilters = $state<ColumnFiltersState>([]);
 	let rowSelection = $state<RowSelectionState>({});
 	let columnVisibility = $state<VisibilityState>({});
-
-	const sortableId = $props.id();
-
-	const sensors = useSensors(
-		useSensor(MouseSensor, {}),
-		useSensor(TouchSensor, {}),
-		useSensor(KeyboardSensor, {})
-	);
-
-	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
-
-	export const columns: Columns = [
-		{
-			...staticColumns.drag,
-			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id }),
-		},
-		{
-			...staticColumns.select,
-			cell: ({ row, table }) =>
-					renderComponent(DataTableCheckbox, {
-						checked: row.getIsSelected(),
-						onCheckedChange: (v) => row.toggleSelected(!!v),
-					}),
-		},
-		{
-			...staticColumns.header,
-			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
-		},
-		...createColumnsFromData(data[0]).map((col) => {
-			switch (col.accessorKey) {
-				case "type":
-					return { ...col, cell: ({ row }) => renderSnippet(DataTableType, { row }) };
-				case "status":
-					return { ...col, cell: ({ row }) => renderSnippet(DataTableStatus, { row }) };
-				case "target":
-					return { ...col, cell: ({ row }) => renderSnippet(DataTableTarget, { row }) };
-				case "limit":
-					return { ...col, cell: ({ row }) => renderSnippet(DataTableLimit, { row }) };
-				case "reviewer":
-					return { ...col, cell: ({ row }) => renderComponent(DataTableReviewer, { row }) };
-				case "actions":
-					return { ...col, cell: () => renderSnippet(DataTableActions) };
-				default:
-					return col;
-			}
-		}),
-	];
-
-
 
 	const table = createSvelteTable({
 		get data() {
@@ -195,15 +199,6 @@
 		},
 	});
 
-	function handleDragEnd(event: DragEndEvent) {
-		const { active, over } = event;
-		if (active && over && active.id !== over.id) {
-			const oldIndex = dataIds.indexOf(active.id);
-			const newIndex = dataIds.indexOf(over.id);
-			data = arrayMove(data, oldIndex, newIndex);
-		}
-	}
-
 	let views = [
 		{
 			id: "outline",
@@ -240,7 +235,7 @@
 			</Select.Trigger>
 			<Select.Content>
 				{#each views as view (view.id)}
-					<Select.Item value={view.id}>badum ts... {view.label}</Select.Item>
+					<Select.Item value={view.id}>{view.label}</Select.Item>
 				{/each}
 			</Select.Content>
 		</Select.Root>
@@ -290,12 +285,12 @@
 	</div>
 	<Tabs.Content value="outline" class="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
 		<div class="overflow-hidden rounded-lg border">
-			<DndContext
-				collisionDetection={closestCenter}
-				modifiers={[restrictToVerticalAxis]}
-				onDragEnd={handleDragEnd}
-				{sensors}
-				id={sortableId}
+			<DragDropProvider
+				modifiers={[
+					// @ts-expect-error @dnd-kit/abstract types are botched atm
+					RestrictToVerticalAxis,
+				]}
+				onDragEnd={(e) => (data = move(data, e))}
 			>
 				<Table.Root>
 					<Table.Header class="bg-muted sticky top-0 z-10">
@@ -316,11 +311,9 @@
 					</Table.Header>
 					<Table.Body class="**:data-[slot=table-cell]:first:w-8">
 						{#if table.getRowModel().rows?.length}
-							<SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-								{#each table.getRowModel().rows as row (row.id)}
-									{@render DraggableRow({ row })}
-								{/each}
-							</SortableContext>
+							{#each table.getRowModel().rows as row, index (row.id)}
+								{@render DraggableRow({ row, index })}
+							{/each}
 						{:else}
 							<Table.Row>
 								<Table.Cell colspan={columns.length} class="h-24 text-center">
@@ -330,7 +323,7 @@
 						{/if}
 					</Table.Body>
 				</Table.Root>
-			</DndContext>
+			</DragDropProvider>
 		</div>
 		<div class="flex items-center justify-between px-4">
 			<div class="text-muted-foreground hidden flex-1 text-sm lg:flex">
@@ -497,34 +490,33 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet DraggableRow({ row }: { row: Row<Schema> })}
-	{@const { transform, transition, node, setNodeRef, isDragging } = useSortable({
-		id: () => row.original.id,
+{#snippet DraggableRow({ row, index }: { row: Row<Schema>; index: number })}
+	{@const { ref, isDragging, handleRef } = useSortable({
+		id: row.original.id,
+		index: () => index,
 	})}
 
 	<Table.Row
 		data-state={row.getIsSelected() && "selected"}
 		data-dragging={isDragging.current}
-		bind:ref={node.current}
 		class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-		style="transition: {transition.current}; transform: {CSS.Transform.toString(
-			transform.current
-		)}"
+		{@attach ref}
 	>
 		{#each row.getVisibleCells() as cell (cell.id)}
 			<Table.Cell>
-				<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
+				<FlexRender
+					attach={handleRef}
+					content={cell.column.columnDef.cell}
+					context={cell.getContext()}
+				/>
 			</Table.Cell>
 		{/each}
 	</Table.Row>
 {/snippet}
 
-{#snippet DragHandle({ id }: { id: number })}
-	{@const { attributes, listeners } = useSortable({ id: () => id })}
-
+{#snippet DragHandle({ attach }: { attach: Attachment })}
 	<Button
-		{...attributes.current}
-		{...listeners.current}
+		{@attach attach}
 		variant="ghost"
 		size="icon"
 		class="text-muted-foreground size-7 hover:bg-transparent"
