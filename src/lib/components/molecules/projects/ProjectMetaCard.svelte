@@ -18,6 +18,9 @@
     import { IconHourglassFilled } from "@tabler/icons-svelte";
     import { IconCalendarPlus } from "@tabler/icons-svelte";
     import { IconCalendarOff } from "@tabler/icons-svelte";
+    import { IconPlus } from "@tabler/icons-svelte";
+    import ProjectDataViewer from './ProjectDataViewer.svelte';
+    import TaskCreateForm from '$lib/components/molecules/tasks/TaskCreateForm.svelte';
 
     let {
         class: className,
@@ -25,7 +28,15 @@
         action,
         enhanceForm = false,
         enhanceCallback = undefined,
-        project
+        project,
+        priorities = [],
+        states = [],
+        riskLevels = [],
+        users = [],
+        taskStates = [],
+        taskPriorities = [],
+        taskTypes = [],
+        metaTasks = []
     }: {
         class?: string;
         method?: string;
@@ -34,6 +45,14 @@
         enhanceCallback?: SubmitFunction;
         project: {
             id: number;
+            creator: {
+                id: number;
+                email?: string;
+                forename: string;
+                surname?: string;
+                username?: string;
+                avatarData?: string;
+            }
             avatarData?: string;
             title: string;
             description?: string;
@@ -61,17 +80,26 @@
                 };
             }>;
         };
+        priorities?: Array<{ id: string; name: string }>;
+        states?: Array<{ id: string; name: string }>;
+        riskLevels?: Array<{ id: string; name: string }>;
+        users?: Array<{ id: string; email: string; forename?: string | null; surname?: string | null; username?: string | null; avatarData?: string | null }>;
+        taskStates?: Array<{ id: string; name: string }>;
+        taskPriorities?: Array<{ id: string; name: string }>;
+        taskTypes?: Array<{ id: string; name: string }>;
+        metaTasks?: Array<{ id: string; title: string }>;
     } = $props();
 
    // debugger;
     console.log("PROJECT DATA: ", project);
-   // debugger;
+
     const projectWorth = $derived(formatCurrencyInt((project.estimatedBudget * 1.2), 'en-US', 'USD'));
     const projectActualCost = $derived(formatCurrencyInt(project.actualCost, 'en-US', 'USD'));
     const projectDescription = $derived(clampToWordCount(project.description, 9));
     const projectStartDate = dateMat(project.startDate,'EUR');
 
     const whatIsIt = projectStartDate;
+
 
     </script>
 
@@ -81,7 +109,7 @@
                 <button type="button" class="inline-flex items-center gap-2" title={project.title}>
                     <Avatar.Root class="size-8 mr-2">
                         <Avatar.Image src={project.avatarData} alt={project.title} />
-                        <Avatar.Fallback>FF</Avatar.Fallback>
+                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{project.title[0]}{project.creator.surname[0]}</span></Avatar.Fallback>
                     </Avatar.Root>
 
                 </button>
@@ -98,15 +126,16 @@
                     <IconMoneybagMinus />
                     {projectActualCost}
                 </Badge>
-                <Badge class="mt-2 max-w-[6rem]" variant="outline">
+                <Badge class="mt-2 max-w-[6rem]  mx-auto" variant="outline">
                     <span class="flex-col flex m-2 max-w-full">
                     <Avatar.Root class="size-8 mr-2 mx-auto">
-                        <Avatar.Image src={project.avatarData} alt={project.title} />
-                        <Avatar.Fallback>FF</Avatar.Fallback>
+
+                        <Avatar.Image src={project.creator.avatarData} alt={project.title} />
+                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{project.creator.forename[0]}{project.creator.surname[0]}</span></Avatar.Fallback>
                     </Avatar.Root>
                         <div class="whitespace-normal max-w-full">
-                    Maxasxaxax Muster-Axt</div>
-                                                </span>
+                    {project.creator.username}</div>
+                    </span>
                 </Badge>
             </CardAction>
         </CardHeader>
@@ -120,7 +149,7 @@
                 {#each project.involvedUsers as u (u.id)}
                 <div class="relative group inline-block">
                     <img
-                    src={u.avatarData ? `data:image/svg+xml;utf8,${encodeURIComponent(u.avatarData)}` : '/fallback-avatar.svg'}
+                    src={u.avatarData ? u.avatarData : '/fallback-avatar.svg'}
                     alt={u.displayName ?? u.email}
                     class="h-8 w-8 rounded-full ring-2 ring-background object-cover"
                     />
@@ -181,8 +210,41 @@
 <!--        <Input id="endDate" name="endDate" type="date" value={project.endDate} />-->
 <!--    </div>-->
 
-        <CardFooter>
-            <Button class="mx-auto" type="submit">Edit</Button>
+        <CardFooter class="relative flex justify-center">
+            <ProjectDataViewer
+                {project}
+                action="?/update"
+                {priorities}
+                {states}
+                {riskLevels}
+                {users}
+            />
+            
+            <div class="absolute bottom-4 right-4">
+                <TaskCreateForm
+                    action="?/create"
+                    enhanceForm={true}
+                    {enhanceCallback}
+                    states={taskStates}
+                    priorities={taskPriorities}
+                    {users}
+                    tasks={metaTasks}
+                    projects={[{ id: project.id, title: project.title, avatarData: project.avatarData }]}
+                    types={taskTypes}
+                    prefilledProjectId={project.id}
+                >
+                    {#snippet trigger(props)}
+                        <Button
+                            type="button"
+                            size="icon"
+                            class="h-10 w-10 rounded-full shadow-lg"
+                            {...props}
+                        >
+                            <IconPlus class="h-5 w-5" />
+                        </Button>
+                    {/snippet}
+                </TaskCreateForm>
+            </div>
         </CardFooter>
 
 </Card>

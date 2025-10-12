@@ -16,7 +16,9 @@ import {
   TaskResponsibleUser,
   TaskCurrentUser,
   TaskLog,
-  ProjectLog
+  ProjectLog,
+  TaskStatus,
+  TaskType
 } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 import { In } from 'typeorm';
@@ -320,12 +322,14 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   // Also load selectable lists
-  const [priorities, states, riskLevels, users, allTasks] = await Promise.all([
+  const [priorities, states, riskLevels, users, allTasks, taskStates, taskTypes] = await Promise.all([
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     statusRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } }),
     userRepo.find({ order: { email: 'ASC' } }),
-    taskRepo.find({ order: { createdAt: 'DESC' }, select: { id: true, title: true } as any })
+    taskRepo.find({ order: { createdAt: 'DESC' }, select: { id: true, title: true, isMeta: true } as any }),
+    AppDataSource.getRepository(TaskStatus).find({ order: { rank: 'ASC', name: 'ASC' } }),
+    AppDataSource.getRepository(TaskType).find({ order: { rank: 'ASC', name: 'ASC' } })
   ]);
 
   const plainProjects = toPlainArray(projects).map((p: any) => ({
@@ -336,6 +340,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     involvedUsers: involvedUsersByProject[p.id] ?? []
   }));
 
+  const metaTasks = allTasks.filter((t: any) => t.isMeta === true);
+
   return {
     projects: plainProjects,
     priorities: toPlainArray(priorities),
@@ -343,6 +349,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     riskLevels: toPlainArray(riskLevels),
     users: toPlainArray(users),
     tasks: toPlainArray(allTasks),
+    taskStates: toPlainArray(taskStates),
+    taskPriorities: toPlainArray(priorities),
+    taskTypes: toPlainArray(taskTypes),
+    metaTasks: toPlainArray(metaTasks),
     user: locals.user
   };
 };

@@ -99,6 +99,21 @@ export const load: PageServerLoad = async ({ locals }) => {
     }
   }
 
+  // Load project associations via ProjectTask junction table
+  const projectsByTask: Record<string, any[]> = {};
+  if (taskIds.length) {
+    const projectTaskRepo = AppDataSource.getRepository(ProjectTask);
+    const projectLinks = await projectTaskRepo.find({ 
+      where: { taskId: In(taskIds) }, 
+      relations: { project: true } 
+    });
+    for (const link of projectLinks as any[]) {
+      if (link.project) {
+        (projectsByTask[link.taskId] ||= []).push(link.project);
+      }
+    }
+  }
+
   const [projects, priorities, states, tags, users, types] = await Promise.all([
     projectRepo.find({ where: { isActive: true }, order: { title: 'ASC' }, relations: { projectStatus: true } }),
     priorityRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
@@ -173,7 +188,13 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   // Build project -> userIds map for available users
-  const projectIds = Array.from(new Set(tasks.map(t => t.projectId).filter(Boolean))) as string[];
+  const allProjectIdsFromTasks = new Set<string>();
+  for (const taskId of Object.keys(projectsByTask)) {
+    for (const proj of projectsByTask[taskId]) {
+      if (proj?.id) allProjectIdsFromTasks.add(proj.id);
+    }
+  }
+  const projectIds = Array.from(allProjectIdsFromTasks);
   const projectUsersMap: Record<string, Set<string>> = {};
   if (projectIds.length) {
     const puRepo = AppDataSource.getRepository(ProjectUser);
@@ -200,7 +221,10 @@ export const load: PageServerLoad = async ({ locals }) => {
   console.log("Tasks on SERVER FILE before MAP:", tasks);
   // Projected rows for the task table (kept here per page-owner request)
   const tasksProjected = tasks.map((t, idx) => {
-    const avSet = t.projectId ? (projectUsersMap[t.projectId] ?? null) : null;
+    const taskProjects = projectsByTask[t.id] ?? [];
+    const firstProject = taskProjects[0] ?? null;
+    const projectId = firstProject?.id ?? null;
+    const avSet = projectId ? (projectUsersMap[projectId] ?? null) : null;
     const availableUsers = (avSet ? users.filter((u: any) => avSet.has(u.id)) : users).map(projectUserInfo);
     return {
       // Use a numeric, table-friendly id while we still have UUIDs in the entity
@@ -211,8 +235,18 @@ export const load: PageServerLoad = async ({ locals }) => {
       description: t.description ?? '',
       status: t.taskStatus?.name ?? '',
       priority: t.priority?.name ?? '',
-      assignedProject: t.project?.title ?? '',
-      projectId: t.projectId ?? null,
+      assignedProject: firstProject?.title ?? '',
+      projectId: projectId,
+      project: firstProject ? {
+        id: firstProject.id,
+        title: firstProject.title,
+        description: firstProject.description ?? null,
+        avatarData: firstProject.avatarData ?? null,
+        isActive: firstProject.isActive ?? false,
+        isDone: firstProject.isDone ?? false,
+        createdAt: firstProject.createdAt,
+        updatedAt: firstProject.updatedAt
+      } : null,
       plannedSchedule: {
         plannedStart: t.plannedStartDate ?? undefined,
         plannedDue: t.dueDate ?? undefined,

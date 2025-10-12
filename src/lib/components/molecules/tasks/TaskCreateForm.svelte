@@ -29,6 +29,8 @@
         tasks = [],
         projects = [],
         types = [],
+        prefilledProjectId = null,
+        trigger,
         ...restProps
     }: {
         action: string;
@@ -40,6 +42,8 @@
         tasks?: Array<{ id: string; title: string }>;
         projects?: Array<{ id: string; title: string; avatarData?: string }>;
         types?: Array<{ id: string; name: string }>;
+        prefilledProjectId?: string | null;
+        trigger?: any;
     } = $props();
 
     const isMobile = new IsMobile();
@@ -74,7 +78,7 @@
     // Required/known fields
     let taskStatusId = $state<string | ''>('');
     let priorityId = $state<string | ''>('');
-    let projectId = $state<string | null>(null);
+    let projectId = $state<string | null>(prefilledProjectId ?? null);
     let mainAssigneeId = $state<string | null>(null);
     let assignedUserIds = $state<string[]>([]);
     let isDone = $state(false);
@@ -128,7 +132,11 @@
 <Drawer.Root direction={isMobile.current ? 'bottom' : 'right'}>
     <Drawer.Trigger>
         {#snippet child({ props })}
-            <Button type="button" variant="default" {...props}>New Task</Button>
+            {#if trigger}
+                {@render trigger(props)}
+            {:else}
+                <Button type="button" variant="default" {...props}>New Task</Button>
+            {/if}
         {/snippet}
     </Drawer.Trigger>
 
