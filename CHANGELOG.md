@@ -1,3 +1,26 @@
+# [5.10.0](https://github.com/patarok/godot-development/compare/v5.9.0...v5.10.0) (2025-10-13)
+
+
+### Bug Fixes
+
+* avatars for Involved Users in ProjectMetaCards work now, ProjectMetaCard now spawns 'create Task' and 'edit Project' drawers, fixes problems with avatar in tasks-data-table ([1f788e5](https://github.com/patarok/godot-development/commit/1f788e5df4bb9b4bacd36137905de0bddb5947ac))
+* removes comments, superfluous logs and utils ([1ed7866](https://github.com/patarok/godot-development/commit/1ed7866a9055fd72565e04d161b654f3f04cdf82))
+
+
+### Features
+
+* adds admin-sidebar, adds addmin-menubar, getting a feel for handling components. ([248da90](https://github.com/patarok/godot-development/commit/248da90d258560d6089d014b2b126468e9484f9b))
+* adds several tools to format data for displaying it in components, adds junction Table to add n:m relation betw. Project and Task, alters initial seed file, modifies ProjectMetaData cards. ([e2cc68b](https://github.com/patarok/godot-development/commit/e2cc68be2b74a8757592722aafe5434face60e00))
+* adds working TaskCreateForm as a Drawer ([71109f6](https://github.com/patarok/godot-development/commit/71109f6d5a565fbc378dd0a2cb1cee6cbb8c6454))
+* identeapots for avatars, more data in table-cell-viewer which can act as an editor now, d3 diagrams working now as should with time-entry data, working seeds which seed avatar images into avatarData fields directly ([b65ad0d](https://github.com/patarok/godot-development/commit/b65ad0d4d22ed4c3f7d332afdc1425dd5274147a))
+* implements kanban board, fixes issues with nullable for root and portal in used components ([5b34709](https://github.com/patarok/godot-development/commit/5b34709663916d5f22458e54a9401d00f572925f))
+* Involved Users in ProjectMetaCards, new seed file, new main roles, and new settings coming from alt_initial_seed ([e116626](https://github.com/patarok/godot-development/commit/e1166268c6d19f4313b36283467770115f67ac88))
+
+
+### Performance Improvements
+
+* using components for kanban switches, adds info to kanban-todo ([013074c](https://github.com/patarok/godot-development/commit/013074c3f7a51a02aafe5e67bb46b3ee8c1672db))
+
 # [5.9.0](https://github.com/patarok/godot-development/compare/v5.8.0...v5.9.0) (2025-09-28)
 
 
