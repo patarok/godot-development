@@ -1,4 +1,10 @@
+
+## TODO for cell input:
+- validation through ZOD and therefore use ZOD the right way see our gathered information on the issue:
+
+
 ### Short answer
+
 - No, you shouldn’t force everything into strings. Use richer shapes (arrays, objects, IDs) and let Zod validate/transform them.
 - Save updates by primary key `id`. Prefer patch-style updates that transmit only changed fields in their canonical forms (IDs for relations), not display strings.
 

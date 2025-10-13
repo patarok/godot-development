@@ -1,272 +1,257 @@
-### Goal
-Finish the review by pinpointing every entity/config file that needs edits so TypeORM synchronize works cleanly on a fresh DB (after you recreated app_db). Below is a file-by-file checklist with exact issues and concrete change suggestions, followed by a short sequence to get sync running.
+# TODO - Development Roadmap
+
+## 🔥 HIGHEST PRIORITY: Database Seeding Reorganization
+
+### Current Issue
+The application currently uses a single monolithic seed file (`alt_initial_seed.ts`) that mixes essential system data with test/development data. This makes production deployment difficult and doesn't provide flexibility for different environments.
+
+### Required Actions
+
+#### 1. Create Base Functional Seed (`db:seed:base` or `db:seed:production`)
+**Purpose**: Seed minimal required data for application functionality that any installation needs.
+
+**Should Include**:
+- ✅ Main Roles (Owner, Admin, Controller, User)
+- ✅ Essential Main Permissions (admin.access, user.manage, settings.view, etc.)
+- ✅ Role-Permission mappings for main roles
+- ✅ SubRole configurations (Engineer, Project Manager, Designer, etc.)
+- ✅ SubRole permissions and their mappings
+- ✅ Task Statuses (Todo, In Progress, Review, Done, Blocked, etc.)
+- ✅ Project Statuses (Planning, Active, On Hold, Completed, etc.)
+- ✅ Priorities (Low, Medium, High, Critical, etc.)
+- ✅ Risk Levels (Low, Medium, High, Critical)
+- ✅ Task Types (Feature, Bug, Task, Epic, Story, etc.)
+- ✅ System Settings (if any default required)
+
+**Should NOT Include**:
+- ❌ Test users (owner@example.com, admin@example.com, user@example.com, etc.)
+- ❌ Sample projects
+- ❌ Sample tasks
+- ❌ Test project-user assignments
+- ❌ Sample time entries
+
+**Implementation**:
+```bash
+# New file structure:
+src/lib/server/database/seeds/
+  ├── base_seed.ts          # Production-ready base data
+  ├── dev_seed.ts           # Development test data
+  └── alt_initial_seed.ts   # Current comprehensive seed (keep for reference)
+```
+
+**Package.json scripts**:
+```json
+{
+  "db:seed:base": "tsx src/lib/server/database/seeds/base_seed.ts",
+  "db:seed:dev": "tsx src/lib/server/database/seeds/dev_seed.ts",
+  "db:seed:full": "npm run db:seed:base && npm run db:seed:dev"
+}
+```
+
+#### 2. Create Development Test Seed (`db:seed:dev`)
+**Purpose**: Add realistic test data for development and testing.
+
+**Should Include**:
+- ✅ Test users with various roles (owner, admin, controller, user, stakeholder, contractor, etc.)
+- ✅ Sample projects with different statuses and configurations
+- ✅ Sample tasks with parent-child relationships
+- ✅ Task-project assignments
+- ✅ User-project assignments
+- ✅ Sample time entries
+- ✅ Sample tags
+- ✅ Sample activity logs
+
+**Environment Detection**:
+```typescript
+// Should check NODE_ENV and refuse to run in production
+if (process.env.NODE_ENV === 'production') {
+  console.error('Cannot run dev seed in production environment');
+  process.exit(1);
+}
+```
+
+#### 3. Refactor Current Seed Files
+- Extract reusable helper functions into `src/lib/server/database/seeds/helpers.ts`:
+  - `upsertRole()`, `upsertPermission()`, `linkRolePermission()`
+  - `upsertTaskStatus()`, `upsertProjectStatus()`, `upsertPriority()`, etc.
+  - `upsertUser()`, `upsertProject()`, `upsertTask()`
+  - `generateIdenteapot()` wrapper
+- Create clear separation between base and test data
+- Add comprehensive comments explaining what each section seeds
+
+#### 4. Update Documentation
+- Update README.md with new seed scripts ✓
+- Add `docs/seeding.md` explaining:
+  - What each seed script does
+  - When to use which seed
+  - How to create custom seeds
+  - Production deployment seed strategy
 
 ---
 
-### Critical configuration: DataSource
-File: src/lib/server/database/config/datasource.ts
-- Incorrect imports and missing imports:
-    - Remove import of non-existent UserRole: `import { UserRole } from '../entities/user/UserRole.ts';` (file not present; not used).
-    - ContractorMail is imported from SimpleMail path: `import { ContractorMail } from "../entities/mail/SimpleMail"`; change to `../entities/mail/ContractorMail.ts`.
-    - Missing imports for SubRole entities used in entities array: SubRoleCfg, SubRolePermission, SubRolePermissionPermission.
-    - If you want Attachment and MailAudit tables created, you must also import and list them explicitly (they live in the same file as ContractorMail).
-- Entities array contains undeclared symbols and is incomplete:
-    - You reference `SubRoleCfg, SubRolePermission, SubRolePermissionPermission` but they aren’t imported.
-    - If you need the nested mail entities: add Attachment and MailAudit.
-- Suggested fixed header and entities list (illustrative):
-    - Add:
-        - `import { SubRoleCfg } from '../entities/user/SubRoleCfg.ts';`
-        - `import { SubRolePermission } from '../entities/user/SubRolePermission.ts';`
-        - `import { SubRolePermissionPermission } from '../entities/user/SubRolePermissionPermission.ts';`
-        - `import { ContractorMail, Attachment, MailAudit } from '../entities/mail/ContractorMail.ts';`
-    - Remove: the `UserRole` import and any reference to it in entities.
-    - Ensure the entities array includes:
-        - User, Role, Permission, RolePermission,
-        - SubRoleCfg, SubRolePermission, SubRolePermissionPermission,
-        - Session, PasswordResetToken,
-        - SystemSetting,
-        - Task, TaskTag, UserTask, Tag,
-        - Priority, TaskStatus, ProjectStatus, RiskLevel,
-        - Project, ProjectUser, ProjectTag, ProjectCreator, ProjectCircle, ProjectAssignedUser, ProjectResponsibleUser,
-        - Deadline, DeadlineTag,
-        - Solution, Impediment, ImpedimentMedian,
-        - Mail, SimpleMail, ContractorMail, Attachment, MailAudit.
+## 🎯 HIGH PRIORITY: Kanban Board Enhancements
 
-Why this matters: Until an entity class appears in the `entities` array, synchronize will not create the table.
+### 1. Implement Drag & Drop Persistence
+**Status**: Drag & drop UI works, but changes are not saved to database.
+
+**Required**:
+- [ ] Add server action `moveCard` in `/routes/tasks/+page.server.ts`
+  - For weekday view: Update `task.plannedStartDate`
+  - For status view: Update `task.taskStatus`
+- [ ] Wire up `onCardMove` handler in `/routes/tasks/+page.svelte`
+- [ ] Add optimistic UI updates
+- [ ] Handle error states with rollback
+
+### 2. Implement Card Operations
+**Required**:
+- [ ] `onCardUpdate`: Update task title/description via server action
+- [ ] `onCardAdd`: Create new task in column
+- [ ] Add loading states during operations
+- [ ] Show success/error toasts
+
+### 3. Additional Grouping Modes
+**Enhancement**: Support more ways to organize tasks.
+
+**Potential modes**:
+- [ ] By Priority (High, Medium, Low)
+- [ ] By Assignee (group by user)
+- [ ] By Project
+- [ ] By Type (Bug, Feature, Task)
 
 ---
 
-### User/Role/Permission domain
+## 🔧 MEDIUM PRIORITY: Code Quality & Refactoring
 
-File: src/lib/server/database/entities/user/User.ts
-- Import issues:
-    - Uses `@ManyToOne` but doesn’t import ManyToOne.
-    - Imports `Session, PasswordResetToken` from `$lib/database`; your barrel is `$lib/server/database`. Change to `$lib/server/database` or use direct relative imports.
-    - Missing import of Role.
-    - Unused imports: `UserRole` (no file), `SubRoleCfg` (not used directly in this file).
-- Relation inverse mismatch with Role:
-    - In Role.ts, the inverse side points to `user.roles` (plural), but `User` defines a single `role: Role`. This must be aligned.
-- Suggested edits:
-    - Add `ManyToOne` to the import list.
-    - Import Role: `import { Role } from './Role';`
-    - Fix barrel path: `from '$lib/server/database'` (or make all direct relative to avoid circular runtime imports).
-    - Keep property as: `@ManyToOne(() => Role, (role) => role.users) role: Role;`
+### 1. Type Safety Improvements
+- [ ] Replace `any[]` with proper interfaces in component props
+- [ ] Create discriminated union for `KanbanColumn` types (weekday vs status)
+- [ ] Add strict type checking for task data structure
 
-File: src/lib/server/database/entities/user/Role.ts
-- Inverse side mismatch and unused imports:
-    - `@OneToMany(() => User, (user) => user.roles, ...)` should reference `user.role` (singular).
-    - `ManyToOne` is imported but not used; `UserRole` is imported but not used (and file doesn’t exist). Remove both imports.
-- Suggested edit:
-    - `@OneToMany(() => User, (user) => user.role, { onDelete: 'CASCADE' }) users: User[];`
+### 2. Error Handling
+- [ ] Add try-catch blocks for date parsing
+- [ ] Handle missing required fields gracefully
+- [ ] Add error boundaries for component failures
+- [ ] Implement proper logging strategy
 
-File: src/lib/server/database/entities/user/Permission.ts
-- Looks fine for current usage.
-
-File: src/lib/server/database/entities/user/RolePermission.ts
-- Looks consistent: snake_case columns match JoinColumn names.
-
-File: src/lib/server/database/entities/user/UserSubRole.ts
-- Column name/JoinColumn mismatch and naming confusion:
-    - You define `roleId` mapped to `role_id`, but the relation to SubRoleCfg uses `@JoinColumn({ name: 'subrole_id' })`. That’s inconsistent. This join will not bind to your `roleId` column; TypeORM will try to create another FK column or fail.
-    - Index names reference `roleId`, but the relation’s column is effectively `subrole_id`.
-- Suggested changes:
-    - Rename the property to reflect SubRoleCfg: `subRoleCfgId` and keep snake_case column name aligned with JoinColumn:
-        - `@Column({ type: 'uuid', name: 'subrole_id' }) subRoleCfgId: string;`
-        - Update indices to use `['userId', 'subRoleCfgId']` and `['subRoleCfgId']`.
-    - Keep the relation as is: `@ManyToOne(() => SubRoleCfg, ...) @JoinColumn({ name: 'subrole_id' }) subRoleCfg: SubRoleCfg;`
-
-File: src/lib/server/database/entities/user/SubRoleCfg.ts
-- Invalid indexes: referencing non-existent fields.
-    - `@Index(['name'], { unique: true })` but the property is `title` (no `name` property).
-    - `@Index(['rank'])` but no `rank` field exists on this entity.
-- Suggested changes:
-    - If the unique should be on `title`, change to `@Index(['title'], { unique: true })`.
-    - Remove the `rank` index or add a numeric `rank` column if you actually need it.
-
-File: src/lib/server/database/entities/user/SubRolePermission.ts
-- Import / inverse mismatch:
-    - Imports `RolePermission` but doesn’t use it; remove.
-    - Uses `SubRolePermissionPermission` but doesn’t import it.
-    - Property on the other side in SubRolePermissionPermission points to `srp.subroles`, which doesn’t exist here.
-- Suggested changes:
-    - Add import: `import { SubRolePermissionPermission } from './SubRolePermissionPermission';`
-    - Keep or rename the collection property here and align the inverse name there. For example keep:
-        - In this file: `subrolePermissionPermissions: SubRolePermissionPermission[];`
-        - Then in SubRolePermissionPermission.ts make the inverse `srp => srp.subrolePermissionPermissions` (exact same name).
-
-File: src/lib/server/database/entities/user/SubRolePermissionPermission.ts
-- Multiple critical issues:
-    - Wrong imports: `import { SubRoleCfg } from '$lib/database'` should be `$lib/server/database` or a direct relative import `../user/SubRoleCfg`.
-    - Index definitions refer to properties that don’t exist: `@Index(['subRoleId'])` (no subRoleId field).
-    - Column names vs JoinColumn names don’t match:
-        - You define `@Column({ name: 'subrole_id' }) roleId: string;` but the relation’s JoinColumn is `{ name: 'subrole_cfg_id' }`.
-    - Relation points to `SubRolePermission` but the file doesn’t import it; also inverse points to `srp.subroles` which doesn’t exist.
-    - You import `Permission` but don’t use it (this junction is between SubRoleCfg and SubRolePermission, not Permission directly).
-- Suggested rewrite (aligned with your intent “SubRoleCfg m:n SubRolePermission”):
-    - Imports:
-        - `import { SubRoleCfg } from './SubRoleCfg';`
-        - `import { SubRolePermission } from './SubRolePermission';`
-    - Columns and indexes:
-        - `@Column({ type: 'uuid', name: 'subrole_cfg_id' }) subRoleCfgId: string;`
-        - `@Column({ type: 'uuid', name: 'subrole_permission_id' }) subRolePermissionId: string;`
-        - `@Index(['subRoleCfgId'])`
-        - `@Index(['subRolePermissionId'])`
-        - `@Index(['subRoleCfgId', 'subRolePermissionId'], { unique: true })`
-    - Relations:
-        - `@ManyToOne(() => SubRoleCfg, (src) => src.subRolePermissionPermissions, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'subrole_cfg_id' }) subRoleCfg: SubRoleCfg;`
-        - `@ManyToOne(() => SubRolePermission, (srp) => srp.subrolePermissionPermissions, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'subrole_permission_id' }) subRolePermission: SubRolePermission;`
-    - Remove the unused `Permission` import.
+### 3. Testing
+- [ ] Set up Vitest for unit tests
+- [ ] Create integration tests for seed scripts
+- [ ] Add E2E tests for critical user flows (Playwright)
+- [ ] Test Kanban drag & drop functionality
 
 ---
 
-### Session domain
+## 📊 MEDIUM PRIORITY: Data & Performance
 
-File: src/lib/server/database/entities/session/Session.ts
-- Likely fine, but make sure the barrel path is correct (it is: `$lib/server/database`).
+### 1. Task Filtering & Search
+- [ ] Add filter UI in task views (by assignee, priority, project, tags, status)
+- [ ] Implement search functionality
+- [ ] Persist filter/search state in URL query params
+- [ ] Add saved filter presets
 
-File: src/lib/server/database/entities/session/PasswordResetToken.ts
-- Looks fine.
+### 2. Performance Optimization
+- [ ] Profile render performance with large datasets (1000+ tasks)
+- [ ] Consider virtualization for large lists
+- [ ] Add pagination to task queries
+- [ ] Optimize database queries (add indexes, review N+1 queries)
+- [ ] Implement caching strategy
 
----
-
-### Project domain
-
-File: src/lib/server/database/entities/project/Project.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectUser.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectAssignedUser.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectResponsibleUser.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectTag.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectCreator.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/project/ProjectCircle.ts
-- Standalone; fine.
+### 3. Real-time Updates
+- [ ] Add WebSocket/SSE for live updates
+- [ ] Show when other users are editing cards
+- [ ] Handle concurrent updates gracefully
+- [ ] Add optimistic locking
 
 ---
 
-### Task domain
+## 🐛 LOW PRIORITY: TypeORM Entity Fixes
 
-File: src/lib/server/database/entities/task/Task.ts
-- Looks consistent.
+> **Note**: These are technical debt items that don't block core functionality but should be addressed for maintainability.
 
-File: src/lib/server/database/entities/task/TaskTag.ts
-- Looks consistent.
+### Files Requiring Updates
 
-File: src/lib/server/database/entities/task/UserTask.ts
-- Looks consistent.
+#### Critical Import/Entity Issues
+- [ ] `src/lib/server/database/config/datasource.ts`
+  - Remove non-existent `UserRole` import
+  - Fix `ContractorMail` import path
+  - Add missing SubRole entity imports
+  - Include Attachment and MailAudit in entities array
 
-File: src/lib/server/database/entities/task/Tag.ts
-- Looks consistent.
+#### User/Role Domain
+- [ ] `entities/user/User.ts` - Fix ManyToOne import, Role import, inverse mismatch
+- [ ] `entities/user/Role.ts` - Fix inverse to reference `user.role` (singular)
+- [ ] `entities/user/UserSubRole.ts` - Rename `roleId` to `subRoleCfgId`, fix indices
+- [ ] `entities/user/SubRoleCfg.ts` - Fix invalid indexes (name→title, remove rank)
+- [ ] `entities/user/SubRolePermission.ts` - Add SubRolePermissionPermission import
+- [ ] `entities/user/SubRolePermissionPermission.ts` - Complete rewrite for proper m:n relationship
 
----
+#### Other Domains
+- [ ] `entities/deadline/Deadline.ts` - Fix import paths for Project, Priority, User
+- [ ] `entities/deadline/DeadlineTag.ts` - Fix typo `$lib/serve/database` → `$lib/server/database`
+- [ ] `entities/mail/ContractorMail.ts` - Fix User relation, add JoinColumn to Attachment/MailAudit
 
-### Deadline domain
-
-File: src/lib/server/database/entities/deadline/Deadline.ts
-- Import path is broken:
-    - `import { Project, Priority, User } from '../project/Project';` is invalid; that file only exports Project. Import each from its proper module (or from the barrel):
-        - Recommended: `import { Project, Priority, User } from '$lib/server/database';`
-
-File: src/lib/server/database/entities/deadline/DeadlineTag.ts
-- Wrong barrel path typo:
-    - `import { Tag } from '$lib/serve/database';` should be `$lib/server/database`.
-- Otherwise consistent.
-
----
-
-### Impediment domain
-
-File: src/lib/server/database/entities/impediment/Solution.ts
-- Suggest aligning column names with snake_case for foreign keys (optional, not mandatory for sync): `@JoinColumn({ name: 'author_id' })` instead of `authorId`. Not strictly required but improves consistency.
-
-File: src/lib/server/database/entities/impediment/Impediment.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/impediment/ImpedimentMedian.ts
-- Looks consistent.
+**Reference**: See detailed entity fix checklist in archive (moved from old TODO.md)
 
 ---
 
-### Mail domain
+## 🎨 UI/UX Enhancements
 
-File: src/lib/server/database/entities/mail/Mail.ts
-- Looks consistent.
+### Kanban Board
+- [ ] Mobile responsiveness improvements
+- [ ] Touch event handlers for mobile drag & drop
+- [ ] WIP (Work In Progress) limits per column
+- [ ] Card detail modal/drawer
+- [ ] Keyboard navigation (arrow keys, space, escape)
+- [ ] Screen reader announcements via live region
 
-File: src/lib/server/database/entities/mail/SimpleMail.ts
-- Looks consistent.
-
-File: src/lib/server/database/entities/mail/ContractorMail.ts
-- Inverse side to User is wrong and child relations need proper join columns:
-    - `@ManyToOne(() => User, user => user.roles, ...)` should not reference `user.roles`. The inverse on User for this entity does not exist; use a no-inverse lambda or create an inverse collection on User. Easiest fix: `@ManyToOne(() => User, { onDelete: 'CASCADE' })` (omit inverse function).
-    - Attachment and MailAudit currently define a separate `@Column() mailId: string;` and also a `@ManyToOne(() => ContractorMail, ...)` without `@JoinColumn`. TypeORM will try to create its own FK column and you’ll end up with duplicates or mismatches.
-- Suggested changes:
-    - In ContractorMail:
-        - Change the User relation to: `@ManyToOne(() => User, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'user_id' }) user: User;`
-    - In Attachment:
-        - Rename the column to snake_case and bind it: `@Column({ type: 'uuid', name: 'mail_id' }) mailId: string;`
-        - Add: `@ManyToOne(() => ContractorMail, (mail) => mail.attachments, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'mail_id' }) mail: ContractorMail;`
-    - In MailAudit:
-        - Similarly: `@Column({ type: 'uuid', name: 'mail_id' }) mailId: string;`
-        - Add: `@ManyToOne(() => ContractorMail, (mail) => mail.audits, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'mail_id' }) mail: ContractorMail;`
-    - Ensure Attachment and MailAudit are in the DataSource `entities` list.
+### General
+- [ ] Add loading skeletons
+- [ ] Improve error messages
+- [ ] Add empty states with helpful CTAs
+- [ ] Implement toast notifications
+- [ ] Add confirmation dialogs for destructive actions
 
 ---
 
-### Barrel and cross-imports
+## 📚 Documentation
 
-File: src/lib/server/database/index.ts
-- Barrel exists and looks fine. However, be cautious importing the barrel inside entities (e.g., `User.ts` importing `Session` via the barrel). This can create circular import timing issues. TypeORM usually survives because relation callbacks are lazy, but it’s safest to:
-    - Use direct relative imports between entities where feasible, or
-    - If you keep barrel imports, ensure they only import types used in decorators and not used at top-level immediately.
-
----
-
-### Minimal step-by-step to make synchronize work again
-1. Fix the DataSource imports and the entities array exactly as above. This alone will eliminate immediate boot errors (missing module/UserRole, wrong ContractorMail path, missing SubRole* imports).
-2. Fix the User/Role inverse mismatch:
-    - Role: `user => user.role`.
-    - User: ensure `@ManyToOne(() => Role, (role) => role.users)` and import ManyToOne + Role.
-3. Align SubRole* files:
-    - UserSubRole: use `subRoleCfgId` bound to `subrole_id` and update indices accordingly.
-    - SubRoleCfg: fix indexes to reference actual properties (`title`, remove `rank` unless you add the field).
-    - SubRolePermission: import SubRolePermissionPermission and align inverse collection name.
-    - SubRolePermissionPermission: rewrite columns/indexes and relations to use `subrole_cfg_id` and `subrole_permission_id` with inverse `srp.subrolePermissionPermissions`.
-4. Fix Deadline imports:
-    - In Deadline.ts: import Project, Priority, User from the barrel `$lib/server/database` (or their direct files).
-    - In DeadlineTag.ts: fix `$lib/serve/database` → `$lib/server/database`.
-5. Fix ContractorMail relations as above and include Attachment/MailAudit in entities.
-6. Recreate the DB or drop schema in dev:
-    - Ensure: `NODE_ENV=development` and (optionally) `DROP_SCHEMA=1` to force clean rebuild.
-    - Ensure DATABASE_URL points to the new `app_db` (e.g., `postgres://user:pass@localhost:5432/app_db`).
-    - Start the server or run a small bootstrap that imports `AppDataSource` (it already initializes on import). Alternatively, create a dedicated script that calls `AppDataSource.initialize()` and `AppDataSource.synchronize()` explicitly.
-
-If you prefer a quick test script, you can adapt the commented script at scripts/generate-schema.ts to import the correct DataSource and run `synchronize(true)` once, then exit.
+- [ ] Create `docs/seeding.md` (database seeding guide)
+- [ ] Create `docs/typeorm-entity-fixes.md` (entity relationship fixes)
+- [ ] Create `docs/architecture.md` (system architecture overview)
+- [ ] Create `docs/api.md` (server actions API reference)
+- [ ] Add JSDoc comments to all public functions
+- [ ] Create Storybook for component library
 
 ---
 
-### Summary list of files needing edits
-- config/datasource.ts
-- entities/user/User.ts
-- entities/user/Role.ts
-- entities/user/UserSubRole.ts
-- entities/user/SubRoleCfg.ts
-- entities/user/SubRolePermission.ts
-- entities/user/SubRolePermissionPermission.ts
-- entities/deadline/Deadline.ts
-- entities/deadline/DeadlineTag.ts
-- entities/mail/ContractorMail.ts
+## 🚀 Future Features
 
-Optional/nice-to-have consistency updates:
-- entities/impediment/Solution.ts (rename join column to author_id for consistency)
+### Phase 1
+- [ ] Email notifications
+- [ ] File attachments to tasks/projects
+- [ ] Comments and discussions on tasks
+- [ ] Task templates
+- [ ] Bulk operations UI
 
-If you want, I can draft concrete patched code blocks for each of the above files, ready to paste in, based on your preferred FK column naming (camelCase vs snake_case).
+### Phase 2
+- [ ] Time tracking UI with start/stop timers
+- [ ] Gantt chart view
+- [ ] Calendar view
+- [ ] Reports and analytics dashboard
+- [ ] Export functionality (CSV, PDF)
+
+### Phase 3
+- [ ] Custom fields for tasks/projects
+- [ ] Workflow automation
+- [ ] Integrations (GitHub, GitLab, Slack, etc.)
+- [ ] API for third-party integrations
+- [ ] Mobile app (React Native or Progressive Web App)
+
+---
+
+## 📝 Notes
+
+- Current seeding approach: `npm run db:seed:alt` runs comprehensive seed with test data
+- Production deployment will require base seed only: `npm run db:seed:base`
+- See `docs/kanban-todo.md` for detailed Kanban board considerations
+- TypeORM synchronize issues are documented but don't block core functionality
