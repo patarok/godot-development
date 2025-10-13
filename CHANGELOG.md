@@ -1,3 +1,10 @@
+## [5.10.1](https://github.com/patarok/godot-development/compare/v5.10.0...v5.10.1) (2025-10-13)
+
+
+### Performance Improvements
+
+* edits README and TODO to current state of external documents ([f3e12bf](https://github.com/patarok/godot-development/commit/f3e12bf7ab5c8a25aed6a3b16339d3ed68419f5e))
+
 # [5.10.0](https://github.com/patarok/godot-development/compare/v5.9.0...v5.10.0) (2025-10-13)
 
 
