@@ -1,3 +1,10 @@
+## [5.10.2](https://github.com/patarok/godot-development/compare/v5.10.1...v5.10.2) (2025-10-13)
+
+
+### Bug Fixes
+
+* better seed files ([fbeddcc](https://github.com/patarok/godot-development/commit/fbeddcc6ddbd26a148ea7d3977a32683bd6ba6cb))
+
 ## [5.10.1](https://github.com/patarok/godot-development/compare/v5.10.0...v5.10.1) (2025-10-13)
 
 
