@@ -7,6 +7,11 @@
   import KanbanBoard from '$lib/components/kanban/kanban-board.svelte';
   import { onMount } from 'svelte';
   import Section from '$lib/components/section.svelte';
+  import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
+  import { Switch } from '$lib/components/ui/switch/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import TableIcon from '@tabler/icons-svelte/icons/table';
+  import LayoutKanbanIcon from '@tabler/icons-svelte/icons/layout-kanban';
 //  import DraggableContainers from '$lib/components/examples/nested/draggable-containers.svelte';
 
 
@@ -29,22 +34,37 @@
     <h1>Tasks</h1>
 
     <!-- View Toggle -->
-    <div class="flex gap-2">
-        <button
-                class="btn btn-sm"
-                class:btn-primary={view === 'table'}
-                onclick={() => view = 'table'}
-        >
-            Table View
-        </button>
-        <button
-                class="btn btn-sm"
-                class:btn-primary={view === 'kanban'}
-                onclick={() => view = 'kanban'}
-        >
-            Kanban View
-        </button>
-    </div>
+    <NavigationMenu.Root>
+        <NavigationMenu.List>
+            <NavigationMenu.Item>
+                <NavigationMenu.Link
+                        href="#"
+                        class={`flex items-center gap-2 ${view === 'table' ? 'font-semibold text-primary' : ''}`}
+                        onclick={(e) => {
+                            e.preventDefault();
+                            view = 'table';
+                        }}
+                >
+                    <TableIcon class="w-4 h-4" />
+                    Table View
+                </NavigationMenu.Link>
+            </NavigationMenu.Item>
+
+            <NavigationMenu.Item>
+                <NavigationMenu.Link
+                        href="#"
+                        class={`flex items-center gap-2 ${view === 'kanban' ? 'font-semibold text-primary' : ''}`}
+                        onclick={(e) => {
+                            e.preventDefault();
+                            view = 'kanban';
+                        }}
+                >
+                    <LayoutKanbanIcon class="w-4 h-4" />
+                    Kanban View
+                </NavigationMenu.Link>
+            </NavigationMenu.Item>
+        </NavigationMenu.List>
+    </NavigationMenu.Root>
 </div>
 
 <div class="m-4">
@@ -66,21 +86,23 @@
           <TasksDataTable data={tasksProjected} {states} {priorities} {types} {users} {projects} />
       </Section>
       {:else}
-          <div class="flex gap-2 mb-4">
-              <button
-                      class="btn btn-sm"
-                      class:btn-primary={kanbanGroupBy === 'weekday'}
-                      onclick={() => kanbanGroupBy = 'weekday'}
-              >
+          <div class="flex items-center gap-3 mb-4 p-4 bg-muted/30 rounded-lg w-fit">
+              <Label for="view-mode-switch" class="text-sm font-medium">
+                  View Mode:
+              </Label>
+              <span class="text-sm" class:text-primary={kanbanGroupBy === 'weekday'} class:font-semibold={kanbanGroupBy === 'weekday'}>
                   By Week
-              </button>
-              <button
-                      class="btn btn-sm"
-                      class:btn-primary={kanbanGroupBy === 'status'}
-                      onclick={() => kanbanGroupBy = 'status'}
-              >
+              </span>
+              <Switch
+                      id="view-mode-switch"
+                      checked={kanbanGroupBy === 'status'}
+                      onCheckedChange={(checked) => {
+                          kanbanGroupBy = checked ? 'status' : 'weekday';
+                      }}
+              />
+              <span class="text-sm" class:text-primary={kanbanGroupBy === 'status'} class:font-semibold={kanbanGroupBy === 'status'}>
                   By Status
-              </button>
+              </span>
           </div>
 
           <KanbanBoard

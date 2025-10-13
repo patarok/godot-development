@@ -18,6 +18,19 @@
 - ✅ Fixed `$state` usage in `kanban-board-provider.svelte` (moved to variable declaration with getters/setters)
 - ✅ All components use proper Svelte 5 runes: `$props()`, `$state()`, `$derived()`, `{@attach}`
 - ✅ Reviewed all 6 kanban component files for compliance
+- ✅ Fixed SSR errors in UI components (dropdown-menu, dialog, select, popover, hover-card, sheet, tooltip) by adding optional chaining to bits-ui Primitive property access
+
+### UI Component Improvements
+- ✅ Replaced Table/Kanban view toggle buttons with NavigationMenu component
+  - Added NavigationMenu.Item with icon support (TableIcon, LayoutKanbanIcon from @tabler/icons-svelte)
+  - Implemented active view styling with font-semibold and text-primary classes
+  - Added proper click handlers with preventDefault
+- ✅ Replaced "By Week" / "By Status" buttons with Switch component
+  - Added label "View Mode:" with Switch toggle
+  - Implemented bidirectional mode labels showing current active mode
+  - Styled with bg-muted/30 rounded container for better visual grouping
+  - Switch checked state: true = 'status', false = 'weekday'
+- ✅ Implementation: src/routes/tasks/+page.svelte (lines 10-14, 37-71, 93-110)
 
 ## Current State Analysis
 
