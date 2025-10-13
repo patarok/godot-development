@@ -9,15 +9,12 @@ export { UserDomainModel } from './UserDomainModel';
 export {
     UserDomainQueryModel,
     type UserSearchFilters,
-    type PaginationOptions,
-    type PaginatedResult,
     type UserPermissions,
     type UserAuthData
 } from './UserDomainQueryModel';
 
-// Re-export for convenience
+// Re-export for convenience (domain-specific aliases only)
 export type {
     UserSearchFilters as UserFilters,
-    PaginatedResult as PaginatedUsers,
     UserAuthData as AuthenticatedUser
 };

@@ -8,12 +8,12 @@ from 'typeorm';
 // import { ProjectStateKind } from '../config/ProjectStateKind'; // Uncomment when implemented
 
 /**
- * ProjectState represents the lifecycle state of a project (e.g., Planned, Active, On Hold, Completed).
+ * ProjectStatus represents the lifecycle state of a project (e.g., Planned, Active, On Hold, Completed).
  */
 @Entity()
 @Index(['name'], { unique: true })
 @Index(['rank'])
-export class ProjectState {
+export class ProjectStatus {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -30,9 +30,9 @@ export class ProjectState {
   description?: string | null;
 
   // Optional relation to a kind table (commented until available)
-  // @ManyToOne(() => ProjectStateKind, { onDelete: 'RESTRICT', nullable: true })
+  // @ManyToOne(() => ProjectStatusKind, { onDelete: 'RESTRICT', nullable: true })
   // @JoinColumn({ name: 'kindId' })
-  // kind?: ProjectStateKind | null;
+  // kind?: ProjectStatusKind | null;
 
   @CreateDateColumn()
   createdAt: Date;

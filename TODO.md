@@ -26,7 +26,7 @@ File: src/lib/server/database/config/datasource.ts
         - Session, PasswordResetToken,
         - SystemSetting,
         - Task, TaskTag, UserTask, Tag,
-        - Priority, TaskState, ProjectState, RiskLevel,
+        - Priority, TaskStatus, ProjectStatus, RiskLevel,
         - Project, ProjectUser, ProjectTag, ProjectCreator, ProjectCircle, ProjectAssignedUser, ProjectResponsibleUser,
         - Deadline, DeadlineTag,
         - Solution, Impediment, ImpedimentMedian,

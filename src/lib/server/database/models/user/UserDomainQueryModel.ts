@@ -10,7 +10,8 @@ import {
     SubRolePermission,
     SubRolePermissionPermission,
     Session
-} from '../entities';
+} from '../../entities';
+import type { PaginationOptions, PaginatedResult } from '../pagination';
 
 /**
  * Interface for user search filters
@@ -26,29 +27,6 @@ export interface UserSearchFilters {
     hasSubRole?: string;
     createdAfter?: Date;
     createdBefore?: Date;
-}
-
-/**
- * Interface for pagination options
- */
-export interface PaginationOptions {
-    page?: number;
-    limit?: number;
-    sortBy?: 'email' | 'username' | 'forename' | 'surname' | 'createdAt' | 'updatedAt';
-    sortOrder?: 'ASC' | 'DESC';
-}
-
-/**
- * Interface for paginated results
- */
-export interface PaginatedResult<T> {
-    data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
 }
 
 /**

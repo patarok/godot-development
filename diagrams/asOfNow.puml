@@ -105,10 +105,10 @@ package "Configuration" {
 }
 
 ' =============================
-' State / Lookups
+' Status / Lookups
 ' =============================
-package "State / Lookups" {
-  ENTITY ProjectState CORE_TABLE {
+package "Status / Lookups" {
+  ENTITY ProjectStatus CORE_TABLE {
     +id: uuid @id
     +name: varchar(64) @unique
     +rank: int
@@ -118,7 +118,7 @@ package "State / Lookups" {
     +updatedAt: timestamptz
   }
 
-  ENTITY TaskState CORE_TABLE {
+  ENTITY TaskStatus CORE_TABLE {
     +id: uuid @id
     +name: varchar(64) @unique
     +rank: int
@@ -217,7 +217,7 @@ package "Project" {
   }
 }
 
-Project "*" -- "1" ProjectState : projectStateId
+Project "*" -- "1" ProjectStatus : projectStatusId
 Project "*" -- "0..1" Priority : priorityId
 Project "*" -- "0..1" RiskLevel : riskLevelId
 Project "*" -- "0..1" User : creatorId
@@ -285,7 +285,7 @@ package "Task & Tags" {
   }
 }
 
-Task "*" -- "1" TaskState : taskStateId
+Task "*" -- "1" TaskStatus : taskStatusId
 Task "*" -- "0..1" Priority : priorityId
 Task "*" -- "0..1" Project : projectId
 Task "*" -- "0..1" User : creatorId

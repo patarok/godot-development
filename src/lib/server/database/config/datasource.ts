@@ -24,28 +24,37 @@ from '$lib/server/database/entities';
 
 // Task
 import { Task,
+         TaskLog,
          TaskTag,
+         TaskDependency,
          UserTask,
-         Tag
+         Tag,
+         TimeEntry,
+         TaskAssignedUser,
+         TaskResponsibleUser,
+         TaskCurrentUser
 }
 from '$lib/server/database/entities';
 
-// State
+// Status
 import {
     Priority,
-    TaskState,
-    ProjectState,
-    RiskLevel
+    TaskStatus,
+    ProjectStatus,
+    RiskLevel,
+    TaskType
 }
 from '$lib/server/database/entities';
 
 // Project domain
 import {
     Project,
+    ProjectLog,
     ProjectUser,
     ProjectTag,
     ProjectCreator,
     ProjectCircle,
+    ProjectTask,
     ProjectAssignedUser,
     ProjectResponsibleUser
 } from '$lib/server/database/entities';
@@ -85,7 +94,7 @@ export const AppDataSource = new DataSource({
     type: 'postgres',
     url: DATABASE_URL,
     synchronize: NODE_ENV === 'development',
-    dropSchema: DROP_SCHEMA && NODE_ENV === 'development',
+    dropSchema: DROP_SCHEMA,
     logging: NODE_ENV === 'development',
     entities: [
 
@@ -108,20 +117,29 @@ export const AppDataSource = new DataSource({
 
         // Task
         Task,
+        TaskLog,
         TaskTag,
+        TaskDependency,
         UserTask,
         Tag,
+        TimeEntry,
+        TaskAssignedUser,
+        TaskResponsibleUser,
+        TaskCurrentUser,
 
-        // State
+        // Status
         Priority,
-        TaskState,
-        ProjectState,
+        TaskStatus,
+        ProjectStatus,
         RiskLevel,
+        TaskType,
 
         // Project domain
         Project,
+        ProjectLog,
         ProjectUser,
         ProjectTag,
+        ProjectTask,
         ProjectCreator,
         ProjectCircle,
         ProjectAssignedUser,
@@ -146,9 +164,3 @@ export const AppDataSource = new DataSource({
     migrations: ['src/lib/server/database/migrations/*.ts'],
     subscribers: ['src/lib/server/database/subscribers/*.ts']
 });
-
-try {
-    await AppDataSource.initialize()
-} catch (error) {
-    console.log(error)
-}

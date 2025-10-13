@@ -5,16 +5,16 @@ import { Entity,
          CreateDateColumn,
          UpdateDateColumn }
 from 'typeorm';
-// import { TaskStateKind } from '../config/TaskStateKind'; // Uncomment when implemented
+// import { TaskStatusKind } from '../config/TaskStatusKind'; // Uncomment when implemented
 
 /**
- * TaskState represents the workflow state of a task (e.g., Todo, In Progress, Done).
+ * TaskStatus represents the workflow status of a task (e.g., Todo, In Progress, Done).
  * Minimal implementation to satisfy current dependencies from Task.ts.
  */
 @Entity()
 @Index(['name'], { unique: true })
 @Index(['rank'])
-export class TaskState {
+export class TaskStatus {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -31,9 +31,9 @@ export class TaskState {
   description?: string | null;
 
   // Optional relation to a kind table (commented until available)
-  // @ManyToOne(() => TaskStateKind, { onDelete: 'RESTRICT', nullable: true })
+  // @ManyToOne(() => TaskStatusKind, { onDelete: 'RESTRICT', nullable: true })
   // @JoinColumn({ name: 'kindId' })
-  // kind?: TaskStateKind | null;
+  // kind?: TaskStatusKind | null;
 
   @CreateDateColumn()
   createdAt: Date;

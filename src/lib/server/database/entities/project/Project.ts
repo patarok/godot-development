@@ -11,9 +11,10 @@ from 'typeorm';
 
 import { User,
          Priority,
-         ProjectState,
-         RiskLevel,
-         Task }
+         ProjectStatus,
+         ProjectTask,
+         RiskLevel
+         }
 from '$lib/server/database/entities';
 
 import { ProjectAssignedUser } from './ProjectAssignedUser';
@@ -32,9 +33,12 @@ export class Project {
   @Column({ type: 'varchar', nullable: true })
   description?: string | null;
 
-  @ManyToOne(() => ProjectState, { onDelete: 'RESTRICT', nullable: false })
-  @JoinColumn({ name: 'project_state_id' })
-  projectState: ProjectState;
+  @Column({ type: 'text', nullable: true })
+  avatarData?: string;
+
+  @ManyToOne(() => ProjectStatus, { onDelete: 'RESTRICT', nullable: false })
+  @JoinColumn({ name: 'project_status_id' })
+  projectStatus: ProjectStatus;
 
   @ManyToOne(() => Priority, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'priority_id' })
@@ -97,10 +101,15 @@ export class Project {
   // @JoinColumn({ name: 'activeUserId' })
   // activeUser?: User | null;
 
-  @OneToMany(() => Task, (t) => t.project)
-  tasks?: Task[];
+  // @OneToMany(() => Task, (t) => t.project)
+  // tasks?: Task[];
 
   // Junctions
+  // UPDATE to the new Many-to-Many relation via the junction table
+  @OneToMany(() => ProjectTask, (pt) => pt.project)
+  taskLinks?: ProjectTask[]; // Name this whatever makes sense (e.g., taskAssignments)
+
+  // Junctions (keeping existing junctions for other Many-to-Many relations)
   @OneToMany(() => ProjectAssignedUser, (pu) => pu.project)
   assignedUserLinks?: ProjectAssignedUser[];
 

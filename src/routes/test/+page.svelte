@@ -1,9 +1,11 @@
 <script>
-    function test() {
-        alert('Button works!');
-    }
+    import { onMount } from 'svelte';
+    let counter = 0;
+
+    onMount(() => {
+        counter++;
+        console.log(`🧪 Test page mount #${counter}`);
+    });
 </script>
 
-<h1>Button Test</h1>
-<button onclick={test}>CLICK ME</button>
-<button onclick={() => alert('Arrow function works!')}>ARROW FUNCTION</button>
+<h1>Test Page - Mount Counter: {counter}</h1>

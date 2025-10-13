@@ -2,7 +2,6 @@
 import { Role } from '../entities/user/Role';
 import { Permission } from '../entities/user/Permission';
 import { User } from '../entities/user/User';
-import { UserRole } from '../entities/user/UserRole';
 import { RolePermission } from '../entities/user/RolePermission';
 import { SystemSetting } from '../entities/config/SystemSetting';
 import { hash as argon2hash } from '@node-rs/argon2';

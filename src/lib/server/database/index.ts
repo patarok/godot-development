@@ -23,24 +23,33 @@ export * from './entities/user/SubRolePermissionPermission';
 
 // Task // TODO: Tag may not belong here. We will change that and reorder later.
 export * from './entities/task/Task';
+export * from './entities/task/TaskLog';
 export * from './entities/task/TaskTag';
+export * from './entities/task/TaskDependency';
 export * from './entities/task/UserTask';
 export * from './entities/task/Tag';
+export * from './entities/task/TimeEntry';
+export * from './entities/task/TaskAssignedUser';
+export * from './entities/task/TaskResponsibleUser';
+export * from './entities/task/TaskCurrentUser';
 
-// State
-export * from './entities/state/Priority';
-export * from './entities/state/TaskState';
-export * from './entities/state/ProjectState';
-export * from './entities/state/RiskLevel';
+// Status
+export * from './entities/status/Priority';
+export * from './entities/status/TaskStatus';
+export * from './entities/status/TaskType';
+export * from './entities/status/ProjectStatus';
+export * from './entities/status/RiskLevel';
 
 // Project domain
 export * from './entities/project/Project';
 export * from './entities/project/ProjectUser';
 export * from './entities/project/ProjectTag';
+export * from './entities/project/ProjectTask';
 export * from './entities/project/ProjectCreator';
 export * from './entities/project/ProjectCircle';
 export * from './entities/project/ProjectAssignedUser';
 export * from './entities/project/ProjectResponsibleUser';
+export * from './entities/project/ProjectLog';
 
 // Deadlines
 export * from './entities/deadline/Deadline';

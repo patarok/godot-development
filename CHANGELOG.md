@@ -149,10 +149,10 @@
 
 * Migrate primary keys and related foreign keys to UUID across user/role/permission/session and join tables (Session.userId, UserRole.userId/roleId, RolePermission.roleId/permissionId, UserTask.userId). TaskTag schema changed from string tag to Tag entity via tagId. Existing databases must be reset or migrated.
 
-- feat(tasks): add task creation page with title/description/due date, completion toggle, required TaskState, optional Priority, and tag assignment
+- feat(tasks): add task creation page with title/description/due date, completion toggle, required TaskStatus, optional Priority, and tag assignment
 - feat(tasks): support toggling task completion and adding tags inline
 - feat(tags): add Tag entity (slug/name/color/description) and refactor TaskTag to reference Tag via tagId with unique constraint
-- feat(admin): add management UI and actions for Task States and Priorities with create/update/delete operations
+- feat(admin): add management UI and actions for Task Status and Priorities with create/update/delete operations
 - feat(admin): add users list with computed role labels and UUID-based manipulation
 - feat(auth): add /api/logout endpoint for AJAX logout and update layout accountToggle
 - feat(db): register new entities (Task, TaskTag, UserTask, Tag, Priority, TaskState, ProjectState) in datasource

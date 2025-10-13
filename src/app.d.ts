@@ -30,7 +30,14 @@ declare global {
         interface Locals {
             user: {
                 username: string;
-                token: string }
+                email: string;
+                forename: string | undefined;
+                surname: string | undefined;
+                name: string;
+                role: string;
+                token: string;
+                isAdmin: boolean;
+                }
             | null }
 
 

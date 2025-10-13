@@ -7,7 +7,7 @@ import {
     SubRoleCfg,
     Session,
     PasswordResetToken
-} from '../entities';
+} from '../../entities';
 
 /**
  * Domain model for managing User CRUD operations and write-related queries.

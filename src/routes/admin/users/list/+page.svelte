@@ -1,8 +1,11 @@
 <script lang="ts">
-  export let data: { notAdmin: boolean; users: any[] };
+  import type { PageData } from './$types';
+  let { data }: { data: PageData } = $props();
+  const { user } = data;
+
 </script>
 
-{#if data.notAdmin}
+{#if !user.isAdmin}
   <p>Permission denied. Please <a href="/admin">login as admin</a>.</p>
 {:else}
   <h2>All Users</h2>

@@ -1,6 +1,18 @@
 import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { AppDataSource, SystemSetting, Priority, TaskState, ProjectState, RiskLevel, initializeDatabase } from '$lib/server/database';
+import { In } from 'typeorm';
+import {
+    AppDataSource,
+    SystemSetting,
+    Priority,
+    TaskStatus,
+    ProjectStatus,
+    RiskLevel,
+    SubRoleCfg,
+    SubRolePermission,               // <-- add
+    SubRolePermissionPermission,     // <-- add
+    initializeDatabase
+} from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -11,11 +23,25 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     const settings = await AppDataSource.getRepository(SystemSetting).find({ order: { key: 'ASC' } });
     const priorities = await AppDataSource.getRepository(Priority).find({ order: { rank: 'ASC', name: 'ASC' } });
-    const taskStates = await AppDataSource.getRepository(TaskState).find({ order: { rank: 'ASC', name: 'ASC' } });
-    const projectStates = await AppDataSource.getRepository(ProjectState).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const taskStatuses = await AppDataSource.getRepository(TaskStatus).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const projectStatuses = await AppDataSource.getRepository(ProjectStatus).find({ order: { rank: 'ASC', name: 'ASC' } });
+    const subRoles = await AppDataSource.getRepository(SubRoleCfg).find({ order: { title: 'ASC' } });
+    const subRolePermissions = await AppDataSource
+        .getRepository(SubRolePermission)
+        .find({ order: { category: 'ASC', name: 'ASC' } });
+    const subRolePermissionAssignments = await AppDataSource
+        .getRepository(SubRolePermissionPermission)
+        .find();
     const riskLevels = await AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } });
-
-    return { plainSettings: toPlainArray(settings), priorities: toPlainArray(priorities), taskStates: toPlainArray(taskStates), projectStates: toPlainArray(projectStates), riskLevels: toPlainArray(riskLevels) };
+       return { plainSettings: toPlainArray(settings),
+                priorities: toPlainArray(priorities),
+                taskStatuses: toPlainArray(taskStatuses),
+                projectStatuses: toPlainArray(projectStatuses),
+                riskLevels: toPlainArray(riskLevels),
+                subRoles: toPlainArray(subRoles),
+                subRolePermissions: toPlainArray(subRolePermissions),
+                subRolePermissionAssignments: toPlainArray(subRolePermissionAssignments)
+       };
 };
 
 export const actions: Actions = {
@@ -81,6 +107,166 @@ export const actions: Actions = {
         await repo.delete(id);
         return { message: 'Priority deleted' };
     },
+    create_subrole: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const title = String(fd.get('title') ?? '').trim();
+        const companyJobTitle = String(fd.get('companyJobTitle') ?? '').trim();
+        const companyJobRole = String(fd.get('companyJobRole') ?? '').trim();
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+
+        if (!title) return fail(400, { message: 'SubRole title required' });
+        if (!companyJobTitle) return fail(400, { message: 'Company job title required' });
+        if (!companyJobRole) return fail(400, { message: 'Company job role required' });
+
+        const repo = AppDataSource.getRepository(SubRoleCfg);
+        try {
+            const sr = repo.create({ title, companyJobTitle, companyJobRole, color: color || null, description: description || null });
+            await repo.save(sr);
+        } catch (e) {
+            return fail(400, { message: 'SubRole title must be unique' });
+        }
+        return { message: 'SubRole created' };
+    },
+    update_subrole: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        const title = String(fd.get('title') ?? '').trim();
+        const companyJobTitle = String(fd.get('companyJobTitle') ?? '').trim();
+        const companyJobRole = String(fd.get('companyJobRole') ?? '').trim();
+        const color = (fd.get('color') as string | null) || null;
+        const description = (fd.get('description') as string | null) || null;
+
+        if (!id || !title) return fail(400, { message: 'Missing id or title' });
+        if (!companyJobTitle) return fail(400, { message: 'Company job title required' });
+        if (!companyJobRole) return fail(400, { message: 'Company job role required' });
+
+        const repo = AppDataSource.getRepository(SubRoleCfg);
+        try {
+            await repo.update(id, { title, companyJobTitle, companyJobRole, color: color || null, description: description || null });
+        } catch (e) {
+            return fail(400, { message: 'SubRole update failed (unique title?)' });
+        }
+        return { message: 'SubRole updated' };
+    },
+    delete_subrole: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '');
+        if (!id) return fail(400, { message: 'Missing id' });
+
+        const repo = AppDataSource.getRepository(SubRoleCfg);
+        try {
+            await repo.delete(id);
+        } catch (e) {
+            return fail(400, { message: 'Cannot delete sub role in use' });
+        }
+        return { message: 'SubRole deleted' };
+    },
+    // Create SubRolePermission
+    create_subrole_permission: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const name = String(fd.get('name') ?? '').trim();
+        const category = String(fd.get('category') ?? '').trim();
+        const value = String(fd.get('value') ?? '').trim();
+        const description = (fd.get('description') as string | null) || null;
+
+        if (!name) return fail(400, { message: 'Permission name required' });
+        if (!category) return fail(400, { message: 'Permission category required' });
+        if (!value) return fail(400, { message: 'Permission value required' });
+
+        const repo = AppDataSource.getRepository(SubRolePermission);
+        try {
+            const p = repo.create({ name, category, value, description: description || null });
+            await repo.save(p);
+        } catch (e) {
+            return fail(400, { message: 'Permission name must be unique' });
+        }
+        return { message: 'Permission created' };
+    },
+
+    // Update SubRolePermission
+    update_subrole_permission: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '').trim();
+        const name = String(fd.get('name') ?? '').trim();
+        const category = String(fd.get('category') ?? '').trim();
+        const value = String(fd.get('value') ?? '').trim();
+        const description = (fd.get('description') as string | null) || null;
+
+        if (!id || !name) return fail(400, { message: 'Missing id or name' });
+        if (!category) return fail(400, { message: 'Permission category required' });
+        if (!value) return fail(400, { message: 'Permission value required' });
+
+        const repo = AppDataSource.getRepository(SubRolePermission);
+        try {
+            await repo.update(id, { name, category, value, description: description || null });
+        } catch (e) {
+            return fail(400, { message: 'Permission update failed (unique name?)' });
+        }
+        return { message: 'Permission updated' };
+    },
+    delete_subrole_permission: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const id = String(fd.get('id') ?? '').trim();
+        if (!id) return fail(400, { message: 'Missing id' });
+
+        const repo = AppDataSource.getRepository(SubRolePermission);
+        try {
+            await repo.delete(id); // junction table has onDelete: 'CASCADE'
+        } catch (e) {
+            return fail(400, { message: 'Cannot delete permission in use' });
+        }
+        return { message: 'Permission deleted' };
+    },
+    set_subrole_permissions: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { message: 'Unauthorized' });
+        if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
+
+        const fd = await request.formData();
+        const subRoleCfgId = String(fd.get('subRoleCfgId') ?? '').trim();
+        if (!subRoleCfgId) return fail(400, { message: 'Missing subRoleCfgId' });
+
+        const permissionIds = fd.getAll('permissionIds').map((v) => String(v)).filter(Boolean);
+
+        const repo = AppDataSource.getRepository(SubRolePermissionPermission);
+
+        // existing assignments
+        const existing = await repo.find({ where: { subRoleCfgId } });
+        const existingIds = new Set(existing.map((e) => e.subRolePermissionId));
+        const desiredIds = new Set(permissionIds);
+
+        const toAdd = [...desiredIds].filter((id) => !existingIds.has(id));
+        const toRemove = [...existingIds].filter((id) => !desiredIds.has(id));
+
+        if (toAdd.length) {
+            const rows = toAdd.map((pid) => repo.create({ subRoleCfgId, subRolePermissionId: pid }));
+            await repo.save(rows);
+        }
+
+        if (toRemove.length) {
+            await repo.delete({ subRoleCfgId, subRolePermissionId: In(toRemove) });
+        }
+
+        return { message: 'Permissions updated' };
+    },
     create_task_state: async ({ request, locals }) => {
         if (!locals.user) return fail(401, { message: 'Unauthorized' });
         if (locals.user.role !== 'admin') return fail(403, { message: 'Forbidden' });
@@ -90,7 +276,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!name) return fail(400, { message: 'Task state name required' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatus);
         try {
             const s = repo.create({ name, rank, color: color || null, description: description || null });
             await repo.save(s);
@@ -109,7 +295,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!id || !name) return fail(400, { message: 'Missing id or name' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatus);
         try {
             await repo.update(id, { name, rank, color: color || null, description: description || null });
         } catch (e) {
@@ -123,7 +309,7 @@ export const actions: Actions = {
         const fd = await request.formData();
         const id = String(fd.get('id') ?? '');
         if (!id) return fail(400, { message: 'Missing id' });
-        const repo = AppDataSource.getRepository(TaskState);
+        const repo = AppDataSource.getRepository(TaskStatus);
         try {
             await repo.delete(id);
         } catch (e) {
@@ -141,7 +327,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!name) return fail(400, { message: 'Project state name required' });
-        const repo = AppDataSource.getRepository(ProjectState);
+        const repo = AppDataSource.getRepository(ProjectStatus);
         try {
             const s = repo.create({ name, rank, color: color || null, description: description || null });
             await repo.save(s);
@@ -160,7 +346,7 @@ export const actions: Actions = {
         const color = (fd.get('color') as string | null) || null;
         const description = (fd.get('description') as string | null) || null;
         if (!id || !name) return fail(400, { message: 'Missing id or name' });
-        const repo = AppDataSource.getRepository(ProjectState);
+        const repo = AppDataSource.getRepository(ProjectStatus);
         try {
             await repo.update(id, { name, rank, color: color || null, description: description || null });
         } catch (e) {
@@ -174,7 +360,7 @@ export const actions: Actions = {
         const fd = await request.formData();
         const id = String(fd.get('id') ?? '');
         if (!id) return fail(400, { message: 'Missing id' });
-        const repo = AppDataSource.getRepository(ProjectState);
+        const repo = AppDataSource.getRepository(ProjectStatus);
         try {
             await repo.delete(id);
         } catch (e) {

@@ -1,10 +1,12 @@
 import {
-	type RowData,
-	type TableOptions,
-	type TableOptionsResolved,
-	type TableState,
-	createTable,
-} from "@tanstack/table-core";
+		type RowData,
+		type TableOptions,
+		type TableOptionsResolved,
+		type TableState,
+		type ColumnDef,
+		createTable,
+	} from "@tanstack/table-core";
+import type { Schema } from "$lib/components/schemas";
 
 /**
  * Creates a reactive TanStack table object for Svelte.
@@ -114,6 +116,7 @@ export function mergeObjects<Sources extends readonly MaybeThunk<any>[]>(
 		},
 
 		ownKeys(): (string | symbol)[] {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const all = new Set<string | symbol>();
 			for (const s of sources) {
 				const obj = resolve(s);
@@ -139,3 +142,45 @@ export function mergeObjects<Sources extends readonly MaybeThunk<any>[]>(
 		},
 	}) as Intersection<{ [K in keyof Sources]: Sources[K] }>;
 }
+
+// additional exports to make DataTable Row rendering more dynamic but typed to offer required columns for basic functionality
+
+export const staticColumns = {
+	drag: { id: "drag" } as ColumnDef<Schema>,
+	select: { id: "select" } as ColumnDef<Schema>,
+	header: { accessorKey: "header" } as ColumnDef<Schema>,
+} satisfies Record<string, ColumnDef<Schema>>;
+
+export type StaticColumns = typeof staticColumns;
+
+export type Columns = [
+	StaticColumns["drag"],
+	StaticColumns["select"],
+	StaticColumns["header"],
+	...ColumnDef<Schema>[]
+];
+
+export function createColumns(
+	...dynamic: ColumnDef<Schema>[]
+): Columns {
+	return [
+		staticColumns.drag,
+		staticColumns.select,
+		staticColumns.header,
+		...dynamic,
+	];
+}
+
+export function createColumnsFromData<T extends { id: string | number }>(
+	sample: T
+): ColumnDef<T>[] {
+	const dynamicColumns: ColumnDef<T>[] = Object.keys(sample)
+		.filter((key) => key !== "id" && key !== "header") // exclude only id/header
+		.map((key) => ({
+			accessorKey: key,
+			header: key.charAt(0).toUpperCase() + key.slice(1),
+		}));
+
+	return dynamicColumns;
+}
+

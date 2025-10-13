@@ -17,24 +17,33 @@ export * from './user/SubRolePermissionPermission';
 
 // Task // TODO: Tag may not belong here. We will change that and reorder later.
 export * from './task/Task';
+export * from './task/TaskLog';
 export * from './task/TaskTag';
+export * from './task/TaskDependency';
 export * from './task/UserTask';
 export * from './task/Tag';
+export * from './task/TimeEntry';
+export * from './task/TaskAssignedUser';
+export * from './task/TaskResponsibleUser';
+export * from './task/TaskCurrentUser';
 
-// State
-export * from './state/Priority';
-export * from './state/TaskState';
-export * from './state/ProjectState';
-export * from './state/RiskLevel';
+// Status
+export * from './status/Priority';
+export * from './status/TaskStatus';
+export * from './status/ProjectStatus';
+export * from './status/RiskLevel';
+export * from './status/TaskType';
 
 // Project domain
 export * from './project/Project';
+export * from './project/ProjectLog';
 export * from './project/ProjectUser';
 export * from './project/ProjectTag';
 export * from './project/ProjectCreator';
 export * from './project/ProjectCircle';
 export * from './project/ProjectAssignedUser';
 export * from './project/ProjectResponsibleUser';
+export * from './project/ProjectTask';
 
 // Deadlines
 export * from './deadline/Deadline';

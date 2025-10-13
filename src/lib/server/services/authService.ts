@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from 'crypto';
-import { AppDataSource, Session, User, Role, UserRole, PasswordResetToken } from '$lib/server/database';
+import { AppDataSource, Session, User, Role, PasswordResetToken } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
 import { MainRoleNotImplementedError } from '$lib/utils';
@@ -114,14 +114,10 @@ export async function ensureRole(name: string): Promise<Role> {
 
 // NEW: ensure a role exists (created on-the-fly if missing)
 export async function ensureMainRole(name: string): Promise<Role> {
-    debugger;
-    const roleRepo = AppDataSource.getRepository(Role);
 
-    debugger;
+    const roleRepo = AppDataSource.getRepository(Role);
     const existing = await roleRepo.findOne({ where: { name: name, isMainRole: true } });
-    debugger;
     if (!existing) {
-        debugger;
         throw new MainRoleNotImplementedError();
     }
     return existing;

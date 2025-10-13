@@ -39,7 +39,7 @@ enum ProjectStateType {
   ON_HOLD
 }
 
-enum TaskStateType {
+enum TaskStatusType {
   TODO
   IN_PROGRESS
   REVIEW
@@ -215,18 +215,18 @@ model ProjectState {
 
 // Task state management
 // App constraint: State transitions should follow Kanban workflow
-model TaskState {
-  id          String        @id @default(cuid())
-  type        TaskStateType @default(TODO)
+model TaskStatus {
+  id          String         @id @default(cuid())
+  type        TaskStatusType @default(TODO)
   title       String
   description String?
   color       String // HEX color for UI
   orderNo     Int // For Kanban ordering
-  isInitial   Boolean       @default(false)
-  isFinal     Boolean       @default(false)
+  isInitial   Boolean        @default(false)
+  isFinal     Boolean        @default(false)
   tasks       Task[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@unique([orderNo])
   @@index([type])
@@ -371,8 +371,8 @@ model Task {
   title                 String
   description           String // Full-text searchable
   isDone                Boolean             @default(false)
-  taskStateId           String
-  taskState             TaskState           @relation(fields: [taskStateId], references: [id])
+  taskStatusId          String
+  taskStatus            TaskStatus          @relation(fields: [taskStatusId], references: [id])
   priorityId            String?
   priority              Priority?           @relation(fields: [priorityId], references: [id])
   users                 UserTask[] // Many-to-many with users
@@ -395,7 +395,7 @@ model Task {
   dueDate               DateTime?
   startDate             DateTime?
 
-  @@index([taskStateId])
+  @@index([taskStatusId])
   @@index([activeUserId])
   @@index([projectId])
   @@index([parentTaskId])

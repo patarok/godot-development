@@ -1,10 +1,43 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  export let data: { plainSettings: { key: string; value: string }[] };
+  export let data: {
+    plainSettings: { key: string; value: string }[];
+    subRoles: {
+                id: string;
+                title: string;
+                companyJobTitle: string;
+                companyJobRole: string;
+                color?: string | null;
+                description?: string | null }[];
+    subRolePermissions: {
+      id: string;
+      name: string;
+      category: string;
+      value: string;
+      description?: string | null;
+    }[];
+    subRolePermissionAssignments: {
+      id: string;
+      subRoleCfgId: string;
+      subRolePermissionId: string;
+      createdAt: string; // or Date if you’re not toPlain-ing dates
+    }[];
+  };
+
+  // Optional helper: Map subrole -> Set(permissionId)
+  const permsBySubRole = new Map<string, Set<string>>();
+  for (const a of data.subRolePermissionAssignments) {
+    let set = permsBySubRole.get(a.subRoleCfgId);
+    if (!set) {
+      set = new Set<string>();
+      permsBySubRole.set(a.subRoleCfgId, set);
+    }
+    set.add(a.subRolePermissionId);
+  }
+
   let message: string | null = null;
   function handleEnhance({ result }: any) {
     if (result?.type === 'success') {
-      // result.data.message from action
       message = result?.data?.message ?? 'Saved';
     } else if (result?.type === 'failure') {
       message = result?.data?.message ?? 'Error';
@@ -14,7 +47,7 @@
 
 <section style="margin-bottom: 24px;">
   <hr>
-  <h2 style="font-weight: 700;">Task States</h2>
+  <h2 style="font-weight: 700;">Task Statuses</h2>
   <hr>
   <form method="POST" action="?/create_task_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
     <input name="name" placeholder="Name (e.g., Todo)" required />
@@ -25,7 +58,7 @@
   </form>
   <hr style="color: lightgrey; margin-bottom: 1rem;">
   <ul style="list-style:none; padding:0;">
-    {#each data.taskStates as s (s.id)}
+    {#each data.taskStatuses as s (s.id)}
       <li style="margin-bottom: 8px; display: flex;">
         <form method="POST" action="?/update_task_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
           <input type="hidden" name="id" value={s.id} />
@@ -46,7 +79,7 @@
 
 <section style="margin-bottom: 24px;">
   <hr>
-  <h2 style="font-weight: 700;">Project States</h2>
+  <h2 style="font-weight: 700;">Project Statuses</h2>
   <hr>
   <form method="POST" action="?/create_project_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
     <input name="name" placeholder="Name (e.g., Active)" required />
@@ -56,7 +89,7 @@
     <button class="btn" type="submit">Add</button>
   </form>
   <ul style="list-style:none; padding:0;">
-    {#each data.projectStates as s (s.id)}
+    {#each data.projectStatuses as s (s.id)}
       <li style="margin-bottom: 8px; display: flex;">
         <form method="POST" action="?/update_project_state" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
           <input type="hidden" name="id" value={s.id} />
@@ -132,6 +165,118 @@
         <form method="POST" action="?/delete_priority" use:enhance={handleEnhance} style="display:inline-block; margin-left: 8px;">
           <input type="hidden" name="id" value={p.id} />
           <button class="btn" type="submit">Delete</button>
+        </form>
+      </li>
+    {/each}
+  </ul>
+</section>
+<section style="margin-bottom: 24px;">
+  <hr>
+  <h2 style="font-weight: 700;">SubRoles</h2>
+  <hr>
+  <form method="POST" action="?/create_subrole" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
+    <input name="title" placeholder="Title (e.g., Contributor)" required />
+    <input name="companyJobTitle" placeholder="Company Job Title (e.g., Engineer)" required />
+    <input name="companyJobRole" placeholder="Company Job Role (e.g., Backend Developer)" required />
+    <input name="color" placeholder="#color (optional)" />
+    <input name="description" placeholder="Description (optional)" />
+    <button class="btn" type="submit">Add</button>
+  </form>
+  <ul style="list-style:none; padding:0;">
+    {#each data.subRoles as s (s.id)}
+      <li style="margin-bottom: 8px; display: flex;">
+        <form method="POST" action="?/update_subrole" use:enhance={handleEnhance} style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
+          <input type="hidden" name="id" value={s.id} />
+          <input name="title" value={s.title} required />
+          <input name="companyJobTitle" value={s.companyJobTitle} required />
+          <input name="companyJobRole" value={s.companyJobRole} required />
+          <input name="color" value={s.color ?? ''} />
+          <input name="description" value={s.description ?? ''} />
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <form method="POST" action="?/delete_subrole" use:enhance={handleEnhance} style="display:inline-block; margin-left: 8px;">
+          <input type="hidden" name="id" value={s.id} />
+          <button class="btn" type="submit">Delete</button>
+        </form>
+      </li>
+    {/each}
+  </ul>
+</section>
+<section style="margin-bottom: 24px;">
+  <hr>
+  <h2 style="font-weight: 700;">SubRole Permissions</h2>
+  <hr>
+
+  <!-- Create -->
+  <form method="POST" action="?/create_subrole_permission" use:enhance={handleEnhance}
+        style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center; margin: 8px 0;">
+    <input name="name" placeholder="Name (unique, e.g., status.change)" required />
+    <input name="category" placeholder="Category (e.g., status)" required />
+    <input name="value" placeholder="Value (e.g., change)" required />
+    <input name="description" placeholder="Description (optional)" />
+    <button class="btn" type="submit">Add</button>
+  </form>
+
+  <!-- List/Update/Delete -->
+  <ul style="list-style:none; padding:0;">
+    {#each data.subRolePermissions as p (p.id)}
+      <li style="margin-bottom: 8px; display:flex;">
+        <form method="POST" action="?/update_subrole_permission" use:enhance={handleEnhance}
+              style="display:flex; gap:8px; flex-wrap:wrap; flex-direction: row; align-items:center;">
+          <input type="hidden" name="id" value={p.id} />
+          <input name="name" value={p.name} required />
+          <input name="category" value={p.category} required />
+          <input name="value" value={p.value} required />
+          <input name="description" value={p.description ?? ''} />
+          <button class="btn" type="submit">Save</button>
+        </form>
+
+        <form method="POST" action="?/delete_subrole_permission" use:enhance={handleEnhance}
+              style="display:inline-block; margin-left: 8px;">
+          <input type="hidden" name="id" value={p.id} />
+          <button class="btn" type="submit">Delete</button>
+        </form>
+      </li>
+    {/each}
+  </ul>
+</section>
+<section style="margin-bottom: 24px;">
+  <hr>
+  <h2 style="font-weight: 700;">Assign Permissions to SubRoles</h2>
+  <hr>
+
+  <ul style="list-style:none; padding:0;">
+    {#each data.subRoles as s (s.id)}
+      <li style="margin-bottom: 16px;">
+        <div style="font-weight:600; margin-bottom: 6px;">
+          {s.title} &mdash; {s.companyJobTitle} ({s.companyJobRole})
+        </div>
+
+        <form method="POST" action="?/set_subrole_permissions" use:enhance={handleEnhance}
+              style="display:flex; flex-direction: column; gap:8px;">
+          <input type="hidden" name="subRoleCfgId" value={s.id} />
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:8px;">
+            {#each data.subRolePermissions as p (p.id)}
+              <label style="display:flex; gap:6px; align-items:center;">
+                <input
+                        type="checkbox"
+                        name="permissionIds"
+                        value={p.id}
+                        checked={permsBySubRole.get(s.id)?.has(p.id) ?? false}
+                />
+                <span>
+                  <strong>{p.category}</strong>: {p.name}
+                  <small style="opacity:0.7;">[{p.value}]</small>
+                  {#if p.description}<small style="opacity:0.7;"> - {p.description}</small>{/if}
+                </span>
+              </label>
+            {/each}
+          </div>
+
+          <div>
+            <button class="btn" type="submit">Save Permissions</button>
+          </div>
         </form>
       </li>
     {/each}

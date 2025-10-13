@@ -1,13 +1,14 @@
-/** **** **** **** **/
+// Shared pagination generics (single canonical export)
+export type { PaginationOptions, PaginatedResult, SortOrder } from './pagination';
+
+/********************/
 /**   USER START   **/
-/** **** **** **** **/
+/********************/
 
 import {
     UserDomainModel,
     UserDomainQueryModel,
     type UserSearchFilters,
-    type PaginationOptions,
-    type PaginatedResult,
     type UserPermissions,
     type UserAuthData
 } from './user';
@@ -21,8 +22,6 @@ export const User = {
 // Export types for convenience
 export type {
     UserSearchFilters,
-    PaginationOptions,
-    PaginatedResult,
     UserPermissions,
     UserAuthData
 } from './user';
@@ -33,17 +32,45 @@ export {
     UserDomainQueryModel
 } from './user';
 
+/********************/
+/**   USER  END    **/
+/********************/
+
+/********************/
+/**   TASK START   **/
+/********************/
+
+import {
+    TaskDomainModel,
+    TaskDomainQueryModel,
+    type TaskSearchFilters,
+    type TaskDataShort,
+} from './task';
+
+// Task namespace export
+export const Task = {
+    Domain: TaskDomainModel,
+    Query: TaskDomainQueryModel
+} as const;
+
+// Export types for convenience
+export type {
+    TaskSearchFilters,
+    TaskDataShort,
+} from './task';
+
+// Alternative named exports (if you prefer direct imports)
+export {
+    TaskDomainModel,
+    TaskDomainQueryModel
+} from './task';
+
+/********************/
+/**    TASK END    **/
+/********************/
+
 // Future model namespaces can follow the same pattern:
 // export const Project = {
 //     Domain: ProjectDomainModel,
 //     Query: ProjectDomainQueryModel
 // } as const;
-
-// export const Task = {
-//     Domain: TaskDomainModel,
-//     Query: TaskDomainQueryModel
-// } as const;
-
-/** **** **** **** **/
-/**   USER  END    **/
-/** **** **** **** **/
