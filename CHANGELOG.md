@@ -1,3 +1,10 @@
+## [5.10.4](https://github.com/patarok/godot-development/compare/v5.10.3...v5.10.4) (2025-12-14)
+
+
+### Bug Fixes
+
+* fixes project meta cards not loading because of wrong query on taskRepo ([ba18806](https://github.com/patarok/godot-development/commit/ba18806f1158595e9681aa167d72199f6e4206da))
+
 ## [5.10.3](https://github.com/patarok/godot-development/compare/v5.10.2...v5.10.3) (2025-10-14)
 
 
