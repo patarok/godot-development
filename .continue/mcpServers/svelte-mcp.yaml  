@@ -1,0 +1,8 @@
+name: Svelte mcpServer
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Svelte
+    command: node
+    args:
+      - "C:\Users\patos\mcpServers\svelte5-mcp\dist\index.js"

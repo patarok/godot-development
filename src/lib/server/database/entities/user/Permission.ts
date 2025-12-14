@@ -26,7 +26,7 @@ export class Permission {
     category: string;
 
     // we may need to define an enum to allow only certain values here for optional info on rights having more granular properties f.i. -> setRank: '0-99'
-    @Column({ type: 'varchar' })
+    @Column({ type: 'varchar', default: 'none' })
     value: string;
 
     @OneToMany(() => RolePermission, (rolePermission) => rolePermission.permission)

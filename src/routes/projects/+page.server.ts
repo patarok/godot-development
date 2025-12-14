@@ -327,7 +327,26 @@ export const load: PageServerLoad = async ({ locals }) => {
     statusRepo.find({ order: { rank: 'ASC', name: 'ASC' } }),
     AppDataSource.getRepository(RiskLevel).find({ order: { rank: 'ASC', name: 'ASC' } }),
     userRepo.find({ order: { email: 'ASC' } }),
-    taskRepo.find({ order: { createdAt: 'DESC' }, select: { id: true, title: true, isMeta: true } as any }),
+    taskRepo.find({
+      order: { createdAt: 'DESC' },
+      relations: {
+        taskStatus: true
+      },
+      select: {
+        id: true,
+        title: true,
+        isMeta: true,
+        taskStatus: {
+          id: true,
+          name: true
+        }
+      }
+    }),
+    // taskRepo.find({ order: { createdAt: 'DESC' },
+    //                 select: { id: true,
+    //                           title: true,
+    //                           isMeta: true,
+    //                           status: true } as any }),
     AppDataSource.getRepository(TaskStatus).find({ order: { rank: 'ASC', name: 'ASC' } }),
     AppDataSource.getRepository(TaskType).find({ order: { rank: 'ASC', name: 'ASC' } })
   ]);
