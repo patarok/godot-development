@@ -136,36 +136,10 @@
                     </Menubar.Menu>
                 {/each}
             </Menubar>
-            <!-- TODO: delete if menubar double-checked -->
-            <!-- <Button
-                    onclick={accountToggle}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
-            >
-                🔒
-            </Button>
-            <Button
-                    onclick={toggleTheme}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
-            >
-                🌙
-            </Button> -->
             {@render children?.()}
 
         {:else if appState.current === 'main' && !currentPath.startsWith('/admin')}
             <!-- Main Layout with Sidebar -->
-            <!-- TODO: delete if menubar double-checked -->
-            <!-- <Button
-                    onclick={accountToggle}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem; z-index: 99;"
-            >
-                🔒
-            </Button>
-            <Button
-                    onclick={toggleTheme}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem; z-index: 99;"
-            >
-                🌙
-            </Button> -->
             <Sidebar.Provider>
                 <AppSidebar />
                 <Sidebar.Inset>
@@ -195,22 +169,9 @@
 
         {:else}
             <!-- Fallback Layout -->
-            <!-- TODO: delete if menubar double-checked -->
-            <!-- <Button
-                    onclick={accountToggle}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
-            >
-                🔒
-            </Button>
-            <Button
-                    onclick={toggleTheme}
-                    style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
-            >
-                🌙
-            </Button> -->
             <div class="[--header-height:calc(--spacing(14))]">
                 <Sidebar.Provider class="flex flex-col">
-                    <header class="h-(--header-height) group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) flex shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
+                    <header class="h-(--header-height) group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) flex shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear fixed min-w-full z-50 bg-sidebar">
                         <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
                             <Sidebar.Trigger class="-ml-1" />
                             <AdminMenubar />

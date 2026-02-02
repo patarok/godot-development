@@ -230,14 +230,14 @@
             </div>
             <div class="">
                 <TaskCreateForm
-                    action="?/create"
+                    action="/tasks?/create"
                     enhanceForm={true}
                     {enhanceCallback}
                     states={taskStates}
                     priorities={taskPriorities}
                     {users}
                     tasks={metaTasks}
-                    projects={[{ id: project.id, title: project.title, avatarData: project.avatarData }]}
+                    projects={[{ id: project.id, title: project.title, description: project.description, avatarData: project.avatarData }]}
                     types={taskTypes}
                     prefilledProjectId={project.id}
                 >

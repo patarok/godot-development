@@ -4,21 +4,48 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { Icon } from "@tabler/icons-svelte";
+	import TaskCreateForm from "$lib/components/molecules/tasks/TaskCreateForm.svelte";
+	import { page } from "$app/state";
+	import { invalidateAll } from "$app/navigation";
 
 	let { items }: { items: { title: string; url: string; icon?: Icon; status?: 'working' | 'stub' | 'missing' }[] } = $props();
+
+	const data = $derived(page.data);
+
+	const enhanceCallback = async ({ result }) => {
+		if (result?.data?.success) {
+			await invalidateAll();
+		}
+	};
 </script>
 
 <Sidebar.Group>
 	<Sidebar.GroupContent class="flex flex-col gap-2">
 		<Sidebar.Menu>
 			<Sidebar.MenuItem class="flex items-center gap-2">
-				<Sidebar.MenuButton
-					class="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-					tooltipContent="Quick create"
+				<TaskCreateForm
+					action="/tasks?/create"
+					enhanceForm={true}
+					{enhanceCallback}
+					states={data.states}
+					priorities={data.priorities}
+					users={data.users}
+					tasks={data.metaTasks}
+					projects={data.projects}
+					types={data.types}
+					prefilledProjectId={data.user?.activeProjectId}
 				>
-					<CirclePlusFilledIcon />
-					<span>Quick Create</span>
-				</Sidebar.MenuButton>
+					{#snippet trigger(props)}
+						<Sidebar.MenuButton
+							class="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+							tooltipContent="Quick create"
+							{...props}
+						>
+							<CirclePlusFilledIcon />
+							<span>Quick Create</span>
+						</Sidebar.MenuButton>
+					{/snippet}
+				</TaskCreateForm>
 				<Button
 					size="icon"
 					class="size-8 group-data-[collapsible=icon]:opacity-0"

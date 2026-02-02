@@ -76,6 +76,8 @@
         {priorities}
         {users}
         tasks={metaTasks}
+        {projects}
+        prefilledProjectId={data.user?.activeProjectId}
 />
 </div>
 

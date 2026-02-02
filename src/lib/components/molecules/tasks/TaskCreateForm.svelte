@@ -40,7 +40,7 @@
         states?: Array<{ id: string; name: string }>;
         users?: Array<{ id: string; email: string; forename?: string | null; surname?: string | null; username?: string | null; avatarData?: string | null }>;
         tasks?: Array<{ id: string; title: string }>;
-        projects?: Array<{ id: string; title: string; avatarData?: string }>;
+        projects?: Array<{ id: string; title: string; description?: string | null; avatarData?: string }>;
         types?: Array<{ id: string; name: string }>;
         prefilledProjectId?: string | null;
         trigger?: any;
@@ -169,7 +169,101 @@
                     <Input id="description" name="description" bind:value={description} placeholder="What should be done?" />
                 </div>
 
-                <!-- Type (optional), Status -->
+                <!-- Project -->
+                {#if projects?.length}
+                    <div class="flex flex-col gap-3">
+                        <Label for="assignedProject">Project</Label>
+                        <div class="flex items-center gap-2">
+                            {#if projectId}
+                                {#each projects.filter((p)=>p.id===projectId) as proj}
+                                    <HoverCard.Root>
+                                        <HoverCard.Trigger asChild>
+                                            <button type="button" class="inline-flex items-center gap-2" title={proj.title}>
+                                                <Avatar.Root class="size-8">
+                                                    <Avatar.Image src={proj.avatarData} alt={proj.title} />
+                                                    <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+                                                </Avatar.Root>
+                                                <span class="font-semibold">{proj.title}</span>
+                                                <span class="text-xs text-muted-foreground">[{proj.id.slice(0,8)}]</span>
+                                            </button>
+                                        </HoverCard.Trigger>
+                                        <HoverCard.Content class="w-80">
+                                            <div class="flex items-center gap-3">
+                                                <Avatar.Root class="size-10">
+                                                    <Avatar.Image src={proj.avatarData} alt={proj.title} />
+                                                    <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
+                                                </Avatar.Root>
+                                                <div class="flex flex-col">
+                                                    <span class="font-medium">{proj.title}</span>
+                                                    {#if proj.description}
+                                                        <span class="text-xs text-muted-foreground">{proj.description}</span>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                        </HoverCard.Content>
+                                    </HoverCard.Root>
+                                {/each}
+                            {:else}
+                                <span class="text-muted-foreground italic">No project assigned</span>
+                            {/if}
+
+                            <Dialog.Root>
+                                <Dialog.Trigger asChild>
+                                    <a
+                                            href="#"
+                                            role="button"
+                                            class={buttonVariants({ variant: 'outline', size: 'sm' })}
+                                            preventdefault:click
+                                    >Assign to Project</a>
+                                </Dialog.Trigger>
+                                <Dialog.Content class="max-w-2xl">
+                                    <Dialog.Header>
+                                        <Dialog.Title>Select Project</Dialog.Title>
+                                    </Dialog.Header>
+
+                                    <!-- Simple list with ID + Title + Short Description -->
+                                    <div class="flex flex-col gap-1 max-h-[60vh] overflow-y-auto border rounded-md">
+                                        <label class="flex items-center gap-3 p-3 rounded hover:bg-muted cursor-pointer border-b last:border-0">
+                                            <input class="hidden" type="radio" name="project-radio" value="" bind:group={projectId} />
+                                            <div class="flex flex-col">
+                                                <span class="font-medium text-destructive">(no project)</span>
+                                            </div>
+                                        </label>
+                                        {#each projects as proj}
+                                            <label class="flex items-center gap-3 p-3 rounded hover:bg-muted cursor-pointer border-b last:border-0">
+                                                <input class="hidden" type="radio" name="project-radio" value={proj.id} bind:group={projectId} />
+                                                <div class="flex items-center gap-3 w-full">
+                                                    <span class="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">{proj.id.slice(0,8)}</span>
+                                                    <div class="flex flex-col min-w-0 flex-1">
+                                                        <span class="font-semibold truncate {projectId === proj.id ? 'text-primary' : ''}">{proj.title}</span>
+                                                        {#if proj.description}
+                                                            <span class="text-xs text-muted-foreground truncate">{proj.description}</span>
+                                                        {/if}
+                                                    </div>
+                                                    {#if projectId === proj.id}
+                                                        <span class="text-primary text-xs font-bold ml-auto">Selected</span>
+                                                    {/if}
+                                                </div>
+                                            </label>
+                                        {/each}
+                                    </div>
+
+                                    <Dialog.Footer>
+                                        <Dialog.Close asChild>
+                                            <a
+                                                    href="#"
+                                                    role="button"
+                                                    class={buttonVariants({ variant: 'default' })}
+                                                    preventdefault:click
+                                            >Done</a>
+                                        </Dialog.Close>
+                                    </Dialog.Footer>
+                                </Dialog.Content>
+                            </Dialog.Root>
+                        </div>
+                        <input type="hidden" name="projectId" value={projectId ?? ''} />
+                    </div>
+                {/if}
                 <div class="grid grid-cols-2 gap-4">
                     {#if types?.length}
                         <div class="flex flex-col gap-3">
@@ -218,105 +312,6 @@
                     </Select.Root>
                 </div>
 
-                <!-- Project -->
-                {#if projects?.length}
-                    <div class="flex flex-col gap-3">
-                        <Label for="assignedProject">Assigned Project</Label>
-                        <div class="flex items-center gap-2">
-                            {#if projectId}
-                                {#each projects.filter((p)=>p.id===projectId) as proj}
-                                    <HoverCard.Root>
-                                        <HoverCard.Trigger asChild>
-                                            <button type="button" class="inline-flex items-center gap-2" title={proj.title}>
-                                                <Avatar.Root class="size-8">
-                                                    <Avatar.Image src={proj.avatarData} alt={proj.title} />
-                                                    <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
-                                                </Avatar.Root>
-                                                <span>{proj.title}</span>
-                                            </button>
-                                        </HoverCard.Trigger>
-                                        <HoverCard.Content class="w-80">
-                                            <div class="flex items-center gap-3">
-                                                <Avatar.Root class="size-10">
-                                                    <Avatar.Image src={proj.avatarData} alt={proj.title} />
-                                                    <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
-                                                </Avatar.Root>
-                                                <div class="flex flex-col">
-                                                    <span class="font-medium">{proj.title}</span>
-                                                </div>
-                                            </div>
-                                        </HoverCard.Content>
-                                    </HoverCard.Root>
-                                {/each}
-                            {:else}
-                                <span class="text-muted-foreground">No project</span>
-                            {/if}
-
-                            <Dialog.Root>
-                                <Dialog.Trigger asChild>
-                                    <a
-                                            href="#"
-                                            role="button"
-                                            class={buttonVariants({ variant: 'outline', size: 'sm' })}
-                                            preventdefault:click
-                                    >Change</a>
-                                </Dialog.Trigger>
-                                <Dialog.Content class="max-w-xl">
-                                    <Dialog.Header>
-                                        <Dialog.Title>Select Project</Dialog.Title>
-                                    </Dialog.Header>
-
-                                    <!-- Radio list with avatars + hovercards -->
-                                    <div class="grid gap-2 max-h-[50vh] overflow-y-auto">
-                                        <label class="flex items-center gap-3 p-2 rounded hover:bg-muted">
-                                            <input class="hidden" type="radio" name="project-radio" value="" bind:group={projectId} />
-                                            <span>(no project)</span>
-                                        </label>
-                                        {#each projects as proj}
-                                            <label class="flex items-center gap-3 p-2 rounded hover:bg-muted">
-                                                <input class="hidden" type="radio" name="project-radio" value={proj.id} bind:group={projectId} />
-                                                <HoverCard.Root>
-                                                    <HoverCard.Trigger asChild>
-                                                        <span class="inline-flex items-center gap-2">
-                                                            <Avatar.Root class="size-7">
-                                                                <Avatar.Image src={proj.avatarData} alt={proj.title} />
-                                                                <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
-                                                            </Avatar.Root>
-                                                            <span class="truncate">{proj.title}</span>
-                                                        </span>
-                                                    </HoverCard.Trigger>
-                                                    <HoverCard.Content class="w-80">
-                                                        <div class="flex items-center gap-3">
-                                                            <Avatar.Root class="size-10">
-                                                                <Avatar.Image src={proj.avatarData} alt={proj.title} />
-                                                                <Avatar.Fallback>{projectInitials(proj.title)}</Avatar.Fallback>
-                                                            </Avatar.Root>
-                                                            <div class="flex flex-col">
-                                                                <span class="font-medium">{proj.title}</span>
-                                                            </div>
-                                                        </div>
-                                                    </HoverCard.Content>
-                                                </HoverCard.Root>
-                                            </label>
-                                        {/each}
-                                    </div>
-
-                                    <Dialog.Footer>
-                                        <Dialog.Close asChild>
-                                            <a
-                                                    href="#"
-                                                    role="button"
-                                                    class={buttonVariants({ variant: 'default' })}
-                                                    preventdefault:click
-                                            >Done</a>
-                                        </Dialog.Close>
-                                    </Dialog.Footer>
-                                </Dialog.Content>
-                            </Dialog.Root>
-                        </div>
-                        <input type="hidden" name="projectId" value={projectId ?? ''} />
-                    </div>
-                {/if}
 
                 <!-- Planned schedule -->
                 <div class="flex flex-col gap-3">
@@ -392,7 +387,7 @@
 
                                         {#each users as u}
                                             <label class="flex items-center gap-3 p-2 rounded hover:bg-muted">
-                                                <input class="hidden" type="radio" name="assignee-radio" value={(u as any).id} bind:group={mainAssigneeId} />
+                                                <input class="hidden" type="radio" name="assignee-radio" value={u.id} bind:group={mainAssigneeId} />
                                                 <HoverCard.Root>
                                                     <HoverCard.Trigger asChild>
                                                         <span class="inline-flex items-center gap-2">
@@ -451,7 +446,7 @@
                         <Label>Assigned Users</Label>
                         <div class="flex flex-wrap items-center gap-2">
                             {#each assignedUserIds as uid}
-                                {#each users.filter(u => (u as any).id === uid) as u}
+                                {#each users.filter(u => u.id === uid) as u}
                                     <HoverCard.Root>
                                         <HoverCard.Trigger asChild>
                                             <span class="inline-flex items-center gap-2 rounded border px-2 py-0.5 text-xs">
@@ -506,7 +501,7 @@
                                             <label class="flex items-center gap-3 p-2 rounded hover:bg-muted">
                                                 <input  class="hidden"
                                                         type="checkbox"
-                                                        value={(u as any).id}
+                                                        value={u.id}
                                                         bind:group={assignedUserIds}
                                                 />
                                                 <HoverCard.Root>

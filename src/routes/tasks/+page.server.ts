@@ -291,9 +291,12 @@ export const actions: Actions = {
     const taskStatusId = String(form.get('taskStatusId') ?? '');
     const dueDateStr = String(form.get('dueDate') ?? '').trim();
     const plannedStartDateStr = String(form.get('plannedStartDate') ?? '').trim();
+    const projectId = form.get('projectId') ? String(form.get('projectId')) : null;
     const isActive = form.get('isActive') ? form.get('isActive') === 'on' : true;
     const isMeta = form.get('isMeta') === 'on';
     const tagsCSV = String(form.get('tags') ?? '').trim();
+    const mainAssigneeId = form.get('mainAssigneeId') ? String(form.get('mainAssigneeId')) : null;
+    const assignedUserIds = form.getAll('assignedUserIds[]').map(v => String(v)).filter(Boolean);
 
     if (!title) return fail(400, { message: 'Title is required' });
     if (!plannedStartDateStr) return fail(400, { message: 'Planned start date is required' });
@@ -317,10 +320,25 @@ export const actions: Actions = {
       plannedStartDate: new Date(plannedStartDateStr),
       dueDate: new Date(dueDateStr),
       parent: parentTaskId ? ({ id: parentTaskId } as any) : undefined,
-      creator: creator ?? undefined
+      creator: creator ?? undefined,
+      user: mainAssigneeId ? ({ id: mainAssigneeId } as any) : undefined
     });
 
     await taskRepo.save(task);
+
+    // handle user assignments
+    if (assignedUserIds.length) {
+      const userTaskRepo = AppDataSource.getRepository(UserTask);
+      for (const uid of assignedUserIds) {
+        await userTaskRepo.save(userTaskRepo.create({ userId: uid, taskId: task.id }));
+      }
+    }
+
+    // handle project assignment
+    if (projectId) {
+      const projTaskRepo = AppDataSource.getRepository(ProjectTask);
+      await projTaskRepo.save(projTaskRepo.create({ projectId, taskId: task.id }));
+    }
 
     // Log creation
     try { await logTaskActivity(locals.user.id, task.id, 'task.create', `title="${title}" statusId=${taskStatusId}`); } catch {}
