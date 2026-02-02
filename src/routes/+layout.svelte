@@ -50,21 +50,12 @@
         })
     ]);
 
-    const theme = writable<'light' | 'dark'>('light');
-
     function setTheme(newTheme: 'light' | 'dark') {
-        if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else document.documentElement.classList.remove('dark');
-        theme.set(newTheme);
+        appState.setTheme(newTheme);
     }
 
     function toggleTheme() {
-        theme.update((currentTheme) => {
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            setTheme(newTheme);
-            return newTheme;
-        });
+        appState.toggleTheme();
     }
 
     async function accountToggle() {
@@ -145,7 +136,8 @@
                     </Menubar.Menu>
                 {/each}
             </Menubar>
-            <Button
+            <!-- TODO: delete if menubar double-checked -->
+            <!-- <Button
                     onclick={accountToggle}
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
             >
@@ -156,12 +148,13 @@
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
             >
                 🌙
-            </Button>
+            </Button> -->
             {@render children?.()}
 
         {:else if appState.current === 'main' && !currentPath.startsWith('/admin')}
             <!-- Main Layout with Sidebar -->
-            <Button
+            <!-- TODO: delete if menubar double-checked -->
+            <!-- <Button
                     onclick={accountToggle}
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem; z-index: 99;"
             >
@@ -172,7 +165,7 @@
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem; z-index: 99;"
             >
                 🌙
-            </Button>
+            </Button> -->
             <Sidebar.Provider>
                 <AppSidebar />
                 <Sidebar.Inset>
@@ -202,7 +195,8 @@
 
         {:else}
             <!-- Fallback Layout -->
-            <Button
+            <!-- TODO: delete if menubar double-checked -->
+            <!-- <Button
                     onclick={accountToggle}
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; left: 0; margin: 1rem;"
             >
@@ -213,7 +207,7 @@
                     style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
             >
                 🌙
-            </Button>
+            </Button> -->
             <div class="[--header-height:calc(--spacing(14))]">
                 <Sidebar.Provider class="flex flex-col">
                     <header class="h-(--header-height) group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) flex shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
@@ -252,7 +246,8 @@
         {/if}
     {:else}
         <!-- Guest Layout -->
-        <Button
+        <!-- TODO: delete if menubar double-checked -->
+        <!-- <Button
                 onclick={accountToggle}
                 style="aspect-ratio: 1 / 1; border: none; position: fixed; top: 0; right: 0; margin: 1rem;"
         >
@@ -263,7 +258,7 @@
                 style="aspect-ratio: 1 / 1; border: none; position: fixed; bottom: 0; right: 0; margin: 1rem;"
         >
             🌙
-        </Button>
+        </Button> -->
         {@render children?.()}
     {/if}
 {:else}

@@ -26,24 +26,6 @@
 		],
 		navMain: [
 			{
-				title: "Admin Dashboard",
-				url: "/admin",
-				icon: DashboardIcon,
-				status: 'working' as const
-			},
-			{
-				title: "User Management",
-				url: "/admin/users/list",
-				icon: UsersIcon,
-				status: 'working' as const
-			},
-			{
-				title: "System Settings",
-				url: "/admin/system",
-				icon: SettingsIcon,
-				status: 'working' as const
-			},
-			{
 				title: "Mail",
 				url: "/admin/mail",
 				icon: MailIcon,

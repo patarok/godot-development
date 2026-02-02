@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 
 class AppState {
     current = $state('landing'); // Always start with landing
+    theme = $state<'light' | 'dark'>('light');
 
     // Initialize from localStorage after hydration
     init() {
@@ -10,7 +11,27 @@ class AppState {
             if (stored) {
                 this.current = stored;
             }
+            const storedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+            if (storedTheme) {
+                this.setTheme(storedTheme);
+            }
         }
+    }
+
+    setTheme(newTheme: 'light' | 'dark') {
+        this.theme = newTheme;
+        if (browser) {
+            localStorage.setItem('theme', newTheme);
+            if (newTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    }
+
+    toggleTheme() {
+        this.setTheme(this.theme === 'light' ? 'dark' : 'light');
     }
 
     setLanding() {

@@ -126,6 +126,9 @@
                         </div>
                     {:else}
                         <h3 class="text-md text-center">Guest</h3>
+                        <p class="text-center mt-2">
+                            <a class="text-sm font-bold underline" href="/login">LOG IN</a>
+                        </p>
                     {/if}
                 </Card.Content>
             </Card.Root>
