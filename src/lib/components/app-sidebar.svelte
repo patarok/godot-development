@@ -10,6 +10,7 @@
 	import HelpIcon from "@tabler/icons-svelte/icons/help";
 	import InnerShadowTopIcon from "@tabler/icons-svelte/icons/inner-shadow-top";
 	import ListDetailsIcon from "@tabler/icons-svelte/icons/list-details";
+	import ListCheckIcon from "@tabler/icons-svelte/icons/list-check";
 	import ReportIcon from "@tabler/icons-svelte/icons/report";
 	import SearchIcon from "@tabler/icons-svelte/icons/search";
 	import SettingsIcon from "@tabler/icons-svelte/icons/settings";
@@ -30,28 +31,45 @@
 		navMain: [
 			{
 				title: "Dashboard",
-				url: "#",
+				url: "/",
 				icon: DashboardIcon,
+				status: 'working'
+			},
+			{
+				title: "Project Overview",
+				url: "/projects/admin",
+				icon: ReportIcon,
+				status: 'working'
+			},
+			{
+				title: "Projects",
+				url: "/projects",
+				icon: FolderIcon,
+				status: 'working'
+			},
+			{
+				title: "Tasks",
+				url: "/tasks",
+				icon: ListCheckIcon,
+				status: 'working'
 			},
 			{
 				title: "Lifecycle",
 				url: "#",
 				icon: ListDetailsIcon,
+				status: 'stub'
 			},
 			{
 				title: "Analytics",
 				url: "#",
 				icon: ChartBarIcon,
-			},
-			{
-				title: "Projects",
-				url: "#",
-				icon: FolderIcon,
+				status: 'stub'
 			},
 			{
 				title: "Team",
 				url: "#",
 				icon: UsersIcon,
+				status: 'stub'
 			},
 		],
 		navClouds: [
@@ -107,16 +125,19 @@
 				title: "Settings",
 				url: "#",
 				icon: SettingsIcon,
+				status: 'stub'
 			},
 			{
 				title: "Get Help",
 				url: "#",
 				icon: HelpIcon,
+				status: 'stub'
 			},
 			{
 				title: "Search",
 				url: "#",
 				icon: SearchIcon,
+				status: 'stub'
 			},
 		],
 		documents: [
@@ -124,16 +145,19 @@
 				name: "Data Library",
 				url: "#",
 				icon: DatabaseIcon,
+				status: 'stub'
 			},
 			{
 				name: "Reports",
 				url: "#",
 				icon: ReportIcon,
+				status: 'stub'
 			},
 			{
 				name: "Word Assistant",
 				url: "#",
 				icon: FileWordIcon,
+				status: 'stub'
 			},
 		],
 	};

@@ -5,9 +5,10 @@
     import Clock from "$lib/components/custom/clock/clock.svelte"
     import { getContext } from 'svelte';
     import { appState } from '$lib/state.svelte.js';
+    import { enhance } from '$app/forms';
     let { data }: { data: PageData } = $props();
     const user = data.user;
-    const username = user?.username ?? 'guest';
+    const activeProject = $derived(data.activeProject);
 
 
 </script>
@@ -100,13 +101,29 @@
                 </Card.Header>
                 <Card.Content>
                     {#if user}
-                        <p class="text-center">
-                            Email: {user.email}
-                            {#if user.forename || user.surname}
-                                <br />Name: {user.forename ?? ''} {user.surname ?? ''}
-                                <br />Role: {user.role ?? ''}
+                        <div class="flex flex-col items-center gap-2">
+                            <p class="text-center">
+                                Email: {user.email}
+                                {#if user.forename || user.surname}
+                                    <br />Name: {user.forename ?? ''} {user.surname ?? ''}
+                                    <br />Role: {user.role ?? ''}
+                                {/if}
+                            </p>
+                            
+                            {#if activeProject}
+                                <div class="mt-4 p-3 bg-secondary rounded-lg w-full flex flex-col items-center gap-2">
+                                    <span class="text-xs uppercase text-muted-foreground font-bold">Active Project</span>
+                                    <span class="font-semibold text-center">{activeProject.title}</span>
+                                    <form method="POST" action="?/resetActiveProject" use:enhance>
+                                        <button type="submit" class="text-xs text-destructive hover:underline mt-1">
+                                            Reset Active Project
+                                        </button>
+                                    </form>
+                                </div>
+                            {:else}
+                                <p class="text-xs text-muted-foreground mt-2 italic">No active project selected</p>
                             {/if}
-                        </p>
+                        </div>
                     {:else}
                         <h3 class="text-md text-center">Guest</h3>
                     {/if}

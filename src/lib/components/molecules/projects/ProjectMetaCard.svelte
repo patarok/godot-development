@@ -37,7 +37,9 @@
         taskStates = [],
         taskPriorities = [],
         taskTypes = [],
-        metaTasks = []
+        metaTasks = [],
+        activeProjectId = null,
+        currentUserId = null
     }: {
         class?: string;
         method?: string;
@@ -45,9 +47,9 @@
         enhanceForm?: boolean;
         enhanceCallback?: SubmitFunction;
         project: {
-            id: number;
+            id: string;
             creator: {
-                id: number;
+                id: string;
                 email?: string;
                 forename: string;
                 surname?: string;
@@ -89,7 +91,12 @@
         taskPriorities?: Array<{ id: string; name: string }>;
         taskTypes?: Array<{ id: string; name: string }>;
         metaTasks?: Array<{ id: string; title: string }>;
+        activeProjectId?: string | null;
+        currentUserId?: string | null;
     } = $props();
+
+    const isCurrentlyActive = $derived(activeProjectId === project.id);
+    const isUserInvolved = $derived(project.involvedUsers?.some(u => u.id === currentUserId) || project.creator?.id === currentUserId);
 
     const projectWorth = $derived(formatCurrencyInt((project.estimatedBudget * 1.2), 'en-US', 'USD'));
     const projectActualCost = $derived(formatCurrencyInt(project.actualCost, 'en-US', 'USD'));
@@ -107,7 +114,7 @@
                 <button type="button" class="inline-flex items-center gap-2" title={project.title}>
                     <Avatar.Root class="size-8 mr-2">
                         <Avatar.Image src={project.avatarData} alt={project.title} />
-                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{project.title[0]}{project.creator.surname[0]}</span></Avatar.Fallback>
+                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{project.title[0]}{(project.creator?.surname?.[0] ?? project.creator?.forename?.[0] ?? '')}</span></Avatar.Fallback>
                     </Avatar.Root>
 
                 </button>
@@ -128,11 +135,11 @@
                     <span class="flex-col flex m-2 max-w-full">
                     <Avatar.Root class="size-8 mr-2 mx-auto">
 
-                        <Avatar.Image src={project.creator.avatarData} alt={project.title} />
-                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{project.creator.forename[0]}{project.creator.surname[0]}</span></Avatar.Fallback>
+                        <Avatar.Image src={project.creator?.avatarData} alt={project.title} />
+                        <Avatar.Fallback><span class="uppercase rounded-full border border-gray-400 p-2">{(project.creator?.forename?.[0] ?? '')}{(project.creator?.surname?.[0] ?? '')}</span></Avatar.Fallback>
                     </Avatar.Root>
                         <div class="whitespace-normal max-w-full">
-                    {project.creator.username}</div>
+                    {project.creator?.username ?? project.creator?.email ?? 'Unknown'}</div>
                     </span>
                 </Badge>
             </CardAction>
@@ -192,18 +199,29 @@
         </CardContent>
 
         <CardFooter class="relative flex justify-between mt-4">
-            <Button
-                    type="button"
-                    size="icon"
-                    class="h-10 w-10 rounded-full shadow-lg"
+            {#if isUserInvolved}
+                {#if isCurrentlyActive}
+                    <Badge variant="default" class="h-10 px-4 gap-2">
+                        <IconEyeBolt class="h-5 w-5" />
+                        Active
+                    </Badge>
+                {:else}
+                    <form method="POST" action="/projects?/setActiveProject" use:enhance>
+                        <input type="hidden" name="projectId" value={project.id} />
+                        <Button type="submit" size="sm" variant="outline" class="h-10 px-4 gap-2">
+                            <IconEyeBolt class="h-5 w-5 text-muted-foreground" />
+                            Set Active
+                        </Button>
+                    </form>
+                {/if}
+            {:else}
+                <div class="w-10"></div> <!-- Placeholder to keep layout -->
+            {/if}
 
-            >
-                <IconEyeBolt class="h-5 w-5" />
-            </Button>
             <div class="">
             <ProjectDataViewer
                 {project}
-                action="?/update"
+                action={action ?? "?/update"}
                 {priorities}
                 {states}
                 {riskLevels}

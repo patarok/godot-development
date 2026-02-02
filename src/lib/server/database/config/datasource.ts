@@ -9,7 +9,8 @@ import { User,
          SubRoleCfg,
          SubRolePermission,
          SubRolePermissionPermission,
-         UserSubRole
+         UserSubRole,
+         UserCurrentActiveProject
 }
 from '$lib/server/database/entities';
 
@@ -107,6 +108,7 @@ export const AppDataSource = new DataSource({
         SubRolePermission,
         SubRolePermissionPermission,
         UserSubRole,
+        UserCurrentActiveProject,
 
         // Config
         SystemSetting,

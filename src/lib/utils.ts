@@ -14,10 +14,8 @@ export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?:
 
 
 export class MainRoleNotImplementedError extends Error {
-	name = 'RoleNotImplementedError';
-	message = 'Role not implemented yet, you will have to implement this new main role first';
-	constructor(
-	) {
-		console.log(message);
+	constructor() {
+		super('Role not implemented yet, you will have to implement this new main role first');
+		this.name = 'RoleNotImplementedError';
 	}
 }

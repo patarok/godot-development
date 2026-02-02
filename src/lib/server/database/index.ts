@@ -14,6 +14,7 @@ export * from './entities/session/PasswordResetToken';
 
 // User
 export * from './entities/user/User';
+export * from './entities/user/UserCurrentActiveProject';
 export * from './entities/user/Role';
 export * from './entities/user/Permission';
 export * from './entities/user/RolePermission';

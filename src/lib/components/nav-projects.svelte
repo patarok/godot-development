@@ -16,6 +16,7 @@
 			// This should be `Component` after @lucide/svelte updates types
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			icon: any;
+			status?: 'working' | 'stub' | 'missing';
 		}[];
 	} = $props();
 
@@ -27,11 +28,18 @@
 	<Sidebar.Menu>
 		{#each projects as item (item.name)}
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton>
+				<Sidebar.MenuButton
+					class="{item.status === 'stub' || item.status === 'missing' ? 'opacity-50 grayscale' : ''}"
+				>
 					{#snippet child({ props })}
 						<a href={item.url} {...props}>
 							<item.icon />
 							<span>{item.name}</span>
+							{#if item.status === 'stub'}
+								<span class="ml-auto text-[10px]">🚧</span>
+							{:else if item.status === 'missing'}
+								<span class="ml-auto text-[10px]">❓</span>
+							{/if}
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>

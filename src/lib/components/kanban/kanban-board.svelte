@@ -12,17 +12,19 @@
         users = [],
         projects = [],
         groupBy = 'weekday',
+        columns: providedColumns = null,
         onCardMove,
         onCardUpdate,
         onCardAdd
     }: {
-        tasks: any[];
-        states: any[];
+        tasks?: any[];
+        states?: any[];
         priorities?: any[];
         types?: any[];
         users?: any[];
         projects?: any[];
         groupBy?: 'status' | 'weekday';
+        columns?: Column[] | null;
         onCardMove?: (cardId: string, columnId: string, index: number) => void;
         onCardUpdate?: (cardId: string, title: string) => void;
         onCardAdd?: (columnId: string, title: string) => void;
@@ -139,17 +141,18 @@
 
 
     const columns = $derived.by(() => {
+        if (providedColumns) return providedColumns;
         if (groupBy === 'status') {
             // Build columns from states
-            return states.map(state => ({
+            return (states || []).map(state => ({
                 id: state.id,
                 title: state.name,
                 color: mapStateToColor(state),
-                items: tasks.filter(task => task.status === state.name).map(taskToCard)
+                items: (tasks || []).filter(task => task.status === state.name).map(taskToCard)
             }));
         } else {
             // Build columns from weekdays (next 7 days)
-            return buildWeekdayColumns(tasks);
+            return buildWeekdayColumns(tasks || []);
         }
     });
 </script>

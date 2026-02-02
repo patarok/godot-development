@@ -12,6 +12,8 @@
   const { priorities, states, riskLevels, users, taskStates, taskPriorities, taskTypes, metaTasks } = data as any;
 
   const projects = $derived($page.data.projects);
+  const activeProjectId = $derived(data.user?.activeProjectId);
+  const currentUserId = $derived(data.user?.id);
 
   let form = $state();
 
@@ -93,6 +95,8 @@
                 iterationWarnAt: p.iterationWarnAt,
                 mainResponsible: p.mainResponsible
               }}
+              {activeProjectId}
+              {currentUserId}
               {priorities}
               {states}
               {riskLevels}

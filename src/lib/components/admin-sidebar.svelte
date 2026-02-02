@@ -1,156 +1,94 @@
 <script lang="ts" module>
-	import AudioWaveformIcon from "@lucide/svelte/icons/audio-waveform";
-	import BookOpenIcon from "@lucide/svelte/icons/book-open";
-	import BotIcon from "@lucide/svelte/icons/bot";
-	import ChartPieIcon from "@lucide/svelte/icons/chart-pie";
-	import CommandIcon from "@lucide/svelte/icons/command";
-	import FrameIcon from "@lucide/svelte/icons/frame";
-	import LifeBuoyIcon from "@lucide/svelte/icons/life-buoy";
-	import SendIcon from "@lucide/svelte/icons/send";
-	import GalleryVerticalEndIcon from "@lucide/svelte/icons/gallery-vertical-end";
-	import MapIcon from "@lucide/svelte/icons/map";
-	import Settings2Icon from "@lucide/svelte/icons/settings-2";
-	import SquareTerminalIcon from "@lucide/svelte/icons/square-terminal";
+	import DashboardIcon from "@tabler/icons-svelte/icons/dashboard";
+	import UsersIcon from "@tabler/icons-svelte/icons/users";
+	import SettingsIcon from "@tabler/icons-svelte/icons/settings";
+	import MailIcon from "@tabler/icons-svelte/icons/mail";
+	import FileDescriptionIcon from "@tabler/icons-svelte/icons/file-description";
+	import FolderIcon from "@tabler/icons-svelte/icons/folder";
+	import ReportIcon from "@tabler/icons-svelte/icons/report";
+	import HelpIcon from "@tabler/icons-svelte/icons/help";
+	import SearchIcon from "@tabler/icons-svelte/icons/search";
+	import CommandIcon from "@tabler/icons-svelte/icons/command";
+
 	// This is sample data.
 	const data = {
 		user: {
-			name: "shadcn",
-			email: "m@example.com",
-			avatar: "/avatars/shadcn.jpg",
+			name: "Admin",
+			email: "admin@example.com",
+			avatar: "/avatars/admin.jpg",
 		},
 		teams: [
 			{
 				name: "Acme Inc",
-				logo: GalleryVerticalEndIcon,
-				plan: "Enterprise",
-			},
-			{
-				name: "Acme Corp.",
-				logo: AudioWaveformIcon,
-				plan: "Startup",
-			},
-			{
-				name: "Evil Corp.",
 				logo: CommandIcon,
-				plan: "Free",
-			},
+				plan: "Enterprise",
+			}
 		],
 		navMain: [
 			{
-				title: "Playground",
-				url: "#",
-				icon: SquareTerminalIcon,
-				isActive: true,
-				items: [
-					{
-						title: "History",
-						url: "#",
-					},
-					{
-						title: "Starred",
-						url: "#",
-					},
-					{
-						title: "Settings",
-						url: "#",
-					},
-				],
+				title: "Admin Dashboard",
+				url: "/admin",
+				icon: DashboardIcon,
+				status: 'working' as const
 			},
 			{
-				title: "Models",
-				url: "#",
-				icon: BotIcon,
-				items: [
-					{
-						title: "Genesis",
-						url: "#",
-					},
-					{
-						title: "Explorer",
-						url: "#",
-					},
-					{
-						title: "Quantum",
-						url: "#",
-					},
-				],
+				title: "User Management",
+				url: "/admin/users/list",
+				icon: UsersIcon,
+				status: 'working' as const
 			},
 			{
-				title: "Documentation",
-				url: "#",
-				icon: BookOpenIcon,
-				items: [
-					{
-						title: "Introduction",
-						url: "#",
-					},
-					{
-						title: "Get Started",
-						url: "#",
-					},
-					{
-						title: "Tutorials",
-						url: "#",
-					},
-					{
-						title: "Changelog",
-						url: "#",
-					},
-				],
+				title: "System Settings",
+				url: "/admin/system",
+				icon: SettingsIcon,
+				status: 'working' as const
 			},
 			{
-				title: "Settings",
-				url: "#",
-				icon: Settings2Icon,
-				items: [
-					{
-						title: "General",
-						url: "#",
-					},
-					{
-						title: "Team",
-						url: "#",
-					},
-					{
-						title: "Billing",
-						url: "#",
-					},
-					{
-						title: "Limits",
-						url: "#",
-					},
-				],
+				title: "Mail",
+				url: "/admin/mail",
+				icon: MailIcon,
+				status: 'stub' as const
+			},
+			{
+				title: "Documents",
+				url: "/admin/documents",
+				icon: FileDescriptionIcon,
+				status: 'stub' as const
+			},
+			{
+				title: "Projects",
+				url: "/admin/projects",
+				icon: FolderIcon,
+				status: 'stub' as const
+			},
+			{
+				title: "Logs",
+				url: "/admin/log",
+				icon: ReportIcon,
+				status: 'stub' as const
 			},
 		],
 		navSecondary: [
 			{
-				title: "Support",
-				url: "#",
-				icon: LifeBuoyIcon,
+				title: "Settings",
+				url: "/admin/system",
+				icon: SettingsIcon,
+				status: 'working' as const
 			},
 			{
-				title: "Feedback",
+				title: "Get Help",
 				url: "#",
-				icon: SendIcon,
+				icon: HelpIcon,
+				status: 'stub' as const
+			},
+			{
+				title: "Search",
+				url: "#",
+				icon: SearchIcon,
+				status: 'stub' as const
 			},
 		],
-		projects: [
-			{
-				name: "Design Engineering",
-				url: "#",
-				icon: FrameIcon,
-			},
-			{
-				name: "Sales & Marketing",
-				url: "#",
-				icon: ChartPieIcon,
-			},
-			{
-				name: "Travel",
-				url: "#",
-				icon: MapIcon,
-			},
-		],
+		projects: [],
 	};
 </script>
 <script lang="ts">

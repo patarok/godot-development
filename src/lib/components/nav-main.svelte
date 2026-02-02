@@ -5,7 +5,7 @@
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import type { Icon } from "@tabler/icons-svelte";
 
-	let { items }: { items: { title: string; url: string; icon?: Icon }[] } = $props();
+	let { items }: { items: { title: string; url: string; icon?: Icon; status?: 'working' | 'stub' | 'missing' }[] } = $props();
 </script>
 
 <Sidebar.Group>
@@ -32,11 +32,23 @@
 		<Sidebar.Menu>
 			{#each items as item (item.title)}
 				<Sidebar.MenuItem>
-					<Sidebar.MenuButton tooltipContent={item.title}>
-						{#if item.icon}
-							<item.icon />
-						{/if}
-						<span>{item.title}</span>
+					<Sidebar.MenuButton
+						tooltipContent={item.title}
+						class="{item.status === 'stub' || item.status === 'missing' ? 'opacity-50 grayscale' : ''}"
+					>
+						{#snippet child({ props })}
+							<a href={item.url} {...props}>
+								{#if item.icon}
+									<item.icon />
+								{/if}
+								<span>{item.title}</span>
+								{#if item.status === 'stub'}
+									<span class="ml-auto text-[10px]">🚧</span>
+								{:else if item.status === 'missing'}
+									<span class="ml-auto text-[10px]">❓</span>
+								{/if}
+							</a>
+						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 			{/each}

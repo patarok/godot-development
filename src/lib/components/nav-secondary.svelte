@@ -7,7 +7,7 @@
 	let {
 		items,
 		...restProps
-	}: { items: { title: string; url: string; icon: Icon }[] } & WithoutChildren<
+	}: { items: { title: string; url: string; icon: Icon; status?: 'working' | 'stub' | 'missing' }[] } & WithoutChildren<
 		ComponentProps<typeof Sidebar.Group>
 	> = $props();
 </script>
@@ -17,11 +17,18 @@
 		<Sidebar.Menu>
 			{#each items as item (item.title)}
 				<Sidebar.MenuItem>
-					<Sidebar.MenuButton>
+					<Sidebar.MenuButton
+						class="{item.status === 'stub' || item.status === 'missing' ? 'opacity-50 grayscale' : ''}"
+					>
 						{#snippet child({ props })}
 							<a href={item.url} {...props}>
 								<item.icon />
 								<span>{item.title}</span>
+								{#if item.status === 'stub'}
+									<span class="ml-auto text-[10px]">🚧</span>
+								{:else if item.status === 'missing'}
+									<span class="ml-auto text-[10px]">❓</span>
+								{/if}
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>

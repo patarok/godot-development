@@ -29,6 +29,7 @@ declare global {
         // SvelteKit Starter defines it as follows
         interface Locals {
             user: {
+                id: string;
                 username: string;
                 email: string;
                 forename: string | undefined;
@@ -37,6 +38,7 @@ declare global {
                 role: string;
                 token: string;
                 isAdmin: boolean;
+                activeProjectId?: string | null;
                 }
             | null }
 
@@ -44,7 +46,10 @@ declare global {
         // shape of "'page.data' state" and "'$page.data' store"
         interface PageData {
             user: {
-                username: string }
+                id: string;
+                username: string;
+                activeProjectId?: string | null;
+            }
             | null }
 
 

@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { createHash } from 'crypto';
-import { AppDataSource, initializeDatabase, Session, User } from '$lib/server/database';
+import { AppDataSource, initializeDatabase, Session, User, UserCurrentActiveProject } from '$lib/server/database';
 import { IsNull } from 'typeorm';
 
 function sha256(s: string) {
@@ -32,10 +32,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     const user = session.user as User;
 
+    // Fetch active project ID
+    const activeProject = await AppDataSource.getRepository(UserCurrentActiveProject).findOne({
+        where: { userId: user.id }
+    });
+
     // Determine admin status based on the user's role
     const isAdmin = !!user.role && user.role.isMainRole === true && user.role.name === 'admin';
 
     event.locals.user = {
+        id: user.id,
         username: user.username ?? user.email,
         email: user.email,
         forename: user.forename,
@@ -43,7 +49,8 @@ export const handle: Handle = async ({ event, resolve }) => {
         name: user.username ?? user.forename + ' ' + user.surname,
         role: isAdmin ? 'admin' : 'user',
         token: token,
-        isAdmin
+        isAdmin,
+        activeProjectId: activeProject?.projectId ?? null
     };
 
     return resolve(event);

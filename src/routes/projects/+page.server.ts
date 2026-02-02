@@ -18,7 +18,8 @@ import {
   TaskLog,
   ProjectLog,
   TaskStatus,
-  TaskType
+  TaskType,
+  UserCurrentActiveProject
 } from '$lib/server/database';
 import { toPlainArray } from '$lib/utils/index';
 import { In } from 'typeorm';
@@ -837,5 +838,33 @@ export const actions: Actions = {
     try { await logProjectActivity(locals.user?.id ?? '', projectId, 'project.task.remove', `taskId=${taskId}`); } catch {}
 
     return redirect(303, '/projects');
+  },
+
+  setActiveProject: async ({ request, locals }) => {
+    if (!locals.user) return fail(401, { message: 'Not authenticated' });
+    await initializeDatabase();
+
+    const form = await request.formData();
+    const projectId = String(form.get('projectId') ?? '');
+    if (!projectId) return fail(400, { message: 'Project ID is required' });
+
+    const activeProjectRepo = AppDataSource.getRepository(UserCurrentActiveProject);
+    
+    // Check if entry exists
+    let activeProject = await activeProjectRepo.findOne({ where: { userId: locals.user.id } });
+    
+    if (activeProject) {
+      activeProject.projectId = projectId;
+      await activeProjectRepo.save(activeProject);
+    } else {
+      activeProject = activeProjectRepo.create({
+        userId: locals.user.id,
+        projectId: projectId,
+        dailyGoal: 4.0
+      });
+      await activeProjectRepo.save(activeProject);
+    }
+
+    return { success: true };
   }
 };

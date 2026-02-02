@@ -8,90 +8,90 @@
 
 <Menubar.Root>
 	<Menubar.Menu>
-		<Menubar.Trigger>File</Menubar.Trigger>
+		<Menubar.Trigger class="opacity-50 grayscale">File</Menubar.Trigger>
 		<Menubar.Content>
-			<Menubar.Item>
+			<Menubar.Item disabled>
 				New Tab <Menubar.Shortcut>⌘T</Menubar.Shortcut>
 			</Menubar.Item>
-			<Menubar.Item>
+			<Menubar.Item disabled>
 				New Window <Menubar.Shortcut>⌘N</Menubar.Shortcut>
 			</Menubar.Item>
-			<Menubar.Item>New Incognito Window</Menubar.Item>
+			<Menubar.Item disabled>New Incognito Window</Menubar.Item>
 			<Menubar.Separator />
 			<Menubar.Sub>
-				<Menubar.SubTrigger>Share</Menubar.SubTrigger>
+				<Menubar.SubTrigger disabled>Share</Menubar.SubTrigger>
 				<Menubar.SubContent>
-					<Menubar.Item>Email link</Menubar.Item>
-					<Menubar.Item>Messages</Menubar.Item>
-					<Menubar.Item>Notes</Menubar.Item>
+					<Menubar.Item disabled>Email link</Menubar.Item>
+					<Menubar.Item disabled>Messages</Menubar.Item>
+					<Menubar.Item disabled>Notes</Menubar.Item>
 				</Menubar.SubContent>
 			</Menubar.Sub>
 			<Menubar.Separator />
-			<Menubar.Item>
+			<Menubar.Item disabled>
 				Print... <Menubar.Shortcut>⌘P</Menubar.Shortcut>
 			</Menubar.Item>
 		</Menubar.Content>
 	</Menubar.Menu>
 	<Menubar.Menu>
-		<Menubar.Trigger>Edit</Menubar.Trigger>
+		<Menubar.Trigger class="opacity-50 grayscale">Edit</Menubar.Trigger>
 		<Menubar.Content>
-			<Menubar.Item>
+			<Menubar.Item disabled>
 				Undo <Menubar.Shortcut>⌘Z</Menubar.Shortcut>
 			</Menubar.Item>
-			<Menubar.Item>
+			<Menubar.Item disabled>
 				Redo <Menubar.Shortcut>⇧⌘Z</Menubar.Shortcut>
 			</Menubar.Item>
 			<Menubar.Separator />
 			<Menubar.Sub>
-				<Menubar.SubTrigger>Find</Menubar.SubTrigger>
+				<Menubar.SubTrigger disabled>Find</Menubar.SubTrigger>
 				<Menubar.SubContent>
-					<Menubar.Item>Search the web</Menubar.Item>
+					<Menubar.Item disabled>Search the web</Menubar.Item>
 					<Menubar.Separator />
-					<Menubar.Item>Find...</Menubar.Item>
-					<Menubar.Item>Find Next</Menubar.Item>
-					<Menubar.Item>Find Previous</Menubar.Item>
+					<Menubar.Item disabled>Find...</Menubar.Item>
+					<Menubar.Item disabled>Find Next</Menubar.Item>
+					<Menubar.Item disabled>Find Previous</Menubar.Item>
 				</Menubar.SubContent>
 			</Menubar.Sub>
 			<Menubar.Separator />
-			<Menubar.Item>Cut</Menubar.Item>
-			<Menubar.Item>Copy</Menubar.Item>
-			<Menubar.Item>Paste</Menubar.Item>
+			<Menubar.Item disabled>Cut</Menubar.Item>
+			<Menubar.Item disabled>Copy</Menubar.Item>
+			<Menubar.Item disabled>Paste</Menubar.Item>
 		</Menubar.Content>
 	</Menubar.Menu>
 	<Menubar.Menu>
-		<Menubar.Trigger>View</Menubar.Trigger>
+		<Menubar.Trigger class="opacity-50 grayscale">View</Menubar.Trigger>
 		<Menubar.Content>
-			<Menubar.CheckboxItem bind:checked={bookmarks}
+			<Menubar.CheckboxItem bind:checked={bookmarks} disabled
 			>Always Show Bookmarks Bar</Menubar.CheckboxItem
 			>
-			<Menubar.CheckboxItem bind:checked={fullUrls}>
+			<Menubar.CheckboxItem bind:checked={fullUrls} disabled>
 				Always Show Full URLs
 			</Menubar.CheckboxItem>
 			<Menubar.Separator />
-			<Menubar.Item inset>
+			<Menubar.Item inset disabled>
 				Reload <Menubar.Shortcut>⌘R</Menubar.Shortcut>
 			</Menubar.Item>
-			<Menubar.Item inset>
+			<Menubar.Item inset disabled>
 				Force Reload <Menubar.Shortcut>⇧⌘R</Menubar.Shortcut>
 			</Menubar.Item>
 			<Menubar.Separator />
-			<Menubar.Item inset>Toggle Fullscreen</Menubar.Item>
+			<Menubar.Item inset disabled>Toggle Fullscreen</Menubar.Item>
 			<Menubar.Separator />
-			<Menubar.Item inset>Hide Sidebar</Menubar.Item>
+			<Menubar.Item inset disabled>Hide Sidebar</Menubar.Item>
 		</Menubar.Content>
 	</Menubar.Menu>
 	<Menubar.Menu>
-		<Menubar.Trigger>Profiles</Menubar.Trigger>
+		<Menubar.Trigger class="opacity-50 grayscale">Profiles</Menubar.Trigger>
 		<Menubar.Content>
 			<Menubar.RadioGroup bind:value={profileRadioValue}>
-				<Menubar.RadioItem value="andy">Andy</Menubar.RadioItem>
-				<Menubar.RadioItem value="benoit">Benoit</Menubar.RadioItem>
-				<Menubar.RadioItem value="Luis">Luis</Menubar.RadioItem>
+				<Menubar.RadioItem value="andy" disabled>Andy</Menubar.RadioItem>
+				<Menubar.RadioItem value="benoit" disabled>Benoit</Menubar.RadioItem>
+				<Menubar.RadioItem value="Luis" disabled>Luis</Menubar.RadioItem>
 			</Menubar.RadioGroup>
 			<Menubar.Separator />
-			<Menubar.Item inset>Edit...</Menubar.Item>
+			<Menubar.Item inset disabled>Edit...</Menubar.Item>
 			<Menubar.Separator />
-			<Menubar.Item inset>Add Profile...</Menubar.Item>
+			<Menubar.Item inset disabled>Add Profile...</Menubar.Item>
 		</Menubar.Content>
 	</Menubar.Menu>
 	<Menubar.Menu>
@@ -116,13 +116,13 @@
 			<Menubar.Item>
 				List all... <Menubar.Shortcut>⌘L</Menubar.Shortcut>
 			</Menubar.Item>
-			<Menubar.Item>
+			<Menubar.Item disabled class="opacity-50 grayscale">
 				<a class="btn" href="/admin/documents">Documents</a>
 			</Menubar.Item>
-			<Menubar.Item>
+			<Menubar.Item disabled class="opacity-50 grayscale">
 				<a class="btn" href="/admin/projects">Projects</a>
 			</Menubar.Item>
-			<Menubar.Item>
+			<Menubar.Item disabled class="opacity-50 grayscale">
 				<a class="btn" href="/admin/log">Logs</a>
 			</Menubar.Item>
 		</Menubar.Content>
