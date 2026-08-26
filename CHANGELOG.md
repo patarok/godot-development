@@ -1,3 +1,10 @@
+## [5.10.6](https://github.com/patarok/godot-development/compare/v5.10.5...v5.10.6) (2026-08-26)
+
+
+### Bug Fixes
+
+* **layout:** Masken-Flackern beheben via Server-State-Hydration ([8be4823](https://github.com/patarok/godot-development/commit/8be48235954e0ad1cff050369e7effd313ade323))
+
 ## [5.10.5](https://github.com/patarok/godot-development/compare/v5.10.4...v5.10.5) (2026-08-26)
 
 
