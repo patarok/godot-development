@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store';
 import type { KanbanColumn, KanbanCard } from '$lib/components/kanban/kanban-board-types';
 
 type KanbanState = {
