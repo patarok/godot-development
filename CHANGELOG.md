@@ -1,3 +1,10 @@
+## [5.10.5](https://github.com/patarok/godot-development/compare/v5.10.4...v5.10.5) (2026-08-26)
+
+
+### Bug Fixes
+
+* **store:** AppState-Duplikat löschen + server-side appState-Bug fixen ([02b5098](https://github.com/patarok/godot-development/commit/02b509813363b4a08c83d4965248cd585af20c4c))
+
 ## [5.10.4](https://github.com/patarok/godot-development/compare/v5.10.3...v5.10.4) (2025-12-14)
 
 
