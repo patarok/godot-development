@@ -82,10 +82,15 @@ export const load: PageServerLoad = async ({ locals }) => {
     },
   ];
 
-  // Load tasks with relations
+  // Load tasks with relations.
+  // NOTE: `creator` and `parent` were previously loaded but are never used in the
+  // projection below. `parent` (self-referential ManyToOne) combined with Task's
+  // `children` OneToMany makes TypeORM emit heavy two-phase "SELECT DISTINCT"
+  // subqueries (see the distinctAlias / ORDER BY ... LIMIT 1 pattern in logs),
+  // which explodes with 409 tasks. Dropping them removes that overhead entirely.
   const tasks = await taskRepo.find({
     order: { createdAt: 'DESC' },
-    relations: { taskStatus: true, priority: true, creator: true, user: true, parent: true, taskType: true }
+    relations: { taskStatus: true, priority: true, user: true, taskType: true }
   });
 
   // Load tags per task
@@ -273,7 +278,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     users: toPlainArray(users),
     types: toPlainArray(types),
     user: locals.user,
-    mTasks: toPlainArray(tasks)
+    // Slim projection for meta-task dropdowns: only the fields +page.svelte /
+    // TaskCreateForm actually consume (id, title, isMeta). Avoids re-serializing
+    // the full 409-hydrated-task array a second time.
+    mTasks: tasks.map((t) => ({ id: t.id, title: t.title, isMeta: t.isMeta }))
   };
 };
 
