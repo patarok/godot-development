@@ -17,12 +17,28 @@
     let { data, children }: { data: LayoutData; children: any } = $props();
     const user = $derived(data.user);
 
-    // Hydriere den Client-State aus der server-seitigen Wahrheit (Cookie),
-    // nicht aus localStorage. Das verhindert das Initial-Flackern der Maske,
-    // weil appState.current direkt mit data.appState startet.
-    if (browser) {
-        appState.hydrate(data.appState);
-    }
+    // Server-seitige Wahrheit (Cookie aus +layout.server.ts) als initiale Quelle.
+    // `mode` ist SSR-korrekt, weil data.appState auch auf dem Server verfügbar ist
+    // (im Gegensatz zu appState.current, das client-only ist und auf dem Server
+    // immer 'landing' liefert — das war der Grund für das Masken-Flackern).
+    let mode = $state<string>(data.appState ?? 'landing');
+
+    // Nur EINMAL hydraten (beim Mount), sonst überschreibt ein re-run den
+    // Client-State bei setMain/setAdmin mit dem stale data.appState zurück.
+    $effect(() => {
+        if (browser) {
+            appState.hydrate(data.appState);
+        }
+    });
+
+    // Reaktiv: `mode` folgt dem Client-State, damit SPA-Navigationen
+    // (setMain/setAdmin/setLanding) die Maske umschalten, ohne dass
+    // data.appState neu vom Server kommt.
+    $effect(() => {
+        if (browser) {
+            mode = appState.current;
+        }
+    });
 
     // Route-Mapping
     const routeLabels: Record<string, string> = {
@@ -114,7 +130,7 @@
 
 {#if browser}
     {#if user}
-        {#if appState.current === 'admin'}
+        {#if mode === 'admin'}
             <!-- Admin Layout -->
             <Menubar class="px-2">
                 {#each menubarMenus as { title, items }}
@@ -135,7 +151,7 @@
             </Menubar>
             {@render children?.()}
 
-        {:else if appState.current === 'main' && !currentPath.startsWith('/admin')}
+        {:else if mode === 'main' && !currentPath.startsWith('/admin')}
             <!-- Main Layout with Sidebar -->
             <Sidebar.Provider>
                 <AppSidebar />
