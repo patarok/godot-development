@@ -1,30 +1,27 @@
 <script lang="ts">
     import favicon from '$lib/assets/favicon.svg';
     import '../app.css';
-    import { writable } from 'svelte/store';
     import { browser } from '$app/environment';
     import type { LayoutData } from './$types';
     import { Button } from "$lib/components/ui/button"
     import { page } from '$app/state';
     import * as Menubar from "$lib/components/ui/menubar/index.js";
     import { appState } from '$lib/state.svelte.js';
-    import { auth } from '$lib/stores/auth.svelte.js';
-    import { setContext, onMount } from 'svelte';
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import AdminSidebar from "$lib/components/admin-sidebar.svelte";
     import AdminMenubar from "$lib/components/admin-menubar.svelte";
     import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.ts";
-    import { breadcrumbStore } from '$lib/stores/breadcrumb.svelte.js';
     import { Separator } from "$lib/components/ui/separator/index.ts";
     import * as Sidebar from "$lib/components/ui/sidebar/index.ts";
-    import SiteHeader from "$lib/components/site-header.svelte";
 
     let { data, children }: { data: LayoutData; children: any } = $props();
     const user = $derived(data.user);
 
-    // Einmalige Initialisierung ohne Effect-Loop
+    // Hydriere den Client-State aus der server-seitigen Wahrheit (Cookie),
+    // nicht aus localStorage. Das verhindert das Initial-Flackern der Maske,
+    // weil appState.current direkt mit data.appState startet.
     if (browser) {
-        appState.init();
+        appState.hydrate(data.appState);
     }
 
     // Route-Mapping
