@@ -1,3 +1,10 @@
+## [5.10.8](https://github.com/patarok/godot-development/compare/v5.10.7...v5.10.8) (2026-08-26)
+
+
+### Bug Fixes
+
+* **layout:** Maske an server-seitige data.appState-Wahrheit koppeln ([1982a66](https://github.com/patarok/godot-development/commit/1982a668beab31836fc28574b429472352af4502))
+
 ## [5.10.7](https://github.com/patarok/godot-development/compare/v5.10.6...v5.10.7) (2026-08-26)
 
 
