@@ -1,3 +1,10 @@
+## [5.10.7](https://github.com/patarok/godot-development/compare/v5.10.6...v5.10.7) (2026-08-26)
+
+
+### Performance Improvements
+
+* **tasks:** load() entschlacken — parent/creator-Relation + mTasks-Serialisierung ([fbfaa03](https://github.com/patarok/godot-development/commit/fbfaa03cf9361789285220817d25353b9634066d))
+
 ## [5.10.6](https://github.com/patarok/godot-development/compare/v5.10.5...v5.10.6) (2026-08-26)
 
 
