@@ -1,3 +1,10 @@
+## [5.10.9](https://github.com/patarok/godot-development/compare/v5.10.8...v5.10.9) (2026-08-26)
+
+
+### Bug Fixes
+
+* **chart:** layerchart getTooltipContext-Crash beheben (client-seitiger /tasks-500er) ([3c15586](https://github.com/patarok/godot-development/commit/3c1558675264b30da2ad2fbba38ce7c853cd361e))
+
 ## [5.10.8](https://github.com/patarok/godot-development/compare/v5.10.7...v5.10.8) (2026-08-26)
 
 
