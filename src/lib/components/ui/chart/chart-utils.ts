@@ -1,4 +1,5 @@
 import type { Tooltip } from "layerchart";
+import { getChartContext } from "layerchart";
 import { getContext, setContext, type Component, type ComponentProps, type Snippet } from "svelte";
 
 export const THEMES = { light: "", dark: ".dark" } as const;
@@ -63,4 +64,36 @@ export function setChartContext(value: ChartContextValue) {
 
 export function useChart() {
 	return getContext<ChartContextValue>(chartContextKey);
+}
+
+/**
+ * Bridge for layerchart 2.x: `getTooltipContext` does not exist as an export.
+ * layerchart 2.x exposes the tooltip state via `getChartContext().tooltip` (a
+ * TooltipState with `series: TooltipSeries[]`), not via a `getTooltipContext()`
+ * hook. This helper returns the `{ payload }` shape that chart-tooltip.svelte
+ * consumes, mapping layerchart's `series` entries onto it.
+ *
+ * Returns `{ payload: [] }` when no chart context is available (SSR / not
+ * wrapped in a chart), so the tooltip renders an empty state instead of
+ * throwing — which previously crashed the module graph and caused the
+ * /tasks 500er.
+ */
+export function getTooltipPayload(): { payload: TooltipPayload[] } {
+	try {
+		// @ts-ignore — layerchart 2.x: ChartState.tooltip is TooltipState, expose getter
+		const state = getChartContext?.() as any;
+		const series = state?.tooltip?.series ?? [];
+		// @ts-ignore — map layerchart TooltipSeries onto our payload item shape
+		const payload = series.map((s: any) => ({
+			key: s.key,
+			name: s.label ?? s.key,
+			label: s.label,
+			value: s.value,
+			color: s.color,
+			payload: s,
+		}));
+		return { payload };
+	} catch {
+		return { payload: [] };
+	}
 }
