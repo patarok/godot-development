@@ -1,3 +1,10 @@
+## [5.10.10](https://github.com/patarok/godot-development/compare/v5.10.9...v5.10.10) (2026-08-28)
+
+
+### Bug Fixes
+
+* **layout:** Maske im SSR mitrendern — behebt 'Content-vor-Maske'-Flackern ([8597d36](https://github.com/patarok/godot-development/commit/8597d364a0c5cef7885412f4d3ed5fa125391661)), closes [#if](https://github.com/patarok/godot-development/issues/if) [#if](https://github.com/patarok/godot-development/issues/if) [#if](https://github.com/patarok/godot-development/issues/if)
+
 ## [5.10.9](https://github.com/patarok/godot-development/compare/v5.10.8...v5.10.9) (2026-08-26)
 
 
