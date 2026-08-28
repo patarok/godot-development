@@ -128,9 +128,8 @@
     <link rel="icon" href={favicon} />
 </svelte:head>
 
-{#if browser}
-    {#if user}
-        {#if mode === 'admin'}
+{#if user}
+    {#if mode === 'admin'}
             <!-- Admin Layout -->
             <Menubar class="px-2">
                 {#each menubarMenus as { title, items }}
@@ -235,7 +234,3 @@
         </Button> -->
         {@render children?.()}
     {/if}
-{:else}
-    <!-- SSR Fallback -->
-    {@render children?.()}
-{/if}
