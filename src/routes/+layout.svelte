@@ -7,6 +7,7 @@
     import { page } from '$app/state';
     import * as Menubar from "$lib/components/ui/menubar/index.js";
     import { appState } from '$lib/state.svelte.js';
+    import { lookupStore } from '$lib/stores/lookup-store.svelte.js';
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import AdminSidebar from "$lib/components/admin-sidebar.svelte";
     import AdminMenubar from "$lib/components/admin-menubar.svelte";
@@ -28,6 +29,22 @@
     $effect(() => {
         if (browser) {
             appState.hydrate(data.appState);
+        }
+    });
+
+    // Client-Lookup-Cache: Lookup-Daten (projects/priorities/states/users/types/
+    // metaTasks) in den Client-Store spiegeln, damit SPA-Navigationen und
+    // Komponenten eine stabile Referenz haben statt wiederholt neu zu derivieren.
+    $effect(() => {
+        if (browser) {
+            lookupStore.hydrate({
+                projects: data.projects,
+                priorities: data.priorities,
+                states: data.states,
+                users: data.users,
+                types: data.types,
+                metaTasks: data.metaTasks
+            });
         }
     });
 
