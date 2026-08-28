@@ -1,3 +1,11 @@
+# [5.11.0](https://github.com/patarok/godot-development/compare/v5.10.10...v5.11.0) (2026-08-28)
+
+
+### Features
+
+* **client-store:** Runes-Lookup-Store + Hydration aus Layout-Daten ([33ace61](https://github.com/patarok/godot-development/commit/33ace610ca3efa4430c66d04f2c19df33efe25e1))
+* **server-cache:** TTL-Cache für Lookup-Daten + Invalidation ([49c9877](https://github.com/patarok/godot-development/commit/49c9877108b8f78ce89b0aa44fda340c524945c0))
+
 ## [5.10.10](https://github.com/patarok/godot-development/compare/v5.10.9...v5.10.10) (2026-08-28)
 
 
