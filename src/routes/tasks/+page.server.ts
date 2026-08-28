@@ -20,6 +20,7 @@ import { TaskResponsibleUser } from '$lib/server/database/entities/task/TaskResp
 import { toPlainArray } from '$lib/utils/index';
 import { In, Between } from 'typeorm';
 import { logTaskActivity } from '$lib/server/services/taskLogService';
+import { invalidateLookupCache } from '$lib/server/database/lookup-cache';
 
 function slugifyTag(s: string) {
   return s
@@ -369,6 +370,7 @@ export const actions: Actions = {
       }
     }
 
+    invalidateLookupCache();
     return { success: true, message: 'Task created' };
   },
 
@@ -565,6 +567,7 @@ export const actions: Actions = {
       }
     }
 
+    invalidateLookupCache();
     return { success: true, message: 'Task updated' };
   },
 
